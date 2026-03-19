@@ -3,6 +3,8 @@
 *.data
 *.parquet
 *.zip
+*.data
+*.names
 
 # Python
 __pycache__/
@@ -15,6 +17,7 @@ __pycache__/
 
 # CodeCarbon Output
 emissions.csv
+powermetrics_log.txt
 
 # IDE
 .vscode/
