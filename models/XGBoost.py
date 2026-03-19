@@ -1,0 +1,39 @@
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from utils import load_data
+from xgboost import XGBClassifier
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.metrics import f1_score, make_scorer
+from codecarbon import EmissionsTracker
+from sklearn.model_selection import cross_validate
+
+DATASET = 'wine'
+
+xgb_config = {
+    "wine":   {"objective": "multi:softmax", "num_class": 3, "eval_metric": "mlogloss"},
+    "credit": {"objective": "binary:logistic", "eval_metric": "logloss"},
+    "higgs":  {"objective": "binary:logistic", "eval_metric": "logloss"},
+}
+
+X, y = load_data(DATASET)
+
+tracker = EmissionsTracker(output_dir="emissions", project_name=f"xgb_{DATASET}")
+tracker.start()
+
+xgbc = XGBClassifier(**xgb_config[DATASET], random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+xgbc.fit(X_train, y_train)
+
+cv_results = cross_validate(xgbc, X, y, cv=5, scoring={
+    'accuracy': 'accuracy',
+    'f1': make_scorer(f1_score, average='weighted')
+})
+
+
+emissions = tracker.stop()
+
+print(f"Datensatz: {DATASET}")
+print(f"Accuracy (CV Mean): {cv_results['test_accuracy'].mean():.4f}")
+print(f"F1-Score (CV Mean): {cv_results['test_f1'].mean():.4f}")
+print(f"CO₂ Emissionen: {emissions:.2e} kg")
