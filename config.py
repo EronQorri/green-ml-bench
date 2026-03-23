@@ -7,7 +7,8 @@ config = {
                   "Color Intensity", "Hue", "OD280/OD315 of diluted wines", "Proline"],
         "skiprows": None,
         "delimiter": ",",
-        "label_offset": -1
+        "label_offset": -1,
+        "nrows": None
     },
     "credit": {
         "path": "csv_files/default_of_credit_card_clients/default_of_credit_card_clients.csv",
@@ -15,14 +16,18 @@ config = {
         "names": None,
         "skiprows": 1,
         "delimiter": ";",
-        "drop_cols": ["ID"]
+        "drop_cols": ["ID"],
+        "nrows": None
     },
     "higgs": {
         "path": "csv_files/higgs/higgs.parquet",
         "target": "label",
         "names": None,
         "skiprows": None,
-        "delimiter": ","
-        
+        "delimiter": ",",
+        "nrows": 500000
     }
 }
+
+RANDOM_STATE = 42
+CV_FOLDS = 5
