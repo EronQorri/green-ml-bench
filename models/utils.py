@@ -4,6 +4,9 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import config
 
+
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import LabelEncoder
 import csv
 from datetime import datetime
 
@@ -39,3 +42,18 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time):
             "emissions_kg": emissions,
             "training_time_s": round(training_time, 2)
         })
+
+
+def minimal_preprocess(X, y):
+    # 1. Missing values (median für numerisch, most_frequent für kategorisch)
+    num_cols = X.select_dtypes(include='number').columns
+    cat_cols = X.select_dtypes(exclude='number').columns
+    
+    if len(num_cols) > 0:
+        X[num_cols] = SimpleImputer(strategy='median').fit_transform(X[num_cols])
+    if len(cat_cols) > 0:
+        X[cat_cols] = SimpleImputer(strategy='most_frequent').fit_transform(X[cat_cols])
+        for col in cat_cols:
+            X[col] = LabelEncoder().fit_transform(X[col])
+    
+    return X, y
