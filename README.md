@@ -12,7 +12,7 @@ Die Datensätze müssen manuell heruntergeladen und in folgende Ordner gelegt we
 
 ## Ausführung
 Datensatz in der jeweiligen Datei oben ändern:
-DATASET = "wine"  # "wine", "credit", "higgs"
+DATASET = "wine"  ("wine", "credit", "higgs")
 
 python random_forest.py
 python xgboost_model.py
