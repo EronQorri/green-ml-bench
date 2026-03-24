@@ -1,10 +1,9 @@
 # Datensätze
-*.csv
+default_of_credit_card_clients.csv
 *.data
 *.parquet
 *.zip
 *.data
-*.names
 
 # Python
 __pycache__/

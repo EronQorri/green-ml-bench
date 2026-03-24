@@ -14,7 +14,7 @@ from codecarbon import EmissionsTracker
 from config import config, RANDOM_STATE, CV_FOLDS
 import time
 
-DATASET = 'higgs'
+DATASET = 'wine'
 
 X, y = load_data(DATASET)
 X, y = minimal_preprocess(X, y)
