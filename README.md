@@ -27,7 +27,14 @@ DATASET = "wine"  # Options: "wine", "credit", "higgs"
 You can then run the models individually via the terminal:
 
 ```bash
-python random_forest.py
-python xgboost_model.py
-python mlp.py
+python models/log_regression.py
+python models/random_forest.py
+python models/xgboost_cpu.py
+python models/xgboost_gpu.py
+```
+
+Or just run the script that runs all the models one after another
+
+```bash
+python models/run_models.py
 ```
