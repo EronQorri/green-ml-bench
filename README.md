@@ -38,3 +38,5 @@ Or just run the script that runs all the models one after another
 ```bash
 python models/run_models.py
 ```
+
+![Results](results/Vergleich.jpg)
