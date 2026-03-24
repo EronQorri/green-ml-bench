@@ -1,29 +1,33 @@
 # Ökologische Effizienz von Klassifikationsalgorithmen
 
 ## Setup
+
+Installiere zunächst die benötigten Abhängigkeiten:
+
+```bash
 pip install -r requirements.txt
+```
 
 ## Datensätze
-Die Datensätze müssen manuell heruntergeladen und in folgende Ordner gelegt werden:
 
-- `wine/wine.data` → https://archive.ics.uci.edu/dataset/109/wine
-- `default_of_credit_card_clients/` → https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients
-- `higgs/higgs.parquet` → https://archive.ics.uci.edu/dataset/280/higgs
+Die Datensätze müssen manuell heruntergeladen und in die folgenden Ordnerstrukturen abgelegt werden:
+
+* **Wine:** `wine/wine.data` → [Zum UCI Download](https://archive.ics.uci.edu/dataset/109/wine)
+* **Credit Card Clients:** `default_of_credit_card_clients/` → [Zum UCI Download](https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients)
+* **HIGGS:** `higgs/higgs.parquet` → [Zum UCI Download](https://archive.ics.uci.edu/dataset/280/higgs)
 
 ## Ausführung
-Datensatz in der jeweiligen Datei oben ändern:
-DATASET = "wine"  ("wine", "credit", "higgs")
 
+Bevor du die Skripte startest, musst du den gewünschten Datensatz in den jeweiligen Python-Dateien oben definieren:
+
+```python
+DATASET = "wine"  # Optionen: "wine", "credit", "higgs"
+```
+
+Anschließend kannst du die Modelle einzeln über das Terminal ausführen:
+
+```bash
 python random_forest.py
 python xgboost_model.py
 python mlp.py
 ```
-
-Und ein `requirements.txt`:
-```
-pandas
-scikit-learn
-xgboost
-torch
-codecarbon
-pyarrow
