@@ -3,7 +3,6 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils import load_data, save_results, minimal_preprocess
 
-# Neue Imports für die Baseline
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
