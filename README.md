@@ -1,30 +1,30 @@
-# Ökologische Effizienz von Klassifikationsalgorithmen
+# Ecological Efficiency of Classification Algorithms
 
 ## Setup
 
-Installiere zunächst die benötigten Abhängigkeiten:
+First, install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Datensätze
+## Datasets
 
-Die Datensätze müssen manuell heruntergeladen und in die folgenden Ordnerstrukturen abgelegt werden:
+The datasets need to be downloaded manually and placed in the following folder structures:
 
-* **Wine:** `wine/wine.data` → [Zum UCI Download](https://archive.ics.uci.edu/dataset/109/wine)
-* **Credit Card Clients:** `default_of_credit_card_clients/` → [Zum UCI Download](https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients)
-* **HIGGS:** `higgs/higgs.parquet` → [Zum UCI Download](https://archive.ics.uci.edu/dataset/280/higgs)
+* **Wine:** `wine/wine.data` → [UCI Download](https://archive.ics.uci.edu/dataset/109/wine)
+* **Credit Card Clients:** `default_of_credit_card_clients/` → [UCI Download](https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients)
+* **HIGGS:** `higgs/higgs.parquet` → [UCI Download](https://archive.ics.uci.edu/dataset/280/higgs)
 
-## Ausführung
+## Running the Scripts
 
-Bevor du die Skripte startest, musst du den gewünschten Datensatz in den jeweiligen Python-Dateien oben definieren:
+Before starting the scripts, you need to define the desired dataset at the top of the respective Python files:
 
 ```python
-DATASET = "wine"  # Optionen: "wine", "credit", "higgs"
+DATASET = "wine"  # Options: "wine", "credit", "higgs"
 ```
 
-Anschließend kannst du die Modelle einzeln über das Terminal ausführen:
+You can then run the models individually via the terminal:
 
 ```bash
 python random_forest.py
