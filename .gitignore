@@ -3,7 +3,6 @@ default_of_credit_card_clients.csv
 *.data
 *.parquet
 *.zip
-*.data
 
 # Python
 __pycache__/
