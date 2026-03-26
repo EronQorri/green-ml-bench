@@ -1,0 +1,75 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%| BACHELOR THESIS - GREEN AI |%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\documentclass[11pt,a4paper]{report}
+
+%%| INCLUDE PACKAGES |%%
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[paper=a4paper,left=25mm,right=25mm,top=25mm,bottom=25mm]{geometry}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[autostyle=true]{csquotes}
+\usepackage[backend=biber, style=ieee]{biblatex}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{pdfpages}
+
+%%| SETTINGS |%%
+\hypersetup{                                                                        
+    colorlinks,
+    citecolor   = black,
+    filecolor   = black,
+    linkcolor   = black,
+    urlcolor    = black,
+    pdftitle    = {Efficiency vs. Performance in Green AI},
+    pdfsubject  = {Bachelor Thesis},
+    pdfauthor   = {Eron Qorri},
+    pdfcreator  = {pdflatex},           
+    pdfproducer = {LaTeX with hyperref}
+}
+\setstretch{1.25}
+
+\addbibresource{Document/Bibliography/ref.bib}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\includepdf[pages={1}]{deckblatt.pdf}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagenumbering{gobble}    
+\tableofcontents
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%| CHAPTERS |%%
+\include{chapters/01_introduction}
+\include{chapters/02_theoretical_background}
+\include{chapters/03_related_work}
+\include{chapters/04_experimental_design}
+\include{chapters/05_implementation_and_measurement}
+\include{chapters/06_results_and_evaluation}
+\include{chapters/07_discussion}
+\include{chapters/08_conclusion_and_outlook}
+\include{chapters/appendix}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage                                            
+\printbibliography[heading=bibintoc, title={Bibliography}]
+\newpage
+\listoffigures
+\addcontentsline{toc}{section}{List of Figures}
+\newpage
+\listoftables
+\addcontentsline{toc}{section}{List of Tables}
+
+\end{document}
