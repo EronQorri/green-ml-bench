@@ -9,7 +9,7 @@ from codecarbon import EmissionsTracker
 from config import config, RANDOM_STATE, CV_FOLDS
 import time
 
-DATASET = 'wine'
+DATASET = 'higgs'
 
 xgb_config = {
     "wine":   {"objective": "multi:softmax", "num_class": 3, "eval_metric": "mlogloss", "device": "cuda"},
