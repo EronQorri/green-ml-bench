@@ -31,6 +31,7 @@ python models/log_regression.py
 python models/random_forest.py
 python models/xgboost_cpu.py
 python models/xgboost_gpu.py
+python models/mlp.py
 ```
 
 Or just run the script that runs all the models one after another
