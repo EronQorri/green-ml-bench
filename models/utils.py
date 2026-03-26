@@ -34,7 +34,7 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
     file_path = os.path.join(results_dir, "results.csv")
     file_exists = os.path.isfile(file_path)
     with open(file_path, "a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["timestamp", "model", "dataset", "nrows", "accuracy", "f1", "emissions_kg", "training_time_s", "carbon_optimal_score"])
+        writer = csv.DictWriter(f, fieldnames=["timestamp", "model", "dataset", "nrows", "accuracy", "f1", "emissions_kg", "training_time_s"])
         if not file_exists:
             writer.writeheader()
         writer.writerow({
@@ -46,7 +46,6 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
             "f1": round(f1, 4),
             "emissions_kg": emissions,
             "training_time_s": round(training_time, 2),
-            "carbon_optimal_score": f1 / (emissions * training_time) ** 0.5
         })
 
 

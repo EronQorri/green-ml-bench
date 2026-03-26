@@ -25,7 +25,7 @@ config = {
         "names": None,
         "skiprows": None,
         "delimiter": ",",
-        "nrows": 500000
+        "nrows": 100000
     }
 }
 
