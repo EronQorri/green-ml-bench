@@ -1,6 +1,11 @@
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent  # = bachelor/
+
+
 config = {
     "wine": {
-        "path": "csv_files/wine/wine.data",
+        "path": BASE_DIR / "csv_files" / "wine" / "wine.data",
         "target": "Class",
         "names": ["Class", "Alcohol", "Malic acid", "Ash", "Alcalinity of ash", "Magnesium",
                   "Total phenols", "Flavanoids", "Nonfavanoid phenols", "Proanthocyanins",
@@ -11,7 +16,7 @@ config = {
         "nrows": None
     },
     "credit": {
-        "path": "csv_files/default_of_credit_card_clients/default_of_credit_card_clients.csv",
+        "path": BASE_DIR / "csv_files" / "default_of_credit_card_clients" / "default_of_credit_card_clients.csv",        ""
         "target": "default payment next month",
         "names": None,
         "skiprows": 1,
@@ -20,7 +25,7 @@ config = {
         "nrows": None
     },
     "higgs": {
-        "path": "csv_files/higgs/higgs.parquet",
+        "path": BASE_DIR / "csv_files" / "higgs" / "higgs.parquet",
         "target": "label",
         "names": None,
         "skiprows": None,

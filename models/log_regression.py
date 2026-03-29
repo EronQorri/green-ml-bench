@@ -11,16 +11,16 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import cross_validate
 from sklearn.metrics import f1_score, make_scorer
 from codecarbon import EmissionsTracker
-from config import config, RANDOM_STATE, CV_FOLDS
+from config import config, RANDOM_STATE, CV_FOLDS, BASE_DIR
 import time
 
-DATASET = 'higgs'
+DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 
 X, y = load_data(DATASET)
 X, y = minimal_preprocess(X, y)
 nrows = config[DATASET].get("nrows")
 
-tracker = EmissionsTracker(output_dir="emissions", project_name=f"lr_{DATASET}")
+tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"lr_{DATASET}")
 tracker.start()
 
 start = time.time()

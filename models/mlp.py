@@ -9,14 +9,14 @@ from sklearn.model_selection import cross_validate
 from sklearn.metrics import f1_score, make_scorer
 from sklearn.preprocessing import StandardScaler
 from codecarbon import EmissionsTracker
-from config import config, RANDOM_STATE, CV_FOLDS
+from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 
 import torch
 from torch import nn
 from skorch import NeuralNetClassifier
 
 
-DATASET = 'higgs'
+DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 
 class MLPModule(nn.Module):
     def __init__(self, input_dim, num_classes, hidden_dim=128):
@@ -64,7 +64,7 @@ net = NeuralNetClassifier(
     verbose=0
 )
 
-tracker = EmissionsTracker(output_dir="emissions", project_name=f"mlp_{DATASET}")
+tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"mlp_{DATASET}")
 tracker.start()
 
 start = time.time()
