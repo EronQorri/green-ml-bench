@@ -12,10 +12,12 @@ from sklearn.pipeline import make_pipeline
 from codecarbon import EmissionsTracker
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results, minimal_preprocess
+from utils import load_data, save_results
 from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 
+
 DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
+
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 class MLPModule(nn.Module):
@@ -39,7 +41,6 @@ mlp_config = {
 }
 
 X, y = load_data(DATASET)
-X, y = minimal_preprocess(X, y)
 
 X_array = X.to_numpy().astype(np.float32)
 y_array = y.to_numpy().astype(np.int64)

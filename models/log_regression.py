@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results, minimal_preprocess
+from utils import load_data, save_results
 
 # Neue Imports für die Pipeline und Skalierung hinzugefügt
 from sklearn.pipeline import make_pipeline
@@ -19,7 +19,6 @@ DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 X, y = load_data(DATASET)
-X, y = minimal_preprocess(X, y)
 nrows = config[DATASET].get("nrows")
 
 tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"lr_{DATASET}")

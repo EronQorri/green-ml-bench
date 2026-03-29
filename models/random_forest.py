@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results, minimal_preprocess
+from utils import load_data, save_results
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import f1_score, make_scorer
@@ -13,7 +13,6 @@ DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 X, y = load_data(DATASET)
-X, y = minimal_preprocess(X, y)
 nrows = config[DATASET].get("nrows")
 
 tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"rf_{DATASET}")

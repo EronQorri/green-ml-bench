@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results, minimal_preprocess
+from utils import load_data, save_results
 from xgboost import XGBClassifier
 from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import f1_score, make_scorer
@@ -19,7 +19,6 @@ xgb_config = {
 }
 
 X, y = load_data(DATASET)
-X, y = minimal_preprocess(X, y)
 nrows = config[DATASET].get("nrows")
 
 tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"xgb_{DATASET}")
