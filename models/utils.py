@@ -48,7 +48,8 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
             "training_time_s": round(training_time, 2),
         })
 
-
+#not really useful as all data I give it is already completely numerical and does not miss any values
+'''
 def minimal_preprocess(X, y):
     X = X.copy()
     num_cols = X.select_dtypes(include='number').columns
@@ -60,3 +61,4 @@ def minimal_preprocess(X, y):
         for col in cat_cols:
             X[col] = LabelEncoder().fit_transform(X[col])
     return X, y
+'''
