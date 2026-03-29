@@ -29,7 +29,7 @@ class MLPModule(nn.Module):
             nn.Linear(hidden_dim // 2, num_classes)
         )
 
-    def forward(self, X, **kwargs):
+    def forward(self, X):
         return self.network(X)
 
 mlp_config = {
@@ -51,10 +51,13 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.manual_seed(RANDOM_STATE)
 
 net = NeuralNetClassifier(
-    MLPModule(input_dim=input_dim, num_classes=mlp_config[DATASET]["num_classes"]),
+    module=MLPModule, 
+    module__input_dim=input_dim, 
+    module__num_classes=mlp_config[DATASET]["num_classes"],
     max_epochs=20,
     lr=0.01,
     iterator_train__batch_size=8192,
+    iterator_valid__batch_size=8192, 
     criterion=nn.CrossEntropyLoss,
     optimizer=torch.optim.Adam,
     iterator_train__shuffle=True,
