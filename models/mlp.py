@@ -2,19 +2,18 @@ import os
 import sys
 import time
 import numpy as np
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results, minimal_preprocess
-from sklearn.model_selection import KFold, cross_validate
-from sklearn.metrics import f1_score, make_scorer
-from sklearn.preprocessing import StandardScaler
-from codecarbon import EmissionsTracker
-from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
-
 import torch
 from torch import nn
 from skorch import NeuralNetClassifier
+from sklearn.model_selection import KFold, cross_validate
+from sklearn.metrics import f1_score, make_scorer
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from codecarbon import EmissionsTracker
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from utils import load_data, save_results, minimal_preprocess
+from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 
 DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
@@ -42,18 +41,15 @@ mlp_config = {
 X, y = load_data(DATASET)
 X, y = minimal_preprocess(X, y)
 
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X).astype(np.float32)
-
+X_array = X.to_numpy().astype(np.float32)
 y_array = y.to_numpy().astype(np.int64)
 
 nrows = config[DATASET].get("nrows")
-input_dim = X_scaled.shape[1]
+input_dim = X_array.shape[1]
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.manual_seed(RANDOM_STATE)
 
-# Skorch Wrapper
 net = NeuralNetClassifier(
     MLPModule(input_dim=input_dim, num_classes=mlp_config[DATASET]["num_classes"]),
     max_epochs=20,
@@ -65,13 +61,15 @@ net = NeuralNetClassifier(
     verbose=0
 )
 
+pipeline = make_pipeline(StandardScaler(), net)
+
 tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"mlp_{DATASET}")
 tracker.start()
 
 start = time.time()
 cv_results = cross_validate(
-    net,
-    X_scaled, y_array, cv=cv,
+    pipeline,
+    X_array, y_array, cv=cv,
     scoring={
         'accuracy': 'accuracy',
         'f1': make_scorer(f1_score, average='weighted')
@@ -79,8 +77,5 @@ cv_results = cross_validate(
 )
 training_time = time.time() - start
 emissions = tracker.stop()
-
-# man könnte hier noch ein GridSearch für die optimalen Hyperparameter machen
-# genau so eigentlich auch bei allen anderen Modellen jetzt wo ich drüber nachdenke 
 
 save_results("MLP_PyTorch", DATASET, cv_results['test_accuracy'].mean(), cv_results['test_f1'].mean(), emissions, training_time, nrows)
