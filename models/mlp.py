@@ -54,6 +54,7 @@ net = NeuralNetClassifier(
     MLPModule(input_dim=input_dim, num_classes=mlp_config[DATASET]["num_classes"]),
     max_epochs=20,
     lr=0.01,
+    iterator_train__batch_size=8192,
     criterion=nn.CrossEntropyLoss,
     optimizer=torch.optim.Adam,
     iterator_train__shuffle=True,
