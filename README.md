@@ -18,23 +18,19 @@ The datasets need to be downloaded manually and placed in the following folder s
 
 ## Running the Scripts
 
-Before starting the scripts, you need to define the desired dataset at the top of the respective Python files:
-
-```python
-DATASET = "wine"  # Options: "wine", "credit", "higgs"
-```
-
-You can then run the models individually via the terminal:
+You can run each model individually for a specific dataset by passing the dataset name as an argument:
 
 ```bash
-python models/log_regression.py
-python models/random_forest.py
-python models/xgboost_cpu.py
-python models/xgboost_gpu.py
-python models/mlp.py
+python models/log_regression.py wine
+python models/random_forest.py credit
+python models/xgboost_cpu.py higgs
+python models/xgboost_gpu.py wine
+python models/mlp.py credit
 ```
 
-Or just run the script that runs all the models one after another
+Valid dataset options are: wine, credit, higgs. If no argument is provided, the scripts default to wine.
+
+To run all models across all datasets automatically:
 
 ```bash
 python models/run_models.py
