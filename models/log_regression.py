@@ -8,13 +8,15 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import f1_score, make_scorer
 from codecarbon import EmissionsTracker
 from config import config, RANDOM_STATE, CV_FOLDS, BASE_DIR
 import time
 
+
 DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
+cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 X, y = load_data(DATASET)
 X, y = minimal_preprocess(X, y)
@@ -29,7 +31,7 @@ cv_results = cross_validate(
         StandardScaler(),
         LogisticRegression(solver='sag', random_state=RANDOM_STATE, n_jobs=-1, max_iter=1000)
     ),
-    X, y, cv=CV_FOLDS,
+    X, y, cv=cv,
     scoring={
         'accuracy': 'accuracy',
         'f1': make_scorer(f1_score, average='weighted')

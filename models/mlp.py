@@ -5,7 +5,7 @@ import numpy as np
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils import load_data, save_results, minimal_preprocess
-from sklearn.model_selection import cross_validate
+from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import f1_score, make_scorer
 from sklearn.preprocessing import StandardScaler
 from codecarbon import EmissionsTracker
@@ -17,6 +17,7 @@ from skorch import NeuralNetClassifier
 
 
 DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
+cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 class MLPModule(nn.Module):
     def __init__(self, input_dim, num_classes, hidden_dim=128):
@@ -70,7 +71,7 @@ tracker.start()
 start = time.time()
 cv_results = cross_validate(
     net,
-    X_scaled, y_array, cv=CV_FOLDS,
+    X_scaled, y_array, cv=cv,
     scoring={
         'accuracy': 'accuracy',
         'f1': make_scorer(f1_score, average='weighted')
