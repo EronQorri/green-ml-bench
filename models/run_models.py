@@ -33,7 +33,7 @@ try:
         "https://ntfy.sh/eron_thesis_higgs_run_123", # Deinen Kanalnamen einsetzen!
         data=f"Alle Skripte sind durchgelaufen! Gesamtdauer: {total_time:.2f} Minuten.".encode(encoding='utf-8'),
         headers={
-            "Title": "✅ Thesis: Master-Run beendet!",
+            "Title": "Thesis: Master-Run beendet!",
             "Priority": "urgent",
             "Tags": "tada,party_popper"
         }
