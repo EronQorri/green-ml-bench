@@ -14,3 +14,18 @@ shown in Table 2.
 \begin{center}
     \includegraphics[width=0.5\textwidth]{graphics/variablen_analyse_datensaetze.png}
 \end{center}
+
+During the MLP training experiments, several configurations were evaluated to optimize 
+performance. Initially, the model was trained using only the CPU, which proved 
+too slow for practical use. Switching to CUDA-based GPU training introduced a new 
+issue: the default batch size of 128 provided by \texttt{scikit-learn} resulted in 
+training times even slower than on CPU, due to the overhead of frequent small data 
+transfers to the GPU.
+
+Increasing the batch size to 8,192 significantly reduced training time. Further 
+tuning of this parameter did not yield improvements, so this value was retained. 
+Additionally, \texttt{pin\_memory=True} was evaluated, which locks data in RAM to 
+accelerate CPU-to-GPU transfers. However, this option also led to slower training, 
+likely because the MLP architecture is not complex enough to benefit from the 
+reduced transfer overhead. These experiments led to the final configuration used 
+for all reported MLP results.

@@ -29,7 +29,7 @@ start = time.time()
 cv_results = cross_validate(
     make_pipeline(
         StandardScaler(),
-        LogisticRegression(solver='sag', random_state=RANDOM_STATE, n_jobs=-1, max_iter=1000)
+        LogisticRegression(solver='sag', random_state=RANDOM_STATE, max_iter=1000)
     ),
     X, y, cv=cv,
     scoring={
