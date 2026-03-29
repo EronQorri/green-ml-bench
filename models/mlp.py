@@ -2,7 +2,9 @@ import os
 import sys
 import time
 import numpy as np
+from skorch.callbacks import EarlyStopping
 import torch
+import torch.nn as nn
 from torch import nn
 from skorch import NeuralNetClassifier
 from sklearn.model_selection import KFold, cross_validate
@@ -20,20 +22,42 @@ DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
+
 class MLPModule(nn.Module):
-    def __init__(self, input_dim, num_classes, hidden_dim=128):
+    def __init__(self, input_dim, num_classes, hidden_dim=256, dropout_rate=0.2):
         super(MLPModule, self).__init__()
+        
         self.network = nn.Sequential(
+            # Layer 1
             nn.Linear(input_dim, hidden_dim),
+            nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            
+            # Layer 2
             nn.Linear(hidden_dim, hidden_dim // 2),
+            nn.BatchNorm1d(hidden_dim // 2),
             nn.ReLU(),
-            nn.Linear(hidden_dim // 2, num_classes)
+            nn.Dropout(dropout_rate),
+            
+            # Layer 3
+            nn.Linear(hidden_dim // 2, hidden_dim // 4),
+            nn.BatchNorm1d(hidden_dim // 4),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            
+            # Layer 4
+            nn.Linear(hidden_dim // 4, hidden_dim // 8),
+            nn.BatchNorm1d(hidden_dim // 8),
+            nn.ReLU(),
+            nn.Dropout(dropout_rate),
+            
+            # Output Layer
+            nn.Linear(hidden_dim // 8, num_classes)
         )
 
-    def forward(self, X):
+    def forward(self, X, **kwargs):
         return self.network(X)
-
 mlp_config = {
     "wine":   {"num_classes": 3},
     "credit": {"num_classes": 2}, 
@@ -54,16 +78,18 @@ torch.manual_seed(RANDOM_STATE)
 net = NeuralNetClassifier(
     module=MLPModule, 
     module__input_dim=input_dim, 
+    module__hidden_dim=256, # <-- Added the missing comma here
     module__num_classes=mlp_config[DATASET]["num_classes"],
-    max_epochs=20,
-    lr=0.01,
-    iterator_train__batch_size=8192,
+    max_epochs=200,
+    lr=0.001,               # <-- Lowered for the deep + BatchNorm architecture
+    iterator_train__batch_size=8192, # <-- Back to the GPU-optimized size
     iterator_valid__batch_size=8192, 
     criterion=nn.CrossEntropyLoss,
     optimizer=torch.optim.Adam,
     iterator_train__shuffle=True,
     device=device,
-    verbose=0
+    verbose=0,
+    callbacks=[EarlyStopping(patience=3, threshold=0.001)]
 )
 
 pipeline = make_pipeline(StandardScaler(), net)

@@ -10,6 +10,10 @@ from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 import time
 
 DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
+if DATASET == 'higgs':
+    print("Skipping Random Forest for Higgs dataset.")
+    sys.exit(0)
+    
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 X, y = load_data(DATASET)
