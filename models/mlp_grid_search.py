@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from torch import nn
 from skorch import NeuralNetClassifier
-from sklearn.model_selection import KFold, cross_validate
+from sklearn.model_selection import KFold, RandomizedSearchCV
 from sklearn.metrics import f1_score, make_scorer
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
@@ -25,11 +25,9 @@ LR = 0.001
 BATCH_SIZE = 4096
 NUM_LAYERS = 4
 
-
 DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
-
 
 class MLPModule(nn.Module):
     def __init__(self, input_dim, num_classes, hidden_dim=NEURONS, dropout_rate=DROPOUT_RATE, num_layers=NUM_LAYERS):
@@ -39,25 +37,19 @@ class MLPModule(nn.Module):
         current_in_dim = input_dim
         current_out_dim = hidden_dim
         
-        # Dynamisch die versteckten Schichten aufbauen
         for _ in range(num_layers):
             layers.append(nn.Linear(current_in_dim, current_out_dim))
             layers.append(nn.BatchNorm1d(current_out_dim))
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(dropout_rate))
             
-            # Dimensionen für die nächste Schicht vorbereiten (halbieren)
             current_in_dim = current_out_dim
             current_out_dim = current_out_dim // 2
             
-            # Sicherheitscheck, damit die Dimension nicht auf 0 fällt
             if current_out_dim < 1:
                 current_out_dim = 1
                 
-        # Letzte Schicht (Output) hinzufügen
         layers.append(nn.Linear(current_in_dim, num_classes))
-        
-        # Sternchen-Operator (*) entpackt die Liste in nn.Sequential
         self.network = nn.Sequential(*layers)
 
     def forward(self, X):
@@ -101,19 +93,51 @@ net = NeuralNetClassifier(
 
 pipeline = make_pipeline(StandardScaler(), net)
 
-tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"mlp_{DATASET}")
-tracker.start()
+# 1. Den Suchraum definieren
+param_distributions = {
+    'neuralnetclassifier__lr': [0.01, 0.005, 0.001, 0.0005],
+    'neuralnetclassifier__module__hidden_dim': [128, 256, 512],
+    'neuralnetclassifier__module__num_layers': [2, 3, 4],
+    'neuralnetclassifier__module__dropout_rate': [0.1, 0.2, 0.3],
+}
 
-start = time.time()
-cv_results = cross_validate(
+# 2. Den RandomizedSearchCV aufsetzen (mit Multi-Scoring)
+search = RandomizedSearchCV(
     pipeline,
-    X_array, y_array, cv=cv,
+    param_distributions=param_distributions,
+    n_iter=10, 
+    cv=cv, # Nutzt dein bestehendes KFold Setup
     scoring={
         'accuracy': 'accuracy',
         'f1': make_scorer(f1_score, average='weighted')
-    }
+    },
+    refit='accuracy', # Sucht das beste Modell basierend auf Accuracy
+    verbose=2, 
+    random_state=RANDOM_STATE,
+    n_jobs=1 
 )
+
+print(f"\nStarte Hyperparameter-Suche für {DATASET} ({nrows} Zeilen)...")
+tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"mlp_grid_{DATASET}")
+tracker.start()
+start = time.time()
+
+# 3. Suche ausführen
+search.fit(X_array, y_array)
+
 training_time = time.time() - start
 emissions = tracker.stop()
 
-save_results("MLP_PyTorch", DATASET, cv_results['test_accuracy'].mean(), cv_results['test_f1'].mean(), emissions, training_time, nrows)
+# 4. Beste Ergebnisse extrahieren
+best_idx = search.cv_results_['params'].index(search.best_params_)
+best_acc = search.cv_results_['mean_test_accuracy'][best_idx]
+best_f1 = search.cv_results_['mean_test_f1'][best_idx]
+
+print("\n=== SUCHE BEENDET ===")
+print(f"Beste Accuracy: {best_acc:.4f} | Bester F1: {best_f1:.4f}")
+print("Beste Parameter:")
+for param, value in search.best_params_.items():
+    print(f" - {param.replace('neuralnetclassifier__', '')}: {value}")
+
+# 5. Speichern in deiner CSV (mit dem Namen "MLP_Tuned" zur Unterscheidung)
+save_results("MLP_Tuned", DATASET, best_acc, best_f1, emissions, training_time, nrows)

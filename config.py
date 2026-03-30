@@ -30,7 +30,7 @@ config = {
         "names": None,
         "skiprows": None,
         "delimiter": ",",
-        "nrows": None
+        "nrows": 100000
     }
 }
 
