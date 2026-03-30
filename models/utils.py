@@ -48,6 +48,26 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
             "training_time_s": round(training_time, 2),
         })
 
+def save_inference_time(model, dataset, emissions, nrows, inference_time):
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    results_dir = os.path.join(base_dir, "results")
+    os.makedirs(results_dir, exist_ok=True)
+    file_path = os.path.join(results_dir, "inference_time.csv")
+    file_exists = os.path.isfile(file_path)
+    with open(file_path, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["timestamp", "model", "dataset", "nrows", "inference_time", "emissions_kg"])
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow({
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "model": model,
+            "dataset": dataset,
+            "nrows": nrows if nrows else "all",
+            "inference_time": inference_time,
+            "emissions_kg": emissions
+        })
+
+
 #not really useful as all data I give it is already completely numerical and does not miss any values
 '''
 def minimal_preprocess(X, y):

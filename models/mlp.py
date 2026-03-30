@@ -14,7 +14,7 @@ from sklearn.pipeline import make_pipeline
 from codecarbon import EmissionsTracker
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results
+from utils import load_data, save_inference_time, save_results
 from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 
 NEURONS = 256
@@ -111,9 +111,19 @@ cv_results = cross_validate(
     scoring={
         'accuracy': 'accuracy',
         'f1': make_scorer(f1_score, average='weighted')
-    }
+    },
+    return_estimator=True
 )
 training_time = time.time() - start
 emissions = tracker.stop()
 
+
+trained_model = cv_results['estimator'][0]
+single_row = X_array[:1]
+
+start_inference = time.perf_counter()
+_ = trained_model.predict(single_row)
+inference_time = time.perf_counter() - start_inference
+
 save_results("MLP_PyTorch", DATASET, cv_results['test_accuracy'].mean(), cv_results['test_f1'].mean(), emissions, training_time, nrows)
+save_inference_time("MLP_PyTorch", DATASET, emissions, nrows, inference_time)

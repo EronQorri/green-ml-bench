@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 import requests
 
-DATASETS = ['wine', 'credit', 'higgs']
+DATASETS = ['wine', 'credit']
 
 SCRIPTS = [
     'log_regression.py',

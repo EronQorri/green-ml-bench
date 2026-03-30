@@ -1,7 +1,7 @@
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results
+from utils import load_data, save_results, save_inference_time
 from xgboost import XGBClassifier
 from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import f1_score, make_scorer
@@ -31,9 +31,18 @@ cv_results = cross_validate(
     scoring={
         'accuracy': 'accuracy',
         'f1': make_scorer(f1_score, average='weighted')
-    }
+    },
+    return_estimator=True
 )
 training_time = time.time() - start
 emissions = tracker.stop()
 
+trained_model = cv_results['estimator'][0]
+single_row = X[:1]
+
+start_inference = time.perf_counter()
+_ = trained_model.predict(single_row)
+inference_time = time.perf_counter() - start_inference
+
 save_results("XGBoost_GPU", DATASET, cv_results['test_accuracy'].mean(), cv_results['test_f1'].mean(), emissions, training_time, nrows)
+save_inference_time("XGBoost_GPU", DATASET, emissions, nrows, inference_time)
