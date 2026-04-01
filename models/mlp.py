@@ -82,8 +82,8 @@ torch.manual_seed(RANDOM_STATE)
 
 net = NeuralNetClassifier(
     module=MLPModule, 
-    module__input_dim=input_dim, 
-    module__hidden_dim=NEURONS, 
+    module__input_dim=input_dim,
+    module__hidden_dim=NEURONS,
     module__num_classes=mlp_config[DATASET]["num_classes"],
     module__dropout_rate=DROPOUT_RATE,
     module__num_layers=NUM_LAYERS,

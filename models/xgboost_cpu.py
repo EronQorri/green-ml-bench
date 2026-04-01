@@ -13,9 +13,12 @@ DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 xgb_config = {
-    "wine":   {"objective": "multi:softmax", "num_class": 3, "eval_metric": "mlogloss"},
-    "credit": {"objective": "binary:logistic", "eval_metric": "logloss"},
-    "higgs":  {"objective": "binary:logistic", "eval_metric": "logloss"},
+    "wine":   {"objective": "multi:softmax", "num_class": 3, "eval_metric": "mlogloss", "n_estimators": 464, "max_depth": 7, 
+               "learning_rate": 0.0139, "subsample": 0.779, "colsample_bytree": 0.750, "min_child_weight": 5,},
+    "credit": {"objective": "binary:logistic", "eval_metric": "logloss", "n_estimators": 108, "max_depth": 3, "learning_rate": 0.2878,
+               "subsample": 0.964, "colsample_bytree": 0.843, "min_child_weight": 7,},
+    "higgs":  {"objective": "binary:logistic", "eval_metric": "logloss", "n_estimators": 479, "max_depth": 8, "learning_rate": 0.0350,
+               "subsample": 0.829, "colsample_bytree": 0.819, "min_child_weight": 4,},
 }
 
 X, y = load_data(DATASET)
