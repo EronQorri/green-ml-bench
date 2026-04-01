@@ -19,10 +19,20 @@ if DATASET == 'higgs':
     
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
+
+rf_config = {
+    "wine": {
+        "n_estimators": 221, "max_depth": 5, "min_samples_split": 8,
+        "min_samples_leaf": 3, "max_features": "sqrt",
+    },
+    "credit": {},
+    "higgs":  {},
+}
+
 X, y = load_data(DATASET)
 nrows = config[DATASET].get("nrows")
 
-model = RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=-1)
+model = RandomForestClassifier(**rf_config[DATASET], random_state=RANDOM_STATE, n_jobs=-1)
 
 tracker = EmissionsTracker(output_dir=str(BASE_DIR / "emissions"), project_name=f"rf_{DATASET}")
 tracker.start()
