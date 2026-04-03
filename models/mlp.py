@@ -17,22 +17,15 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils import load_data, save_inference_time, save_results
 from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 
-NEURONS = 256
-EPOCHS = 200
-PATIENCE = 5
-DROPOUT_RATE = 0.2
-LR = 0.001
-BATCH_SIZE = 8192
-NUM_LAYERS = 4
-
-
+EPOCHS = 200 # the earlyStopping will be reached before the 200 anyway
 DATASET = sys.argv[1] if len(sys.argv) > 1 else 'wine'
 
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 
 class MLPModule(nn.Module):
-    def __init__(self, input_dim, num_classes, layer_sizes=[256, 128], dropout_rate=0.2):
+    # parameters won't be used anyway as they are overwritten by the neuralnet 
+    def __init__(self, input_dim, num_classes, layer_sizes=[256, 128], dropout_rate=0.2): 
         super(MLPModule, self).__init__()
         layers = []
         current_in_dim = input_dim
@@ -69,18 +62,18 @@ net = NeuralNetClassifier(
     module=MLPModule,
     module__input_dim=input_dim,
     module__num_classes=mlp_config[DATASET]["num_classes"],
-    module__layer_sizes=[256, 128, 64],  # später durch Tune-Ergebnisse ersetzen
-    module__dropout_rate=DROPOUT_RATE,
+    module__layer_sizes=mlp_config[DATASET]["layer_sizes"],    
+    module__dropout_rate=mlp_config[DATASET]["dropout_rate"],
     max_epochs=EPOCHS,
-    lr=LR,               
-    iterator_train__batch_size=BATCH_SIZE, 
-    iterator_valid__batch_size=BATCH_SIZE, 
+    lr=mlp_config[DATASET]["lr"],               
+    iterator_train__batch_size=mlp_config[DATASET]["batch_size"], 
+    iterator_valid__batch_size=mlp_config[DATASET]["batch_size"], 
     criterion=nn.CrossEntropyLoss,
     optimizer=torch.optim.Adam,
     iterator_train__shuffle=True,
     device=device,
     verbose=0,
-    callbacks=[EarlyStopping(patience=PATIENCE)]
+    callbacks=[EarlyStopping(patience=mlp_config[DATASET]["patience"])]
 )
 
 pipeline = make_pipeline(StandardScaler(), net)
