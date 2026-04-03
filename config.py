@@ -1,6 +1,6 @@
 from pathlib import Path
 
-BASE_DIR = Path(__file__).parent  # = bachelor/
+BASE_DIR = Path(__file__).parent 
 
 
 config = {
@@ -16,7 +16,7 @@ config = {
         "nrows": None
     },
     "credit": {
-        "path": BASE_DIR / "csv_files" / "default_of_credit_card_clients" / "default_of_credit_card_clients.csv",        ""
+        "path": BASE_DIR / "csv_files" / "default_of_credit_card_clients" / "default_of_credit_card_clients.csv",
         "target": "default payment next month",
         "names": None,
         "skiprows": 1,

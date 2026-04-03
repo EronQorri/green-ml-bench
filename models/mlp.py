@@ -32,40 +32,25 @@ cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 
 class MLPModule(nn.Module):
-    def __init__(self, input_dim, num_classes, hidden_dim=NEURONS, dropout_rate=DROPOUT_RATE, num_layers=NUM_LAYERS):
+    def __init__(self, input_dim, num_classes, layer_sizes=[256, 128], dropout_rate=0.2):
         super(MLPModule, self).__init__()
-        
         layers = []
         current_in_dim = input_dim
-        current_out_dim = hidden_dim
-        
-        # Dynamisch die versteckten Schichten aufbauen
-        for _ in range(num_layers):
-            layers.append(nn.Linear(current_in_dim, current_out_dim))
-            layers.append(nn.BatchNorm1d(current_out_dim))
+        for out_dim in layer_sizes:
+            layers.append(nn.Linear(current_in_dim, out_dim))
+            layers.append(nn.BatchNorm1d(out_dim))
             layers.append(nn.ReLU())
             layers.append(nn.Dropout(dropout_rate))
-            
-            # Dimensionen für die nächste Schicht vorbereiten (halbieren)
-            current_in_dim = current_out_dim
-            current_out_dim = current_out_dim // 2
-            
-            # Sicherheitscheck, damit die Dimension nicht auf 0 fällt
-            if current_out_dim < 1:
-                current_out_dim = 1
-                
-        # Letzte Schicht (Output) hinzufügen
+            current_in_dim = out_dim
         layers.append(nn.Linear(current_in_dim, num_classes))
-        
-        # Sternchen-Operator (*) entpackt die Liste in nn.Sequential
         self.network = nn.Sequential(*layers)
 
     def forward(self, X):
         return self.network(X)
 
 mlp_config = {
-    "wine":   {"num_classes": 3},
-    "credit": {"num_classes": 2}, 
+    "wine":   {"num_classes": 3, "layer_sizes": [256, 512], "dropout_rate": 0.2827, "lr": 0.0006, "batch_size": 256, "patience": 17},
+    "credit": {"num_classes": 2, "layer_sizes": [512, 256, 512, 256], "dropout_rate": 0.3745, "lr": 0.0007, "batch_size": 8192, "patience": 6},
     "higgs":  {"num_classes": 2},
 }
 
@@ -81,12 +66,11 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 torch.manual_seed(RANDOM_STATE)
 
 net = NeuralNetClassifier(
-    module=MLPModule, 
+    module=MLPModule,
     module__input_dim=input_dim,
-    module__hidden_dim=NEURONS,
     module__num_classes=mlp_config[DATASET]["num_classes"],
+    module__layer_sizes=[256, 128, 64],  # später durch Tune-Ergebnisse ersetzen
     module__dropout_rate=DROPOUT_RATE,
-    module__num_layers=NUM_LAYERS,
     max_epochs=EPOCHS,
     lr=LR,               
     iterator_train__batch_size=BATCH_SIZE, 

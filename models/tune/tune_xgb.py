@@ -1,4 +1,3 @@
-# models/tune_xgb.py
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,6 +17,7 @@ X, y = load_data(DATASET)
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 xgb_base = {
+    #could change it to device:cuda if i tune with my gpu at home
     "wine":   {"objective": "multi:softmax", "num_class": 3, "eval_metric": "mlogloss"},
     "credit": {"objective": "binary:logistic", "eval_metric": "logloss"},
     "higgs":  {"objective": "binary:logistic", "eval_metric": "logloss"},
