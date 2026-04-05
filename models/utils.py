@@ -15,7 +15,12 @@ def load_data(dataset):
         if cfg.get("nrows"):
             df = df.head(cfg["nrows"])
     else:
-        df = pd.read_csv(cfg["path"], names=cfg["names"], skiprows=cfg["skiprows"], delimiter=cfg["delimiter"])
+        df = pd.read_csv(
+            cfg["path"],
+            names=cfg["names"],
+            skiprows=cfg["skiprows"],
+            delimiter=cfg["delimiter"],
+        )
     if cfg.get("drop_cols"):
         df = df.drop(cfg["drop_cols"], axis=1)
     X = df.drop(cfg["target"], axis=1)
@@ -32,19 +37,34 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
     file_path = os.path.join(results_dir, "results.csv")
     file_exists = os.path.isfile(file_path)
     with open(file_path, "a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["timestamp", "model", "dataset", "nrows", "accuracy", "f1", "emissions_kg", "training_time_s"])
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "timestamp",
+                "model",
+                "dataset",
+                "nrows",
+                "accuracy",
+                "f1",
+                "emissions_kg",
+                "training_time_s",
+            ],
+        )
         if not file_exists:
             writer.writeheader()
-        writer.writerow({
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "model": model,
-            "dataset": dataset,
-            "nrows": nrows if nrows else "all",
-            "accuracy": round(accuracy, 4),
-            "f1": round(f1, 4),
-            "emissions_kg": emissions,
-            "training_time_s": round(training_time, 2),
-        })
+        writer.writerow(
+            {
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "model": model,
+                "dataset": dataset,
+                "nrows": nrows if nrows else "all",
+                "accuracy": round(accuracy, 4),
+                "f1": round(f1, 4),
+                "emissions_kg": emissions,
+                "training_time_s": round(training_time, 2),
+            }
+        )
+
 
 def save_inference_time(model, dataset, emissions, nrows, inference_time):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -53,14 +73,26 @@ def save_inference_time(model, dataset, emissions, nrows, inference_time):
     file_path = os.path.join(results_dir, "inference_time.csv")
     file_exists = os.path.isfile(file_path)
     with open(file_path, "a", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["timestamp", "model", "dataset", "nrows", "inference_time", "emissions_kg"])
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "timestamp",
+                "model",
+                "dataset",
+                "nrows",
+                "inference_time",
+                "emissions_kg",
+            ],
+        )
         if not file_exists:
             writer.writeheader()
-        writer.writerow({
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "model": model,
-            "dataset": dataset,
-            "nrows": nrows if nrows else "all",
-            "inference_time": inference_time,
-            "emissions_kg": emissions
-        })
+        writer.writerow(
+            {
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "model": model,
+                "dataset": dataset,
+                "nrows": nrows if nrows else "all",
+                "inference_time": inference_time,
+                "emissions_kg": emissions,
+            }
+        )
