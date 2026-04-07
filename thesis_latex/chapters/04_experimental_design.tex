@@ -31,5 +31,12 @@ Further the following Sub-questions will be answered in the progress of this the
 To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
 
 \section{Datasets}
+Three datasets were selected, ranging from small to large scale, to assess how dataset size affects the relationship between model accuracy, energy consumption and carbon footprint. The smallest dataset used is the \textit{Wine} \parencite{stefanaeberhardWine1992} dataset, followed by the medium-sized \textit{Default of Credit Card Clients} \parencite{i-chengyehDefaultCreditCard2009}. As the large-scale dataset, \textit{HIGGS} \parencite{baldiSearchingExoticParticles2014} was selected, comprising eleven million instances.
 
+The \textit{Wine} dataset contains 178 instances across 13 features, where each feature describes a chemical property of wines from the same region in Italy, derived from three different cultivars.
 
+The \textit{Default of Credit Card Clients} dataset contains 30,000 instances across 23 features and focuses on predicting payment default among credit card clients in Taiwan.
+
+The \textit{HIGGS} dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \parencite{whitesonHIGGS2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
+
+Collectively, these three datasets span several orders of magnitude in size, thus enabling a systematic evaluation of how model performance and energy consumption scale across varying levels of data complexity.
