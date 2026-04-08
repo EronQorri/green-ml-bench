@@ -1,8 +1,3 @@
-\begin{center}
-    \includegraphics[width=\textwidth]{graphics/beispiel_grafik_datensaetze.png}
-\end{center}
-I could do something of that sort for my own data sets
-
 \newpage
 We also gathered several other characteristics of each data set, including number of categorical features (NCAT), number of continuous features (NCONT), proportion of features that are categorical (RCAT), number of target classes (NC), minimum single-class proportion (CMIN), and class imbalance (IC). The latter is a measure of the difference in actual and expected proportion of the least common target class (L) and its expected value (LE); i.e., I = (LE – L)/LE. These values are shown in Table 2.
 
@@ -19,8 +14,8 @@ Increasing the batch size to 8,192 significantly reduced training time. Further 
 This chapter outlines the experimental design used to evaluate the ecological efficiency of different machine learning classification algorithms. It describes the datasets, models, evaluation metrics, hyperparameter tuning and measurement setup that form the basis of this empirical analysis.
 
 \section{Research Questions}
-The main research question that this study wants to find the answer to, is: \textit{How does the trade-off between energy consumption and predictive performance vary across Random Forest, XGBoost, and MLP when model complexity and dataset size are systematically varied?}
-Further the following Sub-questions will be answered in the progress of this thesis:
+The main research question that this study aims to answer is: \textit{How does the trade-off between energy consumption and predictive performance vary across Random Forest, XGBoost and MLP models when the complexity of the models and the size of the dataset are systematically varied?}
+The following sub-questions will also be addressed in the course of this thesis:
 \begin{itemize}
     \item Under what conditions do the resource consumption of more complex models exceed the achievable accuracy gain over simpler baselines?
     \item How does energy consumption and CO2 output scale with increasing neural network complexity (number of layers and neurons)?
@@ -31,7 +26,7 @@ Further the following Sub-questions will be answered in the progress of this the
 To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
 
 \section{Datasets}
-The following three datasets were selected, ranging from small to large scale, to assess how dataset size affects the relationship between model accuracy, energy consumption and carbon footprint. 
+The following three datasets, ranging in size from small to large, were selected to assess the effect of dataset size on the relationship between model accuracy, energy consumption and carbon footprint. 
 
 \begin{table}[htbp]
 \centering
@@ -42,7 +37,7 @@ The following three datasets were selected, ranging from small to large scale, t
 \textbf{Dataset} & \textbf{Instances} & \textbf{Features} & \textbf{Classes} & \textbf{Scale} \\
 \midrule
 Wine \cite{stefanaeberhardWine1992} & 178 & 13 & 3 & Small \\
-Credit Card Clients \cite{i-chengyehDefaultCreditCard2009} & 30,000 & 23 & 2 & Medium \\
+Default of Credit Card Clients \cite{i-chengyehDefaultCreditCard2009} & 30,000 & 23 & 2 & Medium \\
 HIGGS \cite{baldiSearchingExoticParticles2014} & 11,000,000 & 28 & 2 & Large \\
 \bottomrule
 \end{tabular}
@@ -50,15 +45,14 @@ HIGGS \cite{baldiSearchingExoticParticles2014} & 11,000,000 & 28 & 2 & Large \\
 
 The \textit{Wine} dataset contains 178 instances across 13 features, where each feature describes a chemical property of wines from the same region in Italy, derived from three different cultivars.
 
-The \textit{Default of Credit Card Clients} dataset contains 30,000 instances across 23 features and focuses on predicting payment default among credit card clients in Taiwan.
+The \textit{Default of Credit Card Clients} (hereafter: \textit{Credit}) dataset contains 30,000 instances across 23 features and focuses on predicting payment default among credit card clients in Taiwan.
 
 The \textit{HIGGS} dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \parencite{whitesonHIGGS2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
 
 Collectively, these three datasets span several orders of magnitude in size, thus enabling a systematic evaluation of how model performance and energy consumption scale across varying levels of data complexity.
 
 \section{Models}
-For this empirical analysis multiple models were used to provide thorough answers for the research questions mentioned above. They range from baseline to Tree-based models to Neural Networks. 
-
+Five classification models were selected to represent a broad spectrum of algorithmic complexity, ranging from linear baselines to tree-based ensemble methods and neural networks.
 \begin{table}[htbp]
 \centering
 \caption{Overview of classification models used in this study}
@@ -67,12 +61,18 @@ For this empirical analysis multiple models were used to provide thorough answer
 \toprule
 \textbf{Model} & \textbf{Type} & \textbf{Device} & \textbf{Role} \\
 \midrule
-Logistic Regression & Linear & CPU & Baseline \\
-Random Forest & Ensemble & CPU & Mid-complexity \\
-XGBoost & Gradient Boosting & CPU & Mid-complexity \\
-XGBoost & Gradient Boosting & GPU & High-complexity \\
-MLP & Neural Network & GPU & High-complexity \\
+Logistic Regression \cite{coxRegressionAnalysisBinary1958} & Linear & CPU & Baseline \\
+Random Forest \cite{breimanRandomForests2001} & Ensemble & CPU & Mid-complexity \\
+XGBoost \cite{chenXGBoostScalableTree2016} & Gradient Boosting & CPU \& GPU & Mid-complexity \\
+Multilayer Perceptron & Neural Network & GPU & High-complexity \\
 \bottomrule
 \end{tabular}
 \end{table}
 
+Logistic regression is a linear classification algorithm that uses the \textit{sigmoid function} to model the probability of class membership, mapping any real-valued input to a value between zero and one. Despite its simplicity, logistic regression often serves as a competitive baseline, making it well suited to quantifying the accuracy gains achieved by more complex models relative to their additional resource consumption.
+
+By contrast, Random Forest is an ensemble method that constructs a large number of decision trees during training, with each tree built on a random subset of the data and features. The final prediction is determined by aggregating the outputs of all the individual trees in a process known as \textit{bagging}. Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
+
+XGBoost is a gradient boosting algorithm that, like Random Forest, builds an ensemble of decision trees. Unlike \textit{bagging}, however, XGBoost constructs trees sequentially, where each tree attempts to correct the errors of its predecessor. This sequential approach, combined with regularization techniques, often results in higher predictive accuracy than Random Forest. In this study, XGBoost was evaluated in two configurations: CPU-based and GPU-accelerated training, allowing for a direct comparison of energy consumption and training time between the two hardware setups.
+
+The Multilayer Perceptron (hereafter: MLP) was selected as the most complex model in this study, representing the deep learning category. An MLP is a feedforward neural network consisting of an input layer, one or more hidden layers, and an output layer, where each layer applies a weighted sum of its inputs followed by a non-linear activation function, enabling the network to learn complex, non-linear relationships in the data. Training is performed via backpropagation, iteratively updating network weights based on the gradient of the loss function. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption.
