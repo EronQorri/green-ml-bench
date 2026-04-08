@@ -31,7 +31,22 @@ Further the following Sub-questions will be answered in the progress of this the
 To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
 
 \section{Datasets}
-Three datasets were selected, ranging from small to large scale, to assess how dataset size affects the relationship between model accuracy, energy consumption and carbon footprint. The smallest dataset used is the \textit{Wine} \parencite{stefanaeberhardWine1992} dataset, followed by the medium-sized \textit{Default of Credit Card Clients} \parencite{i-chengyehDefaultCreditCard2009}. As the large-scale dataset, \textit{HIGGS} \parencite{baldiSearchingExoticParticles2014} was selected, comprising eleven million instances.
+The following three datasets were selected, ranging from small to large scale, to assess how dataset size affects the relationship between model accuracy, energy consumption and carbon footprint. 
+
+\begin{table}[h]
+\centering
+\caption{Overview of datasets used in this analysis}
+\label{tab:datasets}
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Dataset} & \textbf{Instances} & \textbf{Features} & \textbf{Classes} & \textbf{Scale} \\
+\midrule
+Wine \cite{stefanaeberhardWine1992} & 178 & 13 & 3 & Small \\
+Credit Card Clients \cite{i-chengyehDefaultCreditCard2009} & 30,000 & 23 & 2 & Medium \\
+HIGGS \cite{baldiSearchingExoticParticles2014} & 11,000,000 & 28 & 2 & Large \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 The \textit{Wine} dataset contains 178 instances across 13 features, where each feature describes a chemical property of wines from the same region in Italy, derived from three different cultivars.
 
@@ -40,3 +55,24 @@ The \textit{Default of Credit Card Clients} dataset contains 30,000 instances ac
 The \textit{HIGGS} dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \parencite{whitesonHIGGS2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
 
 Collectively, these three datasets span several orders of magnitude in size, thus enabling a systematic evaluation of how model performance and energy consumption scale across varying levels of data complexity.
+
+\section{Models}
+For this empirical analysis multiple models were used to provide thorough answers for the research questions mentioned above. They range from baseline to Tree-based models to Neural Networks. 
+
+\begin{table}[h]
+\centering
+\caption{Overview of classification models used in this study}
+\label{tab:models}
+\begin{tabular}{llll}
+\toprule
+\textbf{Model} & \textbf{Type} & \textbf{Device} & \textbf{Role} \\
+\midrule
+Logistic Regression & Linear & CPU & Baseline \\
+Random Forest & Ensemble & CPU & Mid-complexity \\
+XGBoost & Gradient Boosting & CPU & Mid-complexity \\
+XGBoost & Gradient Boosting & GPU & High-complexity \\
+MLP & Neural Network & GPU & High-complexity \\
+\bottomrule
+\end{tabular}
+\end{table}
+
