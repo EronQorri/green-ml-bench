@@ -83,15 +83,42 @@ The MLP was selected as the most complex model, representing the deep learning c
 Together, the selected models cover a broad spectrum of algorithmic complexity, from a linear baseline to gradient boosting and deep learning, enabling a meaningful comparison of both predictive performance and energy efficiency across fundamentally different model types. The following section defines the metrics used to evaluate these dimensions.
 
 \section{Evaluation Metrics}
+\label{design_metrics}
+
 To answer the research questions of this study, two categories of metrics were employed: classification performance and resource consumption. 
-Accuracy and weighted F1-Score were selected to measure predictive performance, as they provide a standardized basis for comparing models across datasets of varying class distributions, as further described in Section 2.x. 
+Accuracy and weighted F1-Score were selected to measure predictive performance, as they provide a standardized basis for comparing models across datasets of varying class distributions, as further described in \Cref{sec:theoretical_metrics}. 
 Energy consumption in kWh and $CO_2$ emissions in kg were chosen as the primary resource metrics, directly reflecting the ecological cost of model training. 
+It should be noted that all experiments were conducted on a single hardware setup, which is described in detail in \Cref{sec:implementation_hardware}.
+
 Training time in seconds was included as a secondary resource metric, as it captures computational demand independently of hardware-specific power draw. 
 Furthermore, inference time was measured across all experimental setups to account for the operational footprint. In large-scale deployment scenarios, the cumulative energy demand of repeated predictions can often rival or even exceed the initial training costs \cite{desislavovTrendsAIInference2023}.
 Together, these metrics enable a direct assessment of whether gains in predictive performance justify the associated increase in resource consumption.
 
-Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020}, a custom composite metric was developed for this study, named the \textit{Efficiency-Weighted F1} (EWF1) was developed, defined as:
+Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020}, a custom composite metric was developed for this study, named the \textit{Efficiency-Weighted F1} (EWF1), defined as:
 \begin{equation}
 \text{EWF1} = \frac{F_1}{1 + \lambda_1 \cdot \hat{t} + \lambda_2 \cdot \hat{c}}
 \end{equation}
 where $\hat{t}$ and $\hat{c}$ denote the min-max normalized training time and CO2 emissions per dataset respectively. The weights were set to $\lambda_1 = 0.5$ and $\lambda_2 = 1.0$, assigning greater importance to carbon emissions than training time, reflecting the ecological focus of this study. Higher scores indicate a more favorable trade-off between predictive performance and resource consumption.
+
+It should be noted that both $\hat{t}$ and $\hat{c}$ are inherently hardware- and location-dependent, as training time varies with the underlying hardware configuration and CO2 emissions are tied to the carbon intensity of the local electricity grid \parencite{schwartzGreenAI2020}. Consequently, EWF1 scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other hardware or energy infrastructures.
+
+\section{Validation Strategy}
+\label{design_validation}
+
+To obtain reliable and generalizable performance estimates, a cross-validation strategy was employed rather than a single train-test split \cite{hastieModelAssessmentSelection2009}. A single split is highly sensitive to the random partitioning of the data, meaning that results may not be representative of true model performance, particularly on smaller datasets such as \textit{Wine} \cite{kohaviStudyCrossvalidationBootstrap1995}. Cross-validation mitigates this by evaluating each model across multiple data partitions, producing a more stable and unbiased estimate of generalization performance.
+
+Specifically, K-Fold cross-validation was applied with $k=5$ folds, a value widely recommended in the literature as a practical balance between computational cost and estimation stability \cite{hastieModelAssessmentSelection2009}. Each model is trained and evaluated five times on non-overlapping subsets of the data, and the final performance score is averaged across all folds. This approach is consistent across all models and datasets, ensuring comparability of results.
+
+A fixed random state was set for all cross-validation splits to ensure reproducibility. This means that any re-run of the experiments with the same configuration will produce identical fold assignments, eliminating a potential source of variance in the reported results.
+
+\section{Hyperparameter Tuning}
+\label{design_hyperparameter}
+To ensure a fair comparison across all models, hyperparameter tuning was applied to each model prior to evaluation. Without tuning, default parameters tend to favor certain model families over others, potentially skewing the comparison in terms of both predictive performance and resource consumption \cite{bagnallUseDefaultParameter2017}.
+
+Hyperparameter optimization was performed using Optuna \cite{akibaOptunaNextgenerationHyperparameter2019}, an open-source framework that employs Bayesian optimization to efficiently search the parameter space. Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, evaluated across three datasets and four models, a full grid search would require approximately 150,000 evaluations. 
+Optuna was therefore configured to run 50 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, the latter being a relevant factor given that tuning runs contribute to the overall energy budget of this study, as described in \Cref{design_metrics}.
+
+Weighted F1-score was used as the optimization objective, as it accounts for class imbalance more robustly than accuracy, providing a more reliable estimate of model quality across datasets with varying class distributions.
+
+Tuning was performed separately for each dataset, as the datasets differ substantially in size, feature space, and class distribution. A globally tuned model would not represent optimal performance on any individual dataset and would therefore introduce bias into the comparison.
+
