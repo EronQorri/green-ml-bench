@@ -5,7 +5,7 @@ import csv
 from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import config
+from config import RANDOM_STATE, config
 
 
 def load_data(dataset):
@@ -13,7 +13,7 @@ def load_data(dataset):
     if dataset == "higgs":
         df = pd.read_parquet(cfg["path"])
         if cfg.get("nrows"):
-            df = df.head(cfg["nrows"])
+            df = df.sample(n=cfg["nrows"], random_state=RANDOM_STATE)
     else:
         df = pd.read_csv(
             cfg["path"],

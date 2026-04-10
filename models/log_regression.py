@@ -29,6 +29,7 @@ pipeline = make_pipeline(
 tracker = EmissionsTracker(
     output_dir=str(BASE_DIR / "emissions"), project_name=f"lr_{DATASET}"
 )
+print(tracker._conf)
 tracker.start()
 
 start = time.time()
