@@ -26,8 +26,7 @@ The following sub-questions will also be addressed in the course of this thesis:
 To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
 
 \section{Datasets}
-\todo[inline]{hier gleich wie bei models mehr theoretisch erklären wieso überhaupt datasets wieso classification wieso hilft mir das die research question zu beantworten}
-The following three datasets, ranging in size from small to large, were selected to assess the effect of dataset size on the relationship between model accuracy, energy consumption and carbon footprint. 
+Dataset size is a primary driver of both computational demand and energy consumption during model training. To evaluate how this relationship varies across different scales, three classification datasets were selected that deliberately span several orders of magnitude in size. Classification was chosen as the task type since it is well-established across all selected models and allows for direct comparison of predictive performance via standardized metrics such as accuracy and F1-score. The datasets are summarized in Table~\ref{tab:datasets}.
 
 \begin{table}[htbp]
 \centering
@@ -50,11 +49,11 @@ The \textit{Default of Credit Card Clients} (hereafter: \textit{Credit}) dataset
 
 The \textit{HIGGS} dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \parencite{whitesonHIGGS2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
 
-Collectively, these three datasets span several orders of magnitude in size, thus enabling a systematic evaluation of how model performance and energy consumption scale across varying levels of data complexity.
+These three datasets vary significantly in size, enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity.
 
 \section{Models}
-\todo[inline]{hier eigentlich schon noch mehr erwähnen wieso überhaupt models wie das entschieden wurde wieso low complexity wieso high wieso das mir dabei hilft meine research question zu beantworten}
-Five classification models were selected to represent a broad spectrum of algorithmic complexity, ranging from linear baselines to tree-based ensemble methods and neural networks.
+Selecting models of varying complexity is central to answering the research questions of this study. A model that achieves competitive accuracy with significantly lower energy consumption represents a more ecologically efficient choice, but this trade-off can only be quantified if the comparison spans a meaningful range of complexity. For this reason, five classification models were selected, ranging from a linear baseline to tree-based ensemble methods and a neural network, covering low, medium, and high computational demand respectively.
+
 \begin{table}[htbp]
 \centering
 \caption{Overview of classification models used in this study}
@@ -71,10 +70,17 @@ Multilayer Perceptron & Neural Network & GPU & High-complexity \\
 \end{tabular}
 \end{table}
 
-Logistic regression is a linear classification algorithm that uses the \textit{sigmoid function} to model the probability of class membership, mapping any real-valued input to a value between zero and one. Despite its simplicity, logistic regression often serves as a competitive baseline, making it well suited to quantifying the accuracy gains achieved by more complex models relative to their additional resource consumption.
+\todo[inline]{remove the citations in the table as they are probably handled in 02}
 
-By contrast, Random Forest is an ensemble method that constructs a large number of decision trees during training, with each tree built on a random subset of the data and features. The final prediction is determined by aggregating the outputs of all the individual trees in a process known as \textit{bagging}. Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
+Logistic Regression serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive accuracy, making it well suited to quantifying whether the additional resource consumption of more complex models yields a meaningful gain in predictive performance.
 
-XGBoost is a gradient boosting algorithm that, like Random Forest, builds an ensemble of decision trees. Unlike \textit{bagging}, however, XGBoost constructs trees sequentially, where each tree attempts to correct the errors of its predecessor. This sequential approach, combined with regularization techniques, often results in higher predictive accuracy than Random Forest. In this study, XGBoost was evaluated in two configurations: CPU-based and GPU-accelerated training, allowing for a direct comparison of energy consumption and training time between the two hardware setups.
+Random Forest was selected as a mid-complexity representative of tree-based ensemble methods. As described in Section 2.x, it builds predictions by aggregating a large number of decision trees trained on random subsets of the data. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
 
-The Multilayer Perceptron (hereafter: MLP) was selected as the most complex model in this study, representing the deep learning category. An MLP is a feedforward neural network consisting of an input layer, one or more hidden layers, and an output layer, where each layer applies a weighted sum of its inputs followed by a non-linear activation function, enabling the network to learn complex, non-linear relationships in the data. Training is performed via backpropagation, iteratively updating network weights based on the gradient of the loss function. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption.
+Building on the tree-based approach, XGBoost was chosen as a second mid-complexity model, with the key distinction that it also supports GPU-accelerated training. This makes it possible to directly compare the energy consumption and training time of CPU- and GPU-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study.
+
+The MLP was selected as the most complex model, representing the deep learning category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption. A more detailed description of the MLP architecture is provided in Section 2.x.
+
+Together, the selected models cover a broad spectrum of algorithmic complexity, from a linear baseline to gradient boosting and deep learning, enabling a meaningful comparison of both predictive performance and energy efficiency across fundamentally different model types. The following section defines the metrics used to evaluate these dimensions.
+
+\section{Evaluation Metrics}
+
