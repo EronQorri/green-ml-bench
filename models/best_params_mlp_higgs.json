@@ -1,0 +1,14 @@
+{
+    "best_f1": 0.6401129343133102,
+    "best_params": {
+        "n_layers": 3,
+        "layer_0": 512,
+        "layer_1": 512,
+        "layer_2": 256,
+        "dropout_rate": 0.4693081054376665,
+        "lr": 0.00202491105303492,
+        "batch_size": 8192
+    },
+    "tuning_duration_min": 0.501177978515625,
+    "dataset": "higgs"
+}
