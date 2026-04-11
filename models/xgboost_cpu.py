@@ -39,12 +39,12 @@ xgb_config = {
     "higgs": {
         "objective": "binary:logistic",
         "eval_metric": "logloss",
-        "n_estimators": 479,
+        "n_estimators": 475,
         "max_depth": 8,
-        "learning_rate": 0.0350,
-        "subsample": 0.829,
-        "colsample_bytree": 0.819,
-        "min_child_weight": 4,
+        "learning_rate": 0.2428130947622935,
+        "subsample": 0.7099599796229714,
+        "colsample_bytree": 0.9368315352033882,
+        "min_child_weight": 2,
     },
 }
 

@@ -28,7 +28,13 @@ rf_config = {
         "min_samples_leaf": 3,
         "max_features": "sqrt",
     },
-    "credit": {},
+    "credit": {
+        "n_estimators": 381,
+        "max_depth": 9,
+        "min_samples_split": 10,
+        "min_samples_leaf": 2,
+        "max_features": None,
+    },
     "higgs": {},
 }
 
