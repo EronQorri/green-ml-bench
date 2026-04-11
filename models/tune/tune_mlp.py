@@ -60,6 +60,8 @@ def objective(trial):
     lr = trial.suggest_float("lr", 1e-4, 1e-1, log=True)
     batch_size = trial.suggest_categorical("batch_size", [1024, 4096, 8192])
 
+    # Mit CV dauert es einfach zu lange ... 11M is eigentlich groß genug, dass ein split genug ist
+    # Für die Carbon analysis einfach mal 5 rechnen maybe ...
     X_train, X_val, y_train, y_val = train_test_split(
         X_array, y_array, test_size=0.2, random_state=RANDOM_STATE, stratify=y_array
     )
@@ -91,7 +93,6 @@ start_time = time.time()
 
 tracker = EmissionsTracker(
     project_name=f"tune_mlp_{DATASET}",
-    country_iso_code="DEU",
     output_dir=os.path.dirname(os.path.abspath(__file__)),
     log_level="error",
 )
