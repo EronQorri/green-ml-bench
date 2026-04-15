@@ -1,7 +1,33 @@
 \chapter{Implementation and Measurement}
 \section{Metrics}
-\todo[inline]{idee nachdem ich schwartz et al gelesen habe seite: 60 FPO}
-While hardware-agnostic metrics such as Floating Point Operations (FPO) \parencite{schwartzGreenAI2020} would facilitate comparisons across different hardware configurations, direct energy measurement via CodeCarbon was preferred in this study as it captures actual resource consumption rather than a theoretical approximation. A limitation of this approach is that results are tied to the specific hardware used and may not generalize to other systems.
+\todo[inline]{idee nachdem ich schwartz et al gelesen habe seite: 60 FPO
 
-\section{Hardware}
+While hardware-agnostic metrics such as Floating Point Operations (FPO) \parencite{schwartzGreenAI2020} would facilitate comparisons across different hardware configurations, direct energy measurement via CodeCarbon was preferred in this study as it captures actual resource consumption rather than a theoretical approximation. A limitation of this approach is that results are tied to the specific hardware used and may not generalize to other systems.}
+
+\section{Hardware Setup}
 \label{sec:implementation_hardware}
+
+A critical decision in the experimental design was the selection of the computing platform on which all experiments would be conducted. Two options were considered: the university's shared computing infrastructure or a local machine. The latter was ultimately chosen, as it provides several key advantages for this study. First, it ensures complete reproducibility, since all experiments are executed on identical hardware configuration, eliminating interfering variables that could arise from shared resource conflicts or system variability. Second, it provides consistent availability and direct control over system configuration, which is particularly important given the extended runtime of the large-scale experiments (particularly on the 11M-instance HIGGS dataset). Third, local execution facilitates fine-grained performance monitoring and measurement of energy consumption, a primary objective of this study.
+
+The hardware platform selected for all experiments is a consumer-grade desktop system with the following specifications: an NVIDIA RTX 4070 graphics processing unit (12 GB GDDR6 memory, 5,888 CUDA cores), an AMD Ryzen 7 5700X processor (8 cores / 16 threads, base clock 3.6 GHz), and 32 GB of DDR4 RAM. The system runs Windows 11 with all code implemented in Python 3.12.0.
+
+The choice of hardware reflects a deliberate trade-off between experimental scope and practical feasibility. The RTX 4070 represents a mid-to-high-end consumer GPU with sufficient compute capability to execute GPU-accelerated training for XGBoost and MLP models in reasonable time, while remaining accessible to many practitioners. The Ryzen 7 5700X provides adequate CPU performance for baseline models (Logistic Regression, Random Forest) and CPU-based XGBoost training. Together, this configuration enables direct comparison of CPU- and GPU-accelerated training on the same platform, which is central to answering one of the research questions (\textit{How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?}).
+
+It is important to note that energy consumption and CO2 emissions measured in this study are specific to this hardware configuration and the local electricity grid, and may not directly generalize to other systems or geographic regions. However, the relative performance comparisons (e.g., the energy efficiency ranking of different algorithms) are more likely to generalize, as they reflect algorithmic properties rather than hardware specifics alone.
+
+\section{Software Environment}
+\label{implementation_sw_env}
+
+All experiments were implemented in Python 3.12.0. The main libraries used are described below.
+
+Scikit-learn \cite{pedregosaScikitlearnMachineLearning2011} served as the foundation of the evaluation pipeline. It provided the \texttt{LogisticRegression} and \texttt{RandomForestClassifier} implementations, as well as \texttt{KFold} and \texttt{cross\_validate} for cross-validation, \texttt{StandardScaler} for feature normalization, \texttt{make\_pipeline} for chaining preprocessing and model steps, and \texttt{f1\_score} and \texttt{make\_scorer} for evaluation metrics.
+
+The XGBoost library \cite{chenXGBoostScalableTree2016} was used for the gradient boosting model, as it provides a highly optimized implementation that supports both CPU and GPU training.
+
+For the MLP, PyTorch \cite{paszkePyTorchImperativeStyle2019} was used as the deep learning backend. To integrate the PyTorch model into the scikit-learn evaluation pipeline, the Skorch library \cite{ghoshSkorchBridgePyTorch2024} was used, which wraps PyTorch models in a scikit-learn-compatible interface.
+
+Hyperparameter tuning for all models except Logistic Regression was performed using Optuna \cite{akibaOptunaNextgenerationHyperparameter2019}, which uses a tree-structured Parzen estimator to efficiently search the hyperparameter space.
+
+Carbon emissions and energy consumption were tracked using CodeCarbon \cite{Mlco2Codecarbon2026}. One known limitation is that CodeCarbon cannot directly read energy consumption from AMD processors and instead estimates it by multiplying the current CPU utilization with the processor's maximum thermal design power (TDP). This introduces some inaccuracy in the reported CPU energy values.
+
+To ensure reproducibility, a fixed random seed of 42 was used for all data splits, cross-validation folds, and model initialization. A \texttt{requirements.txt} file is provided so that the exact library versions used in this study can be reproduced.

@@ -21,6 +21,9 @@ powermetrics_log.txt
 .vscode/
 .idea/
 
+# Claude Code
+CLAUDE.md
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof

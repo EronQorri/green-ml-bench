@@ -125,7 +125,7 @@ print(f"Best params saved to {params_path}")
 
 try:
     requests.post(
-        "https://ntfy.sh/eron_thesis_higgs_run_123",
+        f"https://ntfy.sh/eron_thesis_higgs_run_123",
         data=f"MLP Tuning auf {DATASET} abgeschlossen! Dauer: {total_time:.2f} Minuten. Best F1: {study.best_value:.4f}".encode(
             encoding="utf-8"
         ),

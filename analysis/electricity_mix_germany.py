@@ -15,6 +15,7 @@ response = requests.get(
     "https://api.electricitymaps.com/v4/power-breakdown/past-range?zone=DE&start=2025-01-21T00:01:00Z&end=2025-01-30T23:59:00Z",
     headers={"auth-token": API_KEY}
 )
+
 data = response.json()
 history = data["data"]
 
