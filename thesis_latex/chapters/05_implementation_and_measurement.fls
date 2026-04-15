@@ -1,0 +1,6 @@
+PWD /Users/eronqorri/Python/bachelor/thesis_latex/chapters
+INPUT /usr/local/texlive/2026/texmf.cnf
+INPUT /usr/local/texlive/2026/texmf-dist/web2c/texmf.cnf
+INPUT /usr/local/texlive/2026/texmf-var/web2c/pdftex/pdflatex.fmt
+INPUT /Users/eronqorri/Python/bachelor/thesis_latex/chapters/05_implementation_and_measurement.tex
+OUTPUT 05_implementation_and_measurement.log
