@@ -46,7 +46,7 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
                 "nrows",
                 "accuracy",
                 "f1",
-                "emissions_kg",
+                "co2eq_kg",
                 "training_time_s",
             ],
         )
@@ -60,7 +60,7 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
                 "nrows": nrows if nrows else "all",
                 "accuracy": round(accuracy, 4),
                 "f1": round(f1, 4),
-                "emissions_kg": emissions,
+                "co2eq_kg": emissions,
                 "training_time_s": round(training_time, 2),
             }
         )
@@ -81,7 +81,7 @@ def save_inference_time(model, dataset, emissions, nrows, inference_time):
                 "dataset",
                 "nrows",
                 "inference_time",
-                "emissions_kg",
+                "co2eq_kg",
             ],
         )
         if not file_exists:
@@ -93,6 +93,6 @@ def save_inference_time(model, dataset, emissions, nrows, inference_time):
                 "dataset": dataset,
                 "nrows": nrows if nrows else "all",
                 "inference_time": inference_time,
-                "emissions_kg": emissions,
+                "co2eq_kg": emissions,
             }
         )

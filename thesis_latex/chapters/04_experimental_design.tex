@@ -1,15 +1,3 @@
-\newpage
-We also gathered several other characteristics of each data set, including number of categorical features (NCAT), number of continuous features (NCONT), proportion of features that are categorical (RCAT), number of target classes (NC), minimum single-class proportion (CMIN), and class imbalance (IC). The latter is a measure of the difference in actual and expected proportion of the least common target class (L) and its expected value (LE); i.e., I = (LE – L)/LE. These values are shown in Table 2.
-
-\begin{center}
-    \includegraphics[width=0.5\textwidth]{graphics/variablen_analyse_datensaetze.png}
-\end{center}
-
-During the MLP training experiments, several configurations were evaluated to optimize performance. Initially, the model was trained using only the CPU, which proved too slow for practical use. Switching to CUDA-based GPU training introduced a new 
-issue: the default batch size of 128 provided by \texttt{scikit-learn} resulted in training times even slower than on CPU, due to the overhead of frequent small data transfers to the GPU.
-
-Increasing the batch size to 8,192 significantly reduced training time. Further tuning of this parameter did not yield improvements, so this value was retained. Additionally, \texttt{pin\_memory=True} was evaluated, which locks data in RAM to accelerate CPU-to-GPU transfers. However, this option also led to slower training, likely because the MLP architecture is not complex enough to benefit from the reduced transfer overhead. These experiments led to the final configuration used for all reported MLP results.
-
 \chapter{Experimental Design}
 This chapter outlines the experimental design used to evaluate the ecological efficiency of different machine learning classification algorithms. It describes the datasets, models, evaluation metrics, hyperparameter tuning and measurement setup that form the basis of this empirical analysis.
 
@@ -26,7 +14,8 @@ The following sub-questions will also be addressed in the course of this thesis:
 To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
 
 \section{Datasets}
-Dataset size is a primary driver of both computational demand and energy consumption during model training. To evaluate how this relationship varies across different scales, three classification datasets were selected that deliberately span several orders of magnitude in size. Classification was chosen as the task type since it is well-established across all selected models and allows for direct comparison of predictive performance via standardized metrics such as accuracy and F1-score. The datasets are summarized in Table~\ref{tab:datasets}.
+\label{experimental_dataset}
+Dataset size is a primary driver of both computational demand and energy consumption during model training \cite{rodriguezEvaluatingEnergyConsumption2024}. To evaluate how this relationship varies across different scales, three classification datasets were selected that span several orders of magnitude in size. Classification was chosen as the task type since it is well-established across all selected models and allows for direct comparison of predictive performance via standardized metrics such as accuracy and F1-score. The datasets are summarized in Table~\ref{tab:datasets}.
 
 \begin{table}[htbp]
 \centering
@@ -52,6 +41,7 @@ The \textit{HIGGS} dataset is the largest dataset used in this study, comprising
 These three datasets vary significantly in size, enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity.
 
 \section{Models}
+\label{design_models}
 Selecting models of varying complexity is central to answering the research questions of this study. A model that achieves competitive accuracy with significantly lower energy consumption represents a more ecologically efficient choice, but this trade-off can only be quantified if the comparison spans a meaningful range of complexity. For this reason, five classification models were selected, ranging from a linear baseline to tree-based ensemble methods and a neural network, covering low, medium, and high computational demand respectively.
 
 \begin{table}[htbp]
@@ -70,11 +60,10 @@ Multilayer Perceptron & Neural Network & GPU & High-complexity \\
 \end{tabular}
 \end{table}
 
-\todo[inline]{Remove the citations in the table as they are probably handled in 02}
 
 Logistic Regression serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive accuracy, making it well suited to quantifying whether the additional resource consumption of more complex models yields a meaningful gain in predictive performance.
 
-Random Forest was selected as a mid-complexity representative of tree-based ensemble methods. As described in Section 2.x, it builds predictions by aggregating numerous decision trees trained on random subsets of the data. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
+Random Forest was selected as a mid-complexity representative of tree-based ensemble methods, as extensively described in Section 2.x \todo{}. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
 
 Building on the tree-based approach, XGBoost was chosen as a second mid-complexity model, with the key distinction that it also supports GPU-accelerated training. This makes it possible to directly compare the energy consumption and training time of CPU- and GPU-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study.
 
@@ -105,17 +94,19 @@ It should be noted that both $\hat{t}$ and $\hat{c}$ are inherently hardware- an
 \section{Validation Strategy}
 \label{design_validation}
 
-To obtain reliable and generalizable performance estimates, a cross-validation strategy was employed rather than a single train-test split \cite{hastieModelAssessmentSelection2009}. A single split is highly sensitive to the random partitioning of the data, meaning that results may not be representative of true model performance, particularly on smaller datasets such as \textit{Wine} \cite{kohaviStudyCrossvalidationBootstrap1995}. Cross-validation mitigates this by evaluating each model across multiple data partitions, producing a more stable and unbiased estimate of generalization performance.
+To obtain reliable and generalizable performance estimates, a cross-validation strategy was employed rather than a single train-test split, as described in Section 2.x.
 
 Specifically, K-Fold cross-validation was applied with $k=5$ folds, a value widely recommended in the literature as a practical balance between computational cost and estimation stability \cite{hastieModelAssessmentSelection2009}. Each model is trained and evaluated five times on non-overlapping subsets of the data, and the final performance score is averaged across all folds. This approach is consistent across all models and datasets, ensuring comparability of results.
 
-A fixed random state was set for all cross-validation splits to ensure reproducibility. This means that any re-run of the experiments with the same configuration will produce identical fold assignments, eliminating a potential source of variance in the reported results.
+To ensure reproducibility, a fixed random state was used for all cross-validation splits, model initialization, and data shuffling. The specific value and its technical implementation are described in \Cref{implementation_sw_env}.
 
 \section{Hyperparameter Tuning}
 \label{design_hyperparameter}
 To ensure a fair comparison across all models, hyperparameter tuning was applied to each model prior to evaluation. Without tuning, default parameters tend to favor certain model families over others, potentially skewing the comparison in terms of both predictive performance and resource consumption \cite{bagnallUseDefaultParameter2017}.
 
-Hyperparameter optimization was performed using Optuna \cite{akibaOptunaNextgenerationHyperparameter2019}, an open-source framework that employs Bayesian optimization to efficiently search the parameter space. Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, evaluated across three datasets and four models, a full grid search would require approximately 150,000 evaluations. 
+Hyperparameter optimization was performed using Optuna \cite{akibaOptunaNextgenerationHyperparameter2019}, an optimization framework based on Bayesian search (see Section 2.x). 
+\todo[inline]{Hier in 02 die genaue Erklärung}
+Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, evaluated across three datasets and four models, a full grid search would require approximately 150,000 evaluations. 
 Optuna was therefore configured to run 50 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, the latter being a relevant factor given that tuning runs contribute to the overall energy budget of this study, as described in \Cref{design_metrics}.
 
 Weighted F1-score was used as the optimization objective, as it accounts for class imbalance more robustly than accuracy, providing a more reliable estimate of model quality across datasets with varying class distributions.

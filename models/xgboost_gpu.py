@@ -58,7 +58,7 @@ tracker.start()
 
 start = time.time()
 cv_results = cross_validate(
-    XGBClassifier(**xgb_config[DATASET], random_state=RANDOM_STATE),
+    XGBClassifier(**xgb_config[DATASET], random_state=RANDOM_STATE, device="cuda"),
     X,
     y,
     cv=cv,

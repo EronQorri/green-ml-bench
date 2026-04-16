@@ -1,21 +1,36 @@
 \chapter{Implementation and Measurement}
-\section{Metrics}
-\todo[inline]{idee nachdem ich schwartz et al gelesen habe seite: 60 FPO
 
-While hardware-agnostic metrics such as Floating Point Operations (FPO) \parencite{schwartzGreenAI2020} would facilitate comparisons across different hardware configurations, direct energy measurement via CodeCarbon was preferred in this study as it captures actual resource consumption rather than a theoretical approximation. A limitation of this approach is that results are tied to the specific hardware used and may not generalize to other systems.}
+% ─────────────────────────────────────────────
+\section{Experimental Setup}
 
-\section{Hardware Setup}
+\subsection{Hardware Setup}
 \label{sec:implementation_hardware}
 
 A critical decision in the experimental design was the selection of the computing platform on which all experiments would be conducted. Two options were considered: the university's shared computing infrastructure or a local machine. The latter was ultimately chosen, as it provides several key advantages for this study. First, it ensures complete reproducibility, since all experiments are executed on identical hardware configuration, eliminating interfering variables that could arise from shared resource conflicts or system variability. Second, it provides consistent availability and direct control over system configuration, which is particularly important given the extended runtime of the large-scale experiments (particularly on the 11M-instance HIGGS dataset). Third, local execution facilitates fine-grained performance monitoring and measurement of energy consumption, a primary objective of this study.
 
 The hardware platform selected for all experiments is a consumer-grade desktop system with the following specifications: an NVIDIA RTX 4070 graphics processing unit (12 GB GDDR6 memory, 5,888 CUDA cores), an AMD Ryzen 7 5700X processor (8 cores / 16 threads, base clock 3.6 GHz), and 32 GB of DDR4 RAM. The system runs Windows 11 with all code implemented in Python 3.12.0.
 
+\begin{table}[htbp]
+\centering
+\caption{Hardware specification of the experimental system}
+\label{tab:hardware}
+\begin{tabular}{ll}
+\toprule
+\textbf{Component} & \textbf{Specification} \\
+\midrule
+CPU & AMD Ryzen 7 5700X (8 cores / 16 threads, 3.6 GHz base) \\
+GPU & NVIDIA RTX 4070 (12 GB GDDR6, 5{,}888 CUDA cores) \\
+RAM & 32 GB DDR4 \\
+Operating System & Windows 11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 The choice of hardware reflects a deliberate trade-off between experimental scope and practical feasibility. The RTX 4070 represents a mid-to-high-end consumer GPU with sufficient compute capability to execute GPU-accelerated training for XGBoost and MLP models in reasonable time, while remaining accessible to many practitioners. The Ryzen 7 5700X provides adequate CPU performance for baseline models (Logistic Regression, Random Forest) and CPU-based XGBoost training. Together, this configuration enables direct comparison of CPU- and GPU-accelerated training on the same platform, which is central to answering one of the research questions (\textit{How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?}).
 
 It is important to note that energy consumption and CO2 emissions measured in this study are specific to this hardware configuration and the local electricity grid, and may not directly generalize to other systems or geographic regions. However, the relative performance comparisons (e.g., the energy efficiency ranking of different algorithms) are more likely to generalize, as they reflect algorithmic properties rather than hardware specifics alone.
 
-\section{Software Environment}
+\subsection{Software Environment}
 \label{implementation_sw_env}
 
 All experiments were implemented in Python 3.12.0. The main libraries used are described below.
@@ -26,8 +41,270 @@ The XGBoost library \cite{chenXGBoostScalableTree2016} was used for the gradient
 
 For the MLP, PyTorch \cite{paszkePyTorchImperativeStyle2019} was used as the deep learning backend. To integrate the PyTorch model into the scikit-learn evaluation pipeline, the Skorch library \cite{ghoshSkorchBridgePyTorch2024} was used, which wraps PyTorch models in a scikit-learn-compatible interface.
 
-Hyperparameter tuning for all models except Logistic Regression was performed using Optuna \cite{akibaOptunaNextgenerationHyperparameter2019}, which uses a tree-structured Parzen estimator to efficiently search the hyperparameter space.
+Hyperparameter tuning for all models except Logistic Regression was performed using Optuna, as described in \Cref{design_hyperparameter}.
 
-Carbon emissions and energy consumption were tracked using CodeCarbon \cite{Mlco2Codecarbon2026}. One known limitation is that CodeCarbon cannot directly read energy consumption from AMD processors and instead estimates it by multiplying the current CPU utilization with the processor's maximum thermal design power (TDP). This introduces some inaccuracy in the reported CPU energy values.
+Carbon emissions and energy consumption were tracked using CodeCarbon \cite{courtyMlco2CodecarbonV2412024}, which is described in detail in \Cref{implementation_emissions}.
 
 To ensure reproducibility, a fixed random seed of 42 was used for all data splits, cross-validation folds, and model initialization. A \texttt{requirements.txt} file is provided so that the exact library versions used in this study can be reproduced.
+
+\newpage
+\section{Dataset Integration}
+\label{implementation_datasets}
+
+The three datasets used in this study — \textit{Wine}, \textit{Credit}, and \textit{HIGGS} — were introduced in \Cref{experimental_dataset}. This section describes how they are integrated into the software architecture, covering the central configuration file, the data loading pipeline, and dataset-specific constraints.
+
+\subsection{Configuration Architecture}
+\label{implementation_config}
+
+To ensure a consistent foundation across all model scripts, a central configuration 
+file (\texttt{config.py}) was created. It serves as a single source of truth for 
+all dataset-related settings, so that each script accesses the same parameters 
+without redundant definitions.
+
+For each dataset, the configuration stores the file path, the name of the target 
+column, and an optional row limit (\texttt{nrows}). The row limit was particularly 
+relevant for the HIGGS dataset, which contains 11 million instances, allowing 
+experiments to be run on smaller subsets where needed. Beyond these common fields, 
+the configuration also captures dataset-specific properties. For example, the Credit 
+dataset includes a header row that must be skipped during loading, and the Wine 
+dataset does not contain column names in the source file, which are therefore defined 
+in the configuration directly. Additionally, a label offset is applied to the Wine 
+target column, as its class labels are encoded as 1, 2, and 3 rather than starting 
+at 0, which is required by the classifiers used in this study.
+
+The global constants \texttt{RANDOM\_STATE} and \texttt{CV\_FOLDS} are also defined 
+here, ensuring that all scripts use identical values for random seeding and 
+cross-validation, which is essential for the comparability of results.
+
+\subsection{Data Loading Pipeline}
+\label{implementation_data_loading}
+
+To read the datasets from their respective files, a custom \texttt{load\_data} method was implemented. Depending on the dataset, the appropriate loading mechanism is selected. The \textit{Wine} and \textit{Credit} datasets are loaded using pandas' \texttt{read\_csv} function. For the \textit{Higgs} dataset, \texttt{read\_parquet} is utilized. This was a deliberate decision to save storage space by storing the large \textit{Higgs} dataset as a Parquet file rather than a standard CSV.
+
+Following the initial loading phase, the \textit{Higgs} data is reduced to a representative subset using a sampling approach controlled by the \texttt{nrows} parameter. Once the data size is managed, any columns specified in the configuration file are dropped from the respective dataset. The data is then split into the feature matrix $X$ and the target vector $y$. If an offset is defined in the config, which is currently only the case for the \textit{Credit} dataset, it is applied as described in the previous section. Finally, the method returns $X$ and $y$ for further use in the subsequent scripts. This process is visualized in \Cref{fig:data_loading_pipeline}.
+
+Due to the substantial scale of the \textit{Higgs} dataset, several constraints were implemented to ensure the stability of the execution environment. Training a \texttt{Random Forest} model on this specific data led to unmanageable processing times. For this reason, the \texttt{Random Forest} algorithm is explicitly bypassed for the \textit{Higgs} dataset and the program terminates using \texttt{sys.exit(0)} to prevent system crashes. This allows the process to stay within the boundaries of the available hardware resources.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.5cm and 2cm,
+    process/.style={rectangle, draw, rounded corners, minimum width=3.5cm, minimum height=1cm, text centered, font=\sffamily},
+    decision/.style={diamond, draw, text centered, aspect=2, inner sep=0pt, font=\sffamily},
+    arrow/.style={thick, ->, >=stealth}
+]
+\node (dataset) [decision] {Dataset?};
+\node (load_csv) [process, below left=1cm and 0.5cm of dataset] {\texttt{read\_csv()}};
+\node (load_parq) [process, below right=1cm and 0.5cm of dataset] {\texttt{read\_parquet()}};
+\node (sample) [process, below=1cm of load_parq] {Sample \texttt{nrows}};
+\node (drop) [process, below=4.5cm of dataset] {Drop config columns};
+\node (split) [process, below=1cm of drop] {Split $X$ and $y$};
+\node (offset) [decision, below=1cm of split] {Offset defined?};
+\node (apply) [process, right=1.5cm of offset] {Apply offset};
+\node (return) [process, below=1cm of offset] {Return $X$ and $y$};
+
+\draw [arrow] (dataset) -| node[anchor=east, yshift=0.2cm] {\textit{Wine} \& \textit{Credit}} (load_csv);
+\draw [arrow] (dataset) -| node[anchor=west, yshift=0.2cm] {\textit{Higgs}} (load_parq);
+\draw [arrow] (load_parq) -- (sample);
+\draw [arrow] (load_csv) |- (drop);
+\draw [arrow] (sample) |- (drop);
+\draw [arrow] (drop) -- (split);
+\draw [arrow] (split) -- (offset);
+\draw [arrow] (offset) -- node[anchor=south] {Yes} (apply);
+\draw [arrow] (offset) -- node[anchor=east] {No} (return);
+\draw [arrow] (apply) |- (return);
+\end{tikzpicture}
+\caption{Visualization of the data loading pipeline and preprocessing steps within the \texttt{load\_data()} method.}
+\label{fig:data_loading_pipeline}
+\end{figure}
+
+\section{Reproducibility and Evaluation Design}
+\label{implementation_reproducibility}
+
+To ensure fully reproducible results across all experiments, a global constant \texttt{RANDOM\_STATE} with a value of 42 is utilized in every model script. This constant is applied to all functions requiring stochastic consistency. It is specifically passed to the \texttt{KFold} splitter, the \texttt{train\_test\_split} method, and the initialization of the machine learning models. For the multilayer perceptron, the random seed is explicitly set using \path{torch.manual_seed(RANDOM_STATE)} to guarantee deterministic weight initialization and training behavior.
+
+The evaluation process relies on a standardized cross validation setup implemented uniformly across all scripts. The data is partitioned using \texttt{KFold} configured with five splits, enabled shuffling, and the aforementioned random state. The execution is handled by the \texttt{cross\_validate} function.
+
+The performance metrics are evaluated using a custom scoring dictionary. This dictionary tracks both the standard accuracy and a weighted F1 score constructed via \texttt{make\_scorer(f1\_score, average="weighted")}. Once the evaluation is complete, the overall performance is aggregated by calculating the mean of the individual fold results, which is accessed through \texttt{cv\_results["test\_accuracy"].mean()} alongside the corresponding F1 score array. Having defined the measures of reproducibility and testing, the focus now shifts to the actual implementation of the predictive models.
+
+\section{Model Implementations}
+\label{implementation_models}
+
+As outlined in \Cref{design_models}, the following classification algorithms were employed to address the research questions mentioned previously. This section therefore details the specific implementation of each model.
+
+\subsection{Logistic Regression}
+\label{implementation_lr}
+
+The first baseline model is a standard logistic regression. To ensure that the model processes all features on an equal scale, the algorithm is embedded within a pipeline that starts with a \texttt{StandardScaler}. This initial scaling step is crucial for the stability and overall performance of the subsequent classification. 
+
+The regression itself is configured to use the Stochastic Average Gradient (SAG) algorithm by setting the \texttt{solver} parameter to \texttt{sag}. This specific solver is highly optimized for large datasets. It significantly reduces the memory footprint and the required training time, which is particularly important when evaluating the extensive \textit{Higgs} data. To allow the solver enough room to converge properly, the maximum number of iterations is capped at 1000 via the \path{max_iter} parameter. 
+
+Deliberately, this model setup does not include any hyperparameter optimization. It serves as a fixed and reproducible baseline to accurately measure the pure computational times without the overhead of complex search algorithms.
+
+\subsection{Random Forest}
+\label{implementation_rf}
+
+The second baseline algorithm is the Random Forest classifier. This method belongs to the family of ensemble learning techniques. Unlike the logistic regression approach, this algorithm operates entirely without the need for prior feature scaling. To maximize computational efficiency, the execution is fully parallelized across all available CPU cores by setting the \path{n_jobs} parameter to \texttt{-1}. This deliberate configuration allows the processor to utilize its maximum capacity, which directly influences the subsequent energy consumption tracking and the overall runtime measurements.
+
+An important methodological decision is the explicit exclusion of the \textit{Higgs} dataset for this specific classifier. As already established in \Cref{implementation_data_loading}, training a Random Forest on such a massive volume of data leads to absurd runtimes. The primary research question focuses on the balance between energy consumption and predictive performance across varying dataset sizes and model complexities. Forcing this specific algorithm to process the \textit{Higgs} data would result in an exponentially massive energy footprint and an excessive runtime. This extreme resource consumption would severely skew the comparative baseline without providing any proportional insights into the underlying scaling behavior. Therefore, the execution is bypassed to maintain a sensible and equitable evaluation framework.
+
+To ensure maximum predictive capabilities for the remaining data, the model configurations were optimized using Optuna. The optimization process specifically targeted the maximization of the weighted F1 score. For the purpose of strict reproducibility, the finalized parameter combinations for both the \textit{Wine} and the \textit{Credit} dataset are documented in \Cref{tab:rf_params}.
+
+\begin{table}[htbp]
+\centering
+\caption{Optimized hyperparameters for the Random Forest classifier obtained via Optuna optimization.}
+\label{tab:rf_params}
+\begin{tabular}{lcc}
+\toprule
+Parameter & \textit{Wine} & \textit{Credit} \\
+\midrule
+\path{n_estimators} & 221 & 381 \\
+\path{max_depth} & 5 & 9 \\
+\path{min_samples_split} & 8 & 10 \\
+\path{min_samples_leaf} & 3 & 2 \\
+\path{max_features} & \path{sqrt} & \path{None} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{XGBoost}
+\label{implementation_xgb}
+
+The next algorithm from the family of tree ensemble models is the XGBoost classifier. This model serves as a direct point of comparison to the Random Forest. A primary reason for including XGBoost in this study is the ability to directly measure and contrast the computational efficiency between CPU and GPU. To achieve this the configuration dictionaries are kept identical across executions with the sole exception of the hardware device parameter being set to utilize the GPU. This controlled environment allows for a precise evaluation of the energy usage and emissions generated by the exact same model architecture on different hardware. This setup directly facilitates the investigation of the third research question \textit{How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?}.
+
+Furthermore a specific technical requirement of the XGBoost framework must be addressed regarding the target variables. While the Random Forest algorithm natively adapts to different class structures XGBoost requires explicit instructions for its learning objective. As mentioned in \Cref{experimental_dataset} the \textit{Wine} dataset consists of three distinct categories. Therefore the objective parameter is set to \path{multi:softmax} paired with the \path{mlogloss} evaluation metric and a defined number of classes. In contrast the \textit{Credit} and \textit{Higgs} datasets contain only two categories. Consequently their objective is configured as \path{binary:logistic} evaluated via the standard \path{logloss} metric.
+
+Similar to the previous baseline algorithm the parameters tailored to each dataset were determined using the Optuna optimization framework. Furthermore the algorithm processes the unscaled feature matrix $X$ directly and uses the globally defined random state parameter to guarantee deterministic execution across all hardware setups. The resulting configurations utilized for the final training phase are detailed in Table \ref{tab:xgb_params}.
+
+\begin{table}[htbp]
+\centering
+\caption{Optimized hyperparameters for the XGBoost classifier across all datasets.}
+\label{tab:xgb_params}
+\begin{tabular}{lccc}
+\toprule
+Parameter & \textit{Wine} & \textit{Credit} & \textit{Higgs} \\
+\midrule
+\path{objective} & \path{multi:softmax} & \path{binary:logistic} & \path{binary:logistic} \\
+\path{eval_metric} & \path{mlogloss} & \path{logloss} & \path{logloss} \\
+\path{num_class} & 3 & N/A & N/A \\
+\path{n_estimators} & 464 & 108 & 475 \\
+\path{max_depth} & 7 & 3 & 8 \\
+\path{learning_rate} & 0.0139 & 0.2878 & 0.2428 \\
+\path{subsample} & 0.7790 & 0.9640 & 0.7100 \\
+\path{colsample_bytree} & 0.7500 & 0.8430 & 0.9368 \\
+\path{min_child_weight} & 5 & 7 & 2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\subsection{Multilayer Perceptron}
+\label{implementation_mlp}
+
+\todo[inline]{MLPModule(nn.Module): dynamische Architektur aus layer\_sizes-Liste. Jede Hidden Layer: Linear → BatchNorm1d → ReLU → Dropout. Skorch NeuralNetClassifier als sklearn-Wrapper (module\_\_*-Parameter-Konvention). CUDA-Detection: torch.cuda.is\_available(). Datentypen: X als float32, y als int64. Adam-Optimizer, CrossEntropyLoss, max\_epochs=200. Early Stopping via skorch.callbacks.EarlyStopping (dataset-spezifische Patience). Pipeline: StandardScaler → NeuralNetClassifier.}
+
+\section{Hyperparameter Optimization}
+\label{implementation_tuning}
+
+\subsection{Optuna as Tuning Framework}
+\label{implementation_optuna}
+
+\todo[inline]{Nur Implementation, keine Begründung (die steht in \Cref{design_hyperparameter}): 
+
+optuna.create\_study(direction="maximize"). 
+
+TPESampler(seed=RANDOM\_STATE) für MLP (reproduzierbare Trial-Reihenfolge). study.optimize(objective, n\_trials=50). Tuning-Ergebnisse werden direkt als Hyperparameter-Dicts in die jeweiligen Model-Scripts übernommen.}
+
+\subsection{Search Spaces per Model}
+\label{implementation_search_spaces}
+
+\todo[inline]{Suchräume für XGB (n\_estimators, max\_depth, learning\_rate, subsample, colsample\_bytree, min\_child\_weight), RF (n\_estimators, max\_depth, min\_samples\_split, min\_samples\_leaf, max\_features), MLP (n\_layers, layer\_sizes, dropout\_rate, lr, batch\_size). Tabelle oder kompakte Auflistung.}
+
+\subsection{Tuning Strategy for HIGGS}
+\label{implementation_tuning_higgs}
+
+\todo[inline]{MLP-Tuning auf HIGGS: stratifiziertes Subset via --tune-sample-size statt vollem Dataset. Train-Test-Split (80/20) statt CV für Tuning (Begründung: Laufzeit). Ergebnisse in best\_params\_mlp\_higgs.json.}
+
+\section{Emissions Measurement}
+\label{implementation_emissions}
+
+Energy consumption and CO\textsubscript{2} emissions were tracked using \textit{CodeCarbon} as described in \Cref{sec:theoretical_codecarbon}. For the hardware configuration used in this study, GPU power was measured directly via hardware counters, while RAM was estimated at 10W. CPU power could not be measured directly on Windows and was therefore estimated at 32.5W based on 50\% of the AMD Ryzen 7 5700X TDP, as discussed in \Cref{sec:theoretical_codecarbon}. \Cref{fig:emissions_flow} shows a visual representation of the process, from pre-processing to saving the results. Prior to training, data is loaded from the respective
+dataset and, where required, features are normalized using
+\texttt{StandardScaler}. Specifically, scaling was applied to Logistic
+Regression and MLP, as these models are sensitive to the magnitude of input
+features. Tree-based models (Random Forest, XGBoost) do not require
+feature scaling and were trained on the raw input data.
+
+Each training run was wrapped in an \texttt{EmissionsTracker} instance, which
+monitored energy consumption across the full 5-fold cross-validation procedure.
+Upon completion, the tracker was
+stopped and the resulting emissions value, alongside accuracy, weighted F1-score,
+training time, and dataset size, was saved to a central \texttt{results.csv}
+file via the \texttt{save\_results()} utility function. In addition,
+\textit{CodeCarbon} writes its own emissions log to the \texttt{emissions/}
+directory, providing a detailed record of all tracked runs. The same tracking
+approach was applied during hyperparameter tuning, ensuring that the energy
+cost of the tuning process is also accounted for in the overall energy budget
+of this study.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=1cm,
+    box/.style={rectangle, rounded corners, draw=black,
+                minimum width=6cm, minimum height=1cm,
+                text centered, font=\small},
+    tracker/.style={rectangle, rounded corners, draw=black,
+                    dashed, minimum width=7cm, minimum height=0.8cm,
+                    text centered, font=\small, fill=gray!10},
+    arrow/.style={-{Stealth}, thick}
+]
+
+\node[box] (load)    {Load dataset};
+\node[box, below=of load] (prep)    {Preprocess / scale features};
+\node[tracker, below=of prep] (start)   {Start \texttt{EmissionsTracker}};
+\node[box, below=of start] (cv)      {5-fold cross-validation};
+\node[box, below=of cv] (train)   {Train \& evaluate model per fold};
+\node[tracker, below=of train] (stop)    {Stop \texttt{EmissionsTracker}};
+\node[box, below=of stop] (save)    {Save results to \texttt{results.csv}};
+
+\draw[arrow] (load)  -- (prep);
+\draw[arrow] (prep)  -- (start);
+\draw[arrow] (start) -- (cv);
+\draw[arrow] (cv)    -- (train);
+\draw[arrow] (train) -- (stop);
+\draw[arrow] (stop)  -- (save);
+
+\end{tikzpicture}
+\caption{Training and emissions tracking procedure per model-dataset combination.
+         Dashed boxes indicate CodeCarbon \texttt{EmissionsTracker} calls.}
+\label{fig:emissions_flow}
+\end{figure}
+
+\todo[inline]{Ggf. noch Subsections ergänzen: 5.6.1 CodeCarbon Integration, 5.6.2 Measurement Granularity (pro Modell × Dataset, eindeutige project\_names), 5.6.3 Limitations (CPU-Schätzung auf Windows, Background-Prozesse)}
+
+\section{Inference Latency Measurement}
+\label{implementation_inference}
+
+Inference time was measured separately after training, outside the emissions
+tracker. For each model, a single sample from the test set was passed through
+the trained model and the elapsed time was recorded using
+\texttt{time.perf\_counter()}. This provides a hardware-level estimate of
+per-sample prediction latency, which is relevant in deployment scenarios where
+repeated inference can accumulate significant energy costs
+\cite{desislavovTrendsAIInference2023}.
+
+\todo[inline]{Ergänzen: Begründung Single-Row statt Batch (Isolation von Training vs. Inference, kein Batch-Effekt). Modell kommt aus erstem CV-Fold (cv\_results["estimator"][0]).}
+
+\section{Results Persistence and Orchestration}
+\label{implementation_results}
+
+\subsection{Results Schema}
+\label{implementation_results_schema}
+
+\todo[inline]{results.csv Schema beschreiben: timestamp, model, dataset, nrows, accuracy, f1, co2eq\_kg, training\_time\_s. Append-Logik (kein Überschreiben) — Hinweis auf mögliche Duplikate bei Mehrfachläufen. inference\_time.csv analog. csv.DictWriter, Header-Check.}
+
+\subsection{Experimental Orchestration}
+\label{implementation_orchestration}
+
+\todo[inline]{run\_models.py: subprocess.run() pro Dataset × Modell-Kombination. Prozess-Isolation wichtig für CodeCarbon (prozessbasierte Messung). Fehlertoleranz: einzelne fehlgeschlagene Scripts blockieren nicht den Gesamtlauf.}

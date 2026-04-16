@@ -1,3 +1,11 @@
 \chapter{Theoretical Background}
 \section{Metrics}
 \label{sec:theoretical_metrics}
+
+\section{CodeCarbon}
+\label{sec:theoretical_codecarbon}
+\textit{CodeCarbon} is an open-source Python library for measuring the carbon footprint of code running on local hardware. Emissions are calculated as the product of two factors: the energy consumed by the hardware in kWh, and the carbon intensity of the local electricity grid in gCO\textsubscript{2}eq/kWh. Carbon intensity is determined based on the country in which the experiment is run, using data from Our World in Data. The resulting emissions are expressed in kilograms of CO\textsubscript{2}-equivalents (kgCO\textsubscript{2}eq), a standardized measure that accounts for the global warming potential of different greenhouse gases \cite{lacosteQuantifyingCarbonEmissions2019}.
+
+Power consumption is sampled at 15-second intervals. Rather than relying on instantaneous power readings, \textit{CodeCarbon} derives average power from accumulated hardware energy counters. Instead, it computes the energy delta between two consecutive measurements and divides by the elapsed time to derive average power. This approach is more robust against short-term fluctuations and provides a stable average over each measurement interval \cite{HowPowerEstimation}. For NVIDIA GPUs, energy is read directly from hardware counters via the \texttt{nvidia-ml-py} library, providing accurate device-level measurements. RAM is estimated by \textit{CodeCarbon}, specifically using a flat value of 5 watts per DIMM slot. 
+
+CPU measurement depends on the operating system and processor. On Linux, CodeCarbon reads energy directly from \textit{RAPL} (Running Average Power Limit) hardware counters, which support both Intel and AMD processors \cite{khanRAPLActionExperiences2018}. On Windows, however, \textit{RAPL} is not accessible. \textit{CodeCarbon} therefore falls back to a TDP-based estimation: it identifies the CPU model from a database of over 2000 processors and assumes an average consumption of 50\% of TDP. On systems where direct CPU energy measurement is unavailable, this TDP-based fallback may introduce inaccuracies, as TDP represents peak power rather than typical operating consumption.
