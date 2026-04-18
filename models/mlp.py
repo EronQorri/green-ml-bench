@@ -44,35 +44,13 @@ class MLPModule(nn.Module):
         return self.network(X)
 
 
-mlp_config = {
-    "wine": {
-        "num_classes": 3,
-        "layer_sizes": [256, 512],
-        "dropout_rate": 0.2827,
-        "lr": 0.0006,
-        "batch_size": 256,
-        "patience": 17,
-    },
-    "credit": {
-        "num_classes": 2,
-        "layer_sizes": [512, 256, 512, 256],
-        "dropout_rate": 0.3745,
-        "lr": 0.0007,
-        "batch_size": 8192,
-        "patience": 6,
-    },
-    "higgs": {"num_classes": 2},
-}
+num_classes = {"wine": 3, "credit": 2, "higgs": 2}[DATASET]
 
-if "layer_sizes" not in mlp_config[DATASET]:
-    _p = load_best_params("mlp", DATASET)["best_params"]
-    mlp_config[DATASET].update({
-        "layer_sizes": [_p[f"layer_{i}"] for i in range(_p["n_layers"])],
-        "dropout_rate": _p["dropout_rate"],
-        "lr": _p["lr"],
-        "batch_size": _p["batch_size"],
-        "patience": 10,
-    })
+_p = load_best_params("mlp", DATASET)["best_params"]
+layer_sizes = [_p[f"layer_{i}"] for i in range(_p["n_layers"])]
+dropout_rate = _p["dropout_rate"]
+lr = _p["lr"]
+batch_size = _p["batch_size"]
 
 X, y = load_data(DATASET)
 
@@ -88,19 +66,19 @@ torch.manual_seed(RANDOM_STATE)
 net = NeuralNetClassifier(
     module=MLPModule,
     module__input_dim=input_dim,
-    module__num_classes=mlp_config[DATASET]["num_classes"],
-    module__layer_sizes=mlp_config[DATASET]["layer_sizes"],
-    module__dropout_rate=mlp_config[DATASET]["dropout_rate"],
+    module__num_classes=num_classes,
+    module__layer_sizes=layer_sizes,
+    module__dropout_rate=dropout_rate,
     max_epochs=EPOCHS,
-    lr=mlp_config[DATASET]["lr"],
-    iterator_train__batch_size=mlp_config[DATASET]["batch_size"],
-    iterator_valid__batch_size=mlp_config[DATASET]["batch_size"],
+    lr=lr,
+    iterator_train__batch_size=batch_size,
+    iterator_valid__batch_size=batch_size,
     criterion=nn.CrossEntropyLoss,
     optimizer=torch.optim.Adam,
     iterator_train__shuffle=True,
     device=device,
     verbose=0,
-    callbacks=[EarlyStopping(patience=mlp_config[DATASET]["patience"])],
+    callbacks=[EarlyStopping(patience=10)],
 )
 
 pipeline = make_pipeline(StandardScaler(), net)
