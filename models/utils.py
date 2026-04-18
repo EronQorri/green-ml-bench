@@ -2,18 +2,24 @@ import pandas as pd
 import os
 import sys
 import csv
+import json
 from datetime import datetime
+from pathlib import Path
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import RANDOM_STATE, config
+from config import RANDOM_STATE, config, BASE_DIR
+
+PARAMS_FILE = BASE_DIR / "models" / "best_params.json"
 
 
 def load_data(dataset):
     cfg = config[dataset]
     if dataset == "higgs":
         df = pd.read_parquet(cfg["path"])
-        if cfg.get("nrows"):
-            df = df.sample(n=cfg["nrows"], random_state=RANDOM_STATE)
+        test_nrows = os.environ.get("TEST_NROWS")
+        nrows = int(test_nrows) if test_nrows else cfg.get("nrows")
+        if nrows:
+            df = df.sample(n=nrows, random_state=RANDOM_STATE)
     else:
         df = pd.read_csv(
             cfg["path"],
@@ -28,6 +34,32 @@ def load_data(dataset):
     if cfg.get("label_offset"):
         y = y + cfg["label_offset"]
     return X, y
+
+
+def save_best_params(model_key, dataset, data):
+    """Upsert tuning results into the shared best_params.json."""
+    params = {}
+    if PARAMS_FILE.exists():
+        with open(PARAMS_FILE) as f:
+            params = json.load(f)
+    params.setdefault(model_key, {})[dataset] = data
+    with open(PARAMS_FILE, "w") as f:
+        json.dump(params, f, indent=4)
+
+
+def load_best_params(model_key, dataset):
+    """Load best_params entry for a given model/dataset from shared JSON."""
+    if not PARAMS_FILE.exists():
+        raise FileNotFoundError(
+            f"No tuning results at {PARAMS_FILE}. Run tuning first."
+        )
+    with open(PARAMS_FILE) as f:
+        params = json.load(f)
+    if model_key not in params or dataset not in params[model_key]:
+        raise KeyError(
+            f"No tuning result for {model_key}/{dataset} in {PARAMS_FILE}."
+        )
+    return params[model_key][dataset]
 
 
 def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):

@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results, save_inference_time
+from utils import load_data, save_results, save_inference_time, load_best_params
 from xgboost import XGBClassifier
 from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import f1_score, make_scorer
@@ -14,44 +14,18 @@ DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
 
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
-xgb_config = {
-    "wine": {
-        "objective": "multi:softmax",
-        "num_class": 3,
-        "eval_metric": "mlogloss",
-        "n_estimators": 464,
-        "max_depth": 7,
-        "learning_rate": 0.0139,
-        "subsample": 0.779,
-        "colsample_bytree": 0.750,
-        "min_child_weight": 5,
-    },
-    "credit": {
-        "objective": "binary:logistic",
-        "eval_metric": "logloss",
-        "n_estimators": 108,
-        "max_depth": 3,
-        "learning_rate": 0.2878,
-        "subsample": 0.964,
-        "colsample_bytree": 0.843,
-        "min_child_weight": 7,
-    },
-    "higgs": {
-        "objective": "binary:logistic",
-        "eval_metric": "logloss",
-        "n_estimators": 475,
-        "max_depth": 8,
-        "learning_rate": 0.2428130947622935,
-        "subsample": 0.7099599796229714,
-        "colsample_bytree": 0.9368315352033882,
-        "min_child_weight": 2,
-    },
+_tuned = load_best_params("xgb", DATASET)["best_params"]
+
+xgb_base = {
+    "wine":   {"objective": "multi:softmax", "num_class": 3, "eval_metric": "mlogloss"},
+    "credit": {"objective": "binary:logistic", "eval_metric": "logloss"},
+    "higgs":  {"objective": "binary:logistic", "eval_metric": "logloss"},
 }
 
 X, y = load_data(DATASET)
 nrows = config[DATASET].get("nrows")
 
-model = XGBClassifier(**xgb_config[DATASET], random_state=RANDOM_STATE)
+model = XGBClassifier(**xgb_base[DATASET], **_tuned, random_state=RANDOM_STATE)
 
 tracker = EmissionsTracker(
     output_dir=str(BASE_DIR / "emissions"), project_name=f"xgb_{DATASET}"

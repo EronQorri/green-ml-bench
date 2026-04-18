@@ -4,7 +4,7 @@ import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils import load_data, save_results, save_inference_time
+from utils import load_data, save_results, save_inference_time, load_best_params
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import f1_score, make_scorer
@@ -19,30 +19,13 @@ if DATASET == "higgs":
 
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
-
-rf_config = {
-    "wine": {
-        "n_estimators": 221,
-        "max_depth": 5,
-        "min_samples_split": 8,
-        "min_samples_leaf": 3,
-        "max_features": "sqrt",
-    },
-    "credit": {
-        "n_estimators": 381,
-        "max_depth": 9,
-        "min_samples_split": 10,
-        "min_samples_leaf": 2,
-        "max_features": None,
-    },
-    "higgs": {},
-}
+_tuned = load_best_params("rfc", DATASET)["best_params"]
 
 X, y = load_data(DATASET)
 nrows = config[DATASET].get("nrows")
 
 model = RandomForestClassifier(
-    **rf_config[DATASET], random_state=RANDOM_STATE, n_jobs=-1
+    **_tuned, random_state=RANDOM_STATE, n_jobs=-1
 )
 
 tracker = EmissionsTracker(

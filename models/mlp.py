@@ -14,7 +14,7 @@ from sklearn.pipeline import make_pipeline
 from codecarbon import EmissionsTracker
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_inference_time, save_results
+from utils import load_data, save_inference_time, save_results, load_best_params
 from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 
 EPOCHS = 200  # the earlyStopping will be reached before the 200 anyway
@@ -63,6 +63,16 @@ mlp_config = {
     },
     "higgs": {"num_classes": 2},
 }
+
+if "layer_sizes" not in mlp_config[DATASET]:
+    _p = load_best_params("mlp", DATASET)["best_params"]
+    mlp_config[DATASET].update({
+        "layer_sizes": [_p[f"layer_{i}"] for i in range(_p["n_layers"])],
+        "dropout_rate": _p["dropout_rate"],
+        "lr": _p["lr"],
+        "batch_size": _p["batch_size"],
+        "patience": 10,
+    })
 
 X, y = load_data(DATASET)
 
