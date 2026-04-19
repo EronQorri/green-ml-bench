@@ -50,4 +50,4 @@ Results are written to `results/results.csv` with the following columns:
 | `cpu_energy_hw_wh` | CPU energy in Wh (HardwareMonitor) |
 | `training_time_s` | Training duration in seconds |
 
-![Results](analysis/vergleich.png)
+![Results](analysis/plots/vergleich.png)
