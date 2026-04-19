@@ -1,11 +1,234 @@
 \chapter{Theoretical Background}
-\section{Metrics}
-\label{sec:theoretical_metrics}
 
-\section{CodeCarbon}
+This chapter establishes the theoretical foundations required to understand the empirical study presented in the remainder of this thesis. It first frames the research within the broader debate between \textit{Red AI} and \textit{Green AI}, then formalizes the concepts of energy consumption and carbon emissions in machine learning. Subsequently, the relevant classification algorithms are described from a purely theoretical standpoint, followed by the metrics used to evaluate their predictive performance, the validation strategy, hyperparameter optimization techniques, and finally the hardware concepts that are central to comparing CPU- and GPU-based training. All implementation details are deliberately deferred to \Cref{implementation_models}.
+
+\todo[inline]{Diese Einleitung ist nur ein Platzhalter — am Ende des Chapters nochmal anpassen, sobald die finalen Sections feststehen.}
+
+% =============================================================
+\section{Green AI and Red AI}
+\label{sec:theoretical_green_red_ai}
+
+\todo[inline]{Übergreifende Section-Einleitung: kurz motivieren, warum dieses Framing für die Arbeit zentral ist (es liefert das ökologische Vokabular für RQ und Metriken). Verweis auf \Cref{sec:theoretical_metrics} (EWF1) und \Cref{sec:theoretical_emissions}.}
+
+\subsection{The Rise of Red AI}
+\label{sec:theoretical_red_ai}
+
+\todo[inline]{Definition Red AI nach \citeauthor{schwartzGreenAI2020}: Forschung, die Genauigkeit primär durch immer mehr Compute, Daten und Parameter erkauft. Skalierungsgesetz von Compute pro SOTA-Paper (Verdopplung alle 3.4 Monate, \cite{AICompute2022} bzw. analog). Kosten-Trends: Strubell et al.\ (Transformer-Training), GPT-Skalierung. Wichtig: nicht moralisieren, sondern Phänomen sachlich beschreiben.}
+
+\subsection{Green AI as a Counter-Movement}
+\label{sec:theoretical_green_ai}
+
+\todo[inline]{Definition Green AI: Forschung, die Effizienz neben Genauigkeit als Erstklass-Metrik behandelt. Kernforderung von \cite{schwartzGreenAI2020}: Reporting von FLOPs / Energie / CO\textsubscript{2} als Standardpraxis. Abgrenzung Green AI vs.\ "AI for Green" (KI \textit{für} Nachhaltigkeit, z.B.\ Smart Grids) — letzteres ist NICHT Thema dieser Arbeit. Erwähnung verwandter Initiativen: ML CO\textsubscript{2} Impact, MLCO2 Calculator, Green Software Foundation.}
+
+\subsection{Efficiency as a First-Class Metric}
+\label{sec:theoretical_efficiency_metric}
+
+\todo[inline]{Konzeptueller Übergang: Wie operationalisiert man "Effizienz"? Diskussion möglicher Proxies — FLOPs (hardware-unabhängig, aber abstrakt), Parameteranzahl (irreführend bei Sparse Models), Trainingszeit (hardware-abhängig), Energie in kWh, CO\textsubscript{2}eq. Trade-offs jeder Metrik kurz benennen. Begründung, warum diese Arbeit auf kWh + CO\textsubscript{2}eq + Trainingszeit setzt — leitet direkt zu \Cref{sec:theoretical_metrics} über. KEIN Vorgriff auf EWF1-Formel (das gehört zu Metrics).}
+
+% =============================================================
+\section{Energy and Carbon Emissions in Machine Learning}
+\label{sec:theoretical_emissions}
+
+\todo[inline]{Section-Einleitung: Brücke von Konzept (Effizienz) zu Messung. Erklären, dass Energieverbrauch und Emissionen \textit{nicht dasselbe} sind — Energie ist eine physikalische Größe (kWh), Emissionen hängen vom Strommix ab.}
+
+\subsection{Energy Consumption of Computing Hardware}
+\label{sec:theoretical_energy}
+
+\todo[inline]{Physikalische Grundlagen: Leistung (Watt) vs.\ Energie (Joule, kWh). Beziehung $E = P \cdot t$. Welche Komponenten verbrauchen Strom beim ML-Training: CPU, GPU, RAM, ggf.\ Speicher / Netzwerk. Konzept TDP (Thermal Design Power) — was es ist und was es \textit{nicht} ist (kein durchschnittlicher Verbrauch, sondern thermische Auslegungsgrenze). Idle vs.\ Last-Verbrauch. Wichtig für später: GPUs haben deutlich höhere Peak-Leistung, aber auch deutlich höheren Durchsatz — Effizienz pro Sample ist entscheidend.}
+
+\subsection{From Energy to CO\texorpdfstring{\textsubscript{2}}{2} Equivalents}
+\label{sec:theoretical_co2}
+
+\todo[inline]{Definition Carbon Intensity (gCO\textsubscript{2}eq/kWh), Abhängigkeit vom Strommix (Kohle vs.\ Wind/Solar/Atom). Konzept CO\textsubscript{2}-Äquivalent: warum nicht nur CO\textsubscript{2}, sondern auch CH\textsubscript{4}, N\textsubscript{2}O etc.\ über GWP (Global Warming Potential) zusammengefasst werden \cite{lacosteQuantifyingCarbonEmissions2019}. Formel: $\text{Emissions} = E \cdot \text{CarbonIntensity}$. Beispielhafter Vergleich: 1 kWh in Frankreich (\~50 g) vs.\ Polen (\~700 g). Verweis auf \Cref{sec:implementation_hardware} für den konkreten deutschen Strommix.}
+
+\subsection{Measurement Approaches}
+\label{sec:theoretical_measurement}
+
+\todo[inline]{Drei Hauptansätze für Energiemessung gegenüberstellen: (1) \textbf{Hardware-Counter}: RAPL für Intel/AMD CPUs (Linux), NVML für NVIDIA-GPUs. Genauigkeit, aber OS-/Hardware-abhängig \cite{khanRAPLActionExperiences2018}. (2) \textbf{TDP-basierte Schätzung}: Annahme eines festen Prozentsatzes (z.B.\ 50\,\%) der TDP. Ungenau, aber überall verfügbar. (3) \textbf{Externe Wattmeter}: Hardware-Steckdosenmessung. Genau, aber nur Gesamtsystem, keine Komponentenauflösung. Klarstellen, warum diese Arbeit auf Software-Ebene misst (Reproduzierbarkeit, keine Hardware-Investition, granular nach Komponenten). Limitationen ehrlich benennen.}
+
+\subsection{CodeCarbon}
 \label{sec:theoretical_codecarbon}
+
+\todo[inline]{Diese Subsection existiert bereits inhaltlich — bei der Überarbeitung des Chapters den bestehenden Text leicht straffen und sicherstellen, dass er logisch auf \Cref{sec:theoretical_measurement} aufbaut (CodeCarbon ist eine konkrete Realisierung des Software-Messansatzes). Label \texttt{sec:theoretical\_codecarbon} unbedingt beibehalten — wird aus \Cref{implementation_emissions} referenziert.}
+
 \textit{CodeCarbon} is an open-source Python library for measuring the carbon footprint of code running on local hardware. Emissions are calculated as the product of two factors: the energy consumed by the hardware in kWh, and the carbon intensity of the local electricity grid in gCO\textsubscript{2}eq/kWh. Carbon intensity is determined based on the country in which the experiment is run, using data from Our World in Data. The resulting emissions are expressed in kilograms of CO\textsubscript{2}-equivalents (kgCO\textsubscript{2}eq), a standardized measure that accounts for the global warming potential of different greenhouse gases \cite{lacosteQuantifyingCarbonEmissions2019}.
 
-Power consumption is sampled at 15-second intervals. Rather than relying on instantaneous power readings, \textit{CodeCarbon} derives average power from accumulated hardware energy counters. Instead, it computes the energy delta between two consecutive measurements and divides by the elapsed time to derive average power. This approach is more robust against short-term fluctuations and provides a stable average over each measurement interval \cite{HowPowerEstimation}. For NVIDIA GPUs, energy is read directly from hardware counters via the \texttt{nvidia-ml-py} library, providing accurate device-level measurements. RAM is estimated by \textit{CodeCarbon}, specifically using a flat value of 5 watts per DIMM slot. 
+Power consumption is sampled at 15-second intervals. Rather than relying on instantaneous power readings, \textit{CodeCarbon} derives average power from accumulated hardware energy counters. Instead, it computes the energy delta between two consecutive measurements and divides by the elapsed time to derive average power. This approach is more robust against short-term fluctuations and provides a stable average over each measurement interval \cite{HowPowerEstimation}. For NVIDIA GPUs, energy is read directly from hardware counters via the \texttt{nvidia-ml-py} library, providing accurate device-level measurements. RAM is estimated by \textit{CodeCarbon}, specifically using a flat value of 5 watts per DIMM slot.
 
 CPU measurement depends on the operating system and processor. On Linux, CodeCarbon reads energy directly from \textit{RAPL} (Running Average Power Limit) hardware counters, which support both Intel and AMD processors \cite{khanRAPLActionExperiences2018}. On Windows, however, \textit{RAPL} is not accessible. \textit{CodeCarbon} therefore falls back to a TDP-based estimation: it identifies the CPU model from a database of over 2000 processors and assumes an average consumption of 50\% of TDP. On systems where direct CPU energy measurement is unavailable, this TDP-based fallback may introduce inaccuracies, as TDP represents peak power rather than typical operating consumption.
+
+% =============================================================
+\section{Foundations of Supervised Classification}
+\label{sec:theoretical_classification}
+
+\todo[inline]{Section-Einleitung: kurze Einordnung, warum Klassifikation als Task gewählt wurde (siehe \Cref{experimental_dataset}) — hier nur die theoretischen Grundbegriffe.}
+
+\subsection{Supervised Learning}
+\label{sec:theoretical_supervised}
+
+\todo[inline]{Formale Definition: gegeben Trainingsmenge $\{(x_i, y_i)\}_{i=1}^{n}$, lerne Funktion $f: \mathcal{X} \to \mathcal{Y}$. Abgrenzung zu Unsupervised und Reinforcement Learning in 1–2 Sätzen. Begriff \textit{Generalisierung}, Overfitting/Underfitting in einem Satz (Detail kommt in Validation Strategies).}
+
+\subsection{Binary and Multiclass Classification}
+\label{sec:theoretical_binary_multiclass}
+
+\todo[inline]{Definition binär ($|\mathcal{Y}|=2$) vs.\ multiklass ($|\mathcal{Y}|>2$). Bezug zu den drei Datasets (Wine = 3-Klassen, Credit/HIGGS = binär). One-vs-Rest und Softmax-Erweiterung als Standardstrategien für lineare/Softmax-Modelle. Hier noch keine Modell-Details — die kommen in \Cref{sec:theoretical_models}.}
+
+\subsection{Loss Functions for Classification}
+\label{sec:theoretical_loss}
+
+\todo[inline]{Cross-Entropy-Loss formal einführen — sowohl binär (Log-Loss) als auch multiklass (Categorical Cross-Entropy / mlogloss). Formeln angeben. Kurz erwähnen, warum Cross-Entropy gegenüber MSE bei Klassifikation bevorzugt wird (Gradientenverlauf, probabilistische Interpretation). Querverweise: wird in MLP (\Cref{sec:theoretical_mlp}) und XGBoost (\Cref{sec:theoretical_xgboost}) als Lernziel verwendet.}
+
+% =============================================================
+\section{Classification Algorithms}
+\label{sec:theoretical_models}
+
+\todo[inline]{Section-Einleitung: Modelle in Reihenfolge wachsender Komplexität (Linear → Tree → Ensemble → Boosting → NN), wie auch in \Cref{design_models} motiviert. WICHTIG: hier rein theoretische Beschreibung — keine Konfigurationsdetails, keine Hyperparameter-Werte, keine Library-Erwähnungen. Implementation in \Cref{implementation_models}.}
+
+\subsection{Logistic Regression}
+\label{sec:theoretical_lr}
+
+\todo[inline]{Lineares Modell mit Sigmoid-Aktivierung: $P(y=1|x) = \sigma(w^\top x + b)$. Sigmoid-Funktion und ihre Eigenschaften. Optimierung über Maximum Likelihood / Cross-Entropy-Minimierung. Solver kurz erwähnen (LBFGS, SAG, Newton-CG) — aber NUR theoretisch, der konkrete \texttt{sag}-Solver wird in \Cref{implementation_lr} begründet. Erweiterung auf Multinomial Logistic Regression (Softmax). Vor- und Nachteile: interpretable, schnell, aber linear → keine Feature-Interaktionen.}
+
+\subsection{Decision Trees}
+\label{sec:theoretical_dt}
+
+\todo[inline]{Grundlage für RF und XGBoost — daher zuerst eingeführt. CART-Algorithmus: rekursive binäre Splits, Greedy-Auswahl nach Gini-Impurity oder Entropie. Formeln für Gini und Entropie. Konzept Tree Depth, Leaf Nodes, Pruning. Stärken (nicht-linear, interpretable) und Schwächen (Overfitting bei tiefen Bäumen, instabil gegenüber kleinen Datenänderungen) — letzteres motiviert direkt Ensembles.}
+
+\subsection{Random Forest}
+\label{sec:theoretical_rf}
+
+\todo[inline]{Bagging-Prinzip nach \cite{breimanRandomForests2001}: $n$ Bootstrap-Samples → $n$ Bäume → Majority Vote / Mittelwert. Zusätzliche Randomisierung über zufällige Feature-Subsets pro Split (mtry / max\_features). Warum das die Varianz reduziert (Bias-Varianz-Zerlegung kurz). Begriff Out-of-Bag (OOB) Error. Parallelisierbarkeit über Bäume hinweg → Ankerpunkt für CPU-Multi-Threading-Diskussion in \Cref{sec:theoretical_hardware}. Skalierungsverhalten: superlinear in $n$ bei tiefen Bäumen — Begründung, warum RF auf HIGGS in \Cref{implementation_rf} ausgeschlossen wurde, schon hier theoretisch andeuten.}
+
+\subsection{Gradient Boosting and XGBoost}
+\label{sec:theoretical_xgboost}
+
+\todo[inline]{Boosting-Idee: sequentiell schwache Lerner addieren, jeder fittet Residuen / Gradienten des bisherigen Ensembles. Formal: Funktionsraumgradientenabstieg \cite{friedmanGreedyFunctionApproximation2001}. Übergang zu XGBoost \cite{chenXGBoostScalableTree2016}: 2nd-Order-Gradienten (Hessian), Regularisierungsterm im Loss ($\Omega(f) = \gamma T + \frac{1}{2}\lambda \|w\|^2$), Shrinkage (learning rate), Column Subsampling. Histogram-basierte Split-Findung (gpu\_hist) als Brücke zu GPU-Beschleunigung — wichtig für RQ "CPU vs.\ GPU".}
+
+\subsection{Multilayer Perceptron}
+\label{sec:theoretical_mlp}
+
+\todo[inline]{Section-Einleitung: kurz historisch (Perceptron \cite{rosenblattPerceptronProbabilisticModel1958}, dann Mehrschicht via Backprop \cite{rumelhartLearningRepresentationsBackpropagating1986}). Danach modular in Subsubsections — der derzeit in \Cref{implementation_mlp} stehende theoretische Block ("BatchNorm normalisiert Aktivierungen über den Mini-Batch ...") soll hierhin verschoben werden, dort nur noch die Implementation übrig lassen.}
+
+\subsubsection{Perceptron and Feedforward Architecture}
+
+\todo[inline]{Einzelner Perceptron als gewichtete Summe + Aktivierung. Stack zu Schichten: $h^{(l)} = \phi(W^{(l)} h^{(l-1)} + b^{(l)})$. Universal Approximation Theorem in 1–2 Sätzen erwähnen. Architekturparameter: Anzahl Hidden Layers, Neuronen pro Layer — direkter Bezug zu RQ "Skalierung der Architektur".}
+
+\subsubsection{Activation Functions}
+
+\todo[inline]{Sigmoid, Tanh, ReLU vergleichen. Vanishing-Gradient-Problem von Sigmoid/Tanh, daher Dominanz von ReLU \cite{hintonRectifiedLinearUnits2010}. Eigenschaften ReLU: $\max(0, x)$, sparse Aktivierungen, billiger Gradient. Kurze Erwähnung von Varianten (Leaky ReLU, GELU) — aber begründen, warum in dieser Arbeit Standard-ReLU genutzt wird.}
+
+\subsubsection{Backpropagation and Gradient Descent}
+
+\todo[inline]{Chain Rule für Gradienten durch das Netz (Backpropagation). Stochastic Gradient Descent (SGD) → Mini-Batch SGD → Adam \cite{kingmaAdamMethodStochastic2015} mit adaptiven Momenten. Formel Adam-Update kompakt. Konzept Learning Rate als wichtigster Hyperparameter (motiviert spätere Tuning-Suchräume).}
+
+\subsubsection{Batch Normalization}
+
+\todo[inline]{Inhalt aus \Cref{implementation_mlp} hierher verschieben: Normalisierung der Aktivierungen pro Mini-Batch zu Mittelwert 0 / Varianz 1, dann affine Transformation mit lernbaren $\gamma, \beta$. Effekt: Reduktion des Internal Covariate Shift, schnellere Konvergenz, leichte Regularisierung \cite{ioffeBatchNormalizationAccelerating2015a}.}
+
+\subsubsection{Dropout}
+
+\todo[inline]{Inhalt aus \Cref{implementation_mlp} hierher verschieben: zufälliges Deaktivieren von Neuronen mit Wahrscheinlichkeit $p$ während des Trainings, volle Aktivierung beim Inference (skaliert). Interpretation als implizites Ensemble \cite{srivastavaDropoutSimpleWay2014}. Warum BN + Dropout zusammen funktionieren (mit Vorsicht — bekannte Wechselwirkungen kurz erwähnen).}
+
+\subsubsection{Early Stopping as Regularization}
+
+\todo[inline]{Konzept: Training abbrechen, sobald Validation-Loss nicht mehr sinkt. Theoretische Begründung als impliziter Regularisierer (begrenzt effektive Modellkapazität). Patience-Parameter erklären. Querverweis: konkrete Implementation in \Cref{implementation_mlp}.}
+
+% =============================================================
+\section{Evaluation Metrics}
+\label{sec:theoretical_metrics}
+
+\todo[inline]{Section-Einleitung: drei Metrik-Familien — (i) Klassifikationsgüte, (ii) Ressourcenverbrauch, (iii) zusammengesetzte Effizienzmetriken. Wird aus \Cref{design_metrics} referenziert.}
+
+\subsection{Confusion Matrix and Accuracy}
+\label{sec:theoretical_accuracy}
+
+\todo[inline]{Confusion Matrix für binär (TP, TN, FP, FN) und Erweiterung auf multiklass. Accuracy = $(TP+TN)/N$ bzw.\ Anteil korrekter Vorhersagen. Limitation bei Class Imbalance demonstrieren mit kleinem Beispiel (z.B.\ 99\,\% Mehrheitsklasse → 99\,\% Accuracy mit trivialem Klassifikator) — motiviert F1.}
+
+\subsection{Precision, Recall and F1-Score}
+\label{sec:theoretical_f1}
+
+\todo[inline]{Definitionen: Precision = $TP/(TP+FP)$, Recall = $TP/(TP+FN)$, F1 = harmonisches Mittel. Warum harmonisches statt arithmetisches Mittel (penalisiert Extremwerte). Macro / Micro / Weighted F1 unterscheiden — Weighted F1 = pro Klasse gewichtet mit Support, nutzt diese Arbeit. Begründung für Weighted F1 bei den hier verwendeten Datasets (Credit ist imbalanced, HIGGS leicht imbalanced).}
+
+\subsection{Resource Metrics}
+\label{sec:theoretical_resource_metrics}
+
+\todo[inline]{Trainingszeit (Sekunden), Energie (kWh), CO\textsubscript{2}eq (kg), Inference-Latenz (Sekunden / Sample). Querverweis auf \Cref{sec:theoretical_emissions} für Definitionen. Hier nur knapp die Rolle als Evaluationsmetrik begründen.}
+
+\subsection{Composite Efficiency Metrics}
+\label{sec:theoretical_composite}
+
+\todo[inline]{Generelle Idee zusammengesetzter Metriken: ein Score, der Performance gegen Kosten abwägt. Beispiele aus der Literatur: Energy-Efficiency Ratio, Performance-per-Watt, FLOPs-per-Sample. Hier theoretischer Hintergrund — die konkrete EWF1-Definition für diese Arbeit steht in \Cref{design_metrics}, hier nur die methodische Grundlage und Schwächen solcher Composite-Metriken (Gewichtungswillkür, Hardware-Abhängigkeit) diskutieren.}
+
+% =============================================================
+\section{Validation Strategies}
+\label{sec:theoretical_validation}
+
+\todo[inline]{Section-Einleitung: warum nicht einfach auf Trainingsdaten evaluieren (Overfitting-Risiko, Generalisierung). Wird aus \Cref{design_validation} referenziert.}
+
+\subsection{Hold-Out Train-Test Split}
+\label{sec:theoretical_holdout}
+
+\todo[inline]{Einfachste Strategie: $X$ in train/test aufteilen (z.B.\ 80/20). Vorteile (schnell, einfach), Nachteile (hohe Varianz bei kleinen Datasets, Performance-Schätzung hängt stark vom konkreten Split ab).}
+
+\subsection{K-Fold Cross-Validation}
+\label{sec:theoretical_kfold}
+
+\todo[inline]{K-Fold-Algorithmus: Daten in $k$ Folds, $k$-mal trainieren, jeweils ein Fold als Test. Mittelwert über Folds als Performance-Schätzer, Standardabweichung als Stabilitätsmaß. Trade-off $k$: kleines $k$ → schneller, höherer Bias; großes $k$ (LOOCV) → niedriger Bias, sehr teuer. $k=5$ und $k=10$ als Standardwerte \cite{hastieModelAssessmentSelection2009}. Rechtfertigung für $k=5$ in dieser Arbeit verlinken auf \Cref{design_validation}.}
+
+\subsection{Stratified Sampling}
+\label{sec:theoretical_stratified}
+
+\todo[inline]{Stratifizierte Splits erhalten Klassenverhältnisse in jedem Fold. Wichtig bei imbalanced Datasets (Credit, HIGGS). Kurz erklären, dass scikit-learn's StratifiedKFold dies automatisch tut — hier nur das Prinzip, keine API-Details.}
+
+% =============================================================
+\section{Hyperparameter Optimization}
+\label{sec:theoretical_hpo}
+
+\todo[inline]{Section-Einleitung: aus \Cref{design_hyperparameter} wird hierher referenziert für die genaue theoretische Erklärung von Bayesian Optimization / Optuna.}
+
+\subsection{Hyperparameters vs.\ Parameters}
+\label{sec:theoretical_hp_vs_p}
+
+\todo[inline]{Klare Abgrenzung: Parameter = während Training gelernt (Gewichte), Hyperparameter = vor Training festgelegt (Lernrate, Tiefe, Anzahl Bäume). Suchraum als Cartesian Product der HP-Wertebereiche. Begriff Validation-Set / inneres CV für HP-Selektion.}
+
+\subsection{Grid Search and Random Search}
+\label{sec:theoretical_grid_random}
+
+\todo[inline]{Grid Search: erschöpfende Suche über vorgegebenes Gitter. Skaliert exponentiell mit Anzahl HP — konkretes Rechenbeispiel passt zu \Cref{design_hyperparameter} (5 HPs $\times$ 10 Werte $\times$ 4 Modelle $\times$ 3 Datasets = 150{,}000 Evaluationen). Random Search nach \cite{bergstraRandomSearchHyperParameter2012}: zufällige Stichprobe aus Suchraum, in höherdimensionalen Räumen oft effizienter als Grid. Beide Verfahren \textit{informationslos} (lernen nichts aus vergangenen Trials) — das motiviert Bayes.}
+
+\subsection{Bayesian Optimization}
+\label{sec:theoretical_bayes}
+
+\todo[inline]{Sequentielles modellbasiertes Optimieren: Surrogatmodell (z.B.\ Gaussian Process oder TPE) approximiert die Objective, Acquisition Function (Expected Improvement, UCB) wählt nächsten Punkt. Exploration vs.\ Exploitation. TPE (Tree-structured Parzen Estimator) nach \cite{bergstraAlgorithmsHyperParameterOptimization2011} kurz beschreiben — modelliert $p(x|y)$ statt $p(y|x)$, gut für mixed/conditional search spaces. Komplexitätsvorteil ggü.\ Grid Search bei vielen HPs.}
+
+\subsection{Optuna as a Practical Framework}
+\label{sec:theoretical_optuna}
+
+\todo[inline]{Optuna \cite{akibaOptunaNextgenerationHyperparameter2019} als define-by-run-Framework: Suchraum wird im Objective-Code dynamisch konstruiert (statt vorab als Config). Standardsampler ist TPE. Pruner-Konzept (frühes Abbrechen schlechter Trials, z.B.\ MedianPruner) — nur theoretisch, ob diese Arbeit Pruning nutzt steht in \Cref{implementation_optuna}. Reproducibility über Sampler-Seed. KEINE Code-Snippets hier — die gehören in Chapter 5.}
+
+% =============================================================
+\section{Hardware Considerations for Machine Learning}
+\label{sec:theoretical_hardware}
+
+\todo[inline]{Section-Einleitung: motiviert die CPU-vs-GPU-Forschungsfrage aus theoretischer Sicht. Konkrete verwendete Hardware steht in \Cref{sec:implementation_hardware}, hier nur die Konzepte.}
+
+\subsection{CPU Architecture for ML Workloads}
+\label{sec:theoretical_cpu}
+
+\todo[inline]{CPU-Eigenschaften: wenige starke Cores, hohe Single-Thread-Leistung, große Caches, latenzoptimiert. Multi-Threading via OpenMP / Intel MKL für Matrixoperationen. Warum CPUs für RF-Bagging gut geeignet sind (Bäume sind unabhängig parallelisierbar, aber jeder Baum selbst ist sequentiell mit irregulären Speicherzugriffen).}
+
+\subsection{GPU Computing and CUDA}
+\label{sec:theoretical_gpu}
+
+\todo[inline]{GPU-Architektur: tausende einfache Cores, SIMT-Execution, durchsatzoptimiert. CUDA als NVIDIA-Programmiermodell. Warum Matrixmultiplikation (und damit NN-Training) ideal für GPUs ist: dichte parallele Operationen mit regelmäßigem Speichermuster. Memory-Hierarchie GPU (HBM/GDDR vs.\ Shared Memory) kurz erwähnen, nur soweit für Verständnis nötig.}
+
+\subsection{Algorithmic Suitability for CPU vs.\ GPU}
+\label{sec:theoretical_cpu_vs_gpu}
+
+\todo[inline]{Zusammenfassend: welche Algorithmen profitieren wovon? Logistic Regression: meist CPU (Datentransfer-Overhead lohnt sich nicht). Random Forest: CPU (irreguläre Tree-Traversal). XGBoost: beides möglich (\texttt{hist} auf CPU, \texttt{gpu\_hist} auf GPU) — dieser Vergleich ist Kern einer RQ. MLP: GPU klar überlegen ab nicht-trivialer Größe. Energiebetrachtung anschließen: GPU hat höhere Peak-Leistung, aber bei passenden Workloads deutlich mehr Sample/J → bessere Energieeffizienz, NICHT zwangsläufig weniger Energieverbrauch absolut. Diese Theorie wird in \Cref{results} empirisch geprüft.}
+
+% =============================================================
+\section{Chapter Summary}
+\label{sec:theoretical_summary}
+
+\todo[inline]{Kurzes Fazit (max.\ ein Absatz): die wichtigsten theoretischen Bausteine für die folgenden Chapters sind benannt — Green-AI-Framing, Energie-/Emissions-Definitionen, Algorithmen-Theorie, Metriken, Validation, HPO und Hardware. Brücke zu Chapter 3 (Related Work) und Chapter 4 (Experimental Design).}

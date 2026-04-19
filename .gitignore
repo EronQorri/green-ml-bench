@@ -38,3 +38,5 @@ _minted*
 *.pyg
 latex.out/
 .pdf
+*.bbl-SAVE-ERROR 
+*.bcf-SAVE-ERROR
