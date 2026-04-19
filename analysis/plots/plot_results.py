@@ -10,6 +10,9 @@ BASE_DIR = Path(__file__).parent.parent.parent
 RESULTS_DIR = BASE_DIR / "results"
 PLOTS_DIR = Path(__file__).parent
 
+MODEL_ORDER = ["LogisticRegression", "RandomForest", "XGBoost", "XGBoost_GPU", "MLP_PyTorch"]
+MODEL_PALETTE = dict(zip(MODEL_ORDER, sns.color_palette("tab10", len(MODEL_ORDER))))
+
 df_results = pd.read_csv(RESULTS_DIR / "results.csv")
 df_inf = pd.read_csv(RESULTS_DIR / "inference_time.csv")
 df_results.columns = df_results.columns.str.strip()
@@ -69,27 +72,29 @@ layout = [
 fig, axes = plt.subplot_mosaic(layout, figsize=(18, 12))
 fig.suptitle("Model Comparison: Efficiency vs. Accuracy", fontsize=15, fontweight="bold", y=0.98)
 
-sns.barplot(data=df, x="dataset", y="co2eq_kg", hue="model", ax=axes["emissions"])
+bp_kwargs = dict(hue="model", hue_order=MODEL_ORDER, palette=MODEL_PALETTE)
+
+sns.barplot(data=df, x="dataset", y="co2eq_kg", ax=axes["emissions"], **bp_kwargs)
 axes["emissions"].set_title("CO₂ Emissions — corrected (kg, log)")
 axes["emissions"].set_yscale("log")
 axes["emissions"].set_xlabel("")
 
-sns.barplot(data=df, x="dataset", y="training_time_s", hue="model", ax=axes["time"])
+sns.barplot(data=df, x="dataset", y="training_time_s", ax=axes["time"], **bp_kwargs)
 axes["time"].set_title("Training Time (s, log)")
 axes["time"].set_yscale("log")
 axes["time"].set_xlabel("")
 
-sns.barplot(data=df, x="dataset", y="inference_time", hue="model", ax=axes["inf_time"])
+sns.barplot(data=df, x="dataset", y="inference_time", ax=axes["inf_time"], **bp_kwargs)
 axes["inf_time"].set_title("Inference Time per Sample (s, log)")
 axes["inf_time"].set_yscale("log")
 axes["inf_time"].set_xlabel("")
 
-sns.barplot(data=df, x="dataset", y="accuracy", hue="model", ax=axes["acc"])
+sns.barplot(data=df, x="dataset", y="accuracy", ax=axes["acc"], **bp_kwargs)
 axes["acc"].set_title("Accuracy")
 axes["acc"].set_ylim(0, 1.25)
 axes["acc"].set_xlabel("")
 
-sns.barplot(data=df, x="dataset", y="f1", hue="model", ax=axes["f1"])
+sns.barplot(data=df, x="dataset", y="f1", ax=axes["f1"], **bp_kwargs)
 axes["f1"].set_title("F1-Score")
 axes["f1"].set_ylim(0, 1.25)
 axes["f1"].set_xlabel("")
@@ -99,8 +104,10 @@ for ds, key in zip(["wine", "credit", "higgs"], ["carb_wine", "carb_credit", "ca
     if subset.empty:
         axes[key].set_visible(False)
         continue
-    sns.barplot(data=subset, x="model", y="carbon_optimal_score", hue="model",
-                ax=axes[key], dodge=False)
+    models_in_ds = [m for m in MODEL_ORDER if m in subset["model"].values]
+    sns.barplot(data=subset, x="model", y="carbon_optimal_score",
+                order=models_in_ds, hue="model", hue_order=models_in_ds,
+                palette=MODEL_PALETTE, ax=axes[key], dodge=False)
     axes[key].set_title(f"Carbon-Score: {ds}")
     axes[key].set_xlabel("")
     axes[key].set_ylim(0, 1.25)
