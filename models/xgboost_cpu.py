@@ -2,7 +2,7 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results, save_inference_time, load_best_params
+from utils import load_data, save_results, save_inference_time, load_best_params, get_nrows
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
 from xgboost import XGBClassifier
 from sklearn.model_selection import KFold, cross_validate
@@ -24,7 +24,7 @@ xgb_base = {
 }
 
 X, y = load_data(DATASET)
-nrows = config[DATASET].get("nrows")
+nrows = get_nrows(DATASET)
 
 model = XGBClassifier(**xgb_base[DATASET], **_tuned, random_state=RANDOM_STATE)
 

@@ -178,6 +178,10 @@ The next tree-based ensemble model is the XGBoost classifier. This model serves 
 
 \todo[inline]{Finale Zahlen aus results.csv eintragen und das hier in der Diskussion ausführen. Jeanne hatte recht --- bei kleinen Datasets (Wine) ist die GPU langsamer und verbraucht mehr, bei großen (Higgs) dreht sich das komplett um. Den Break-Even-Point unbedingt ansprechen. Interessant ist auch dass mit der echten HardwareMonitor-Messung der Break-Even weiter nach oben verschoben wird, weil CodeCarbon kurze Runs stärker unterschätzt als lange --- das hätte ich mit CodeCarbon allein nicht gesehen. Außerdem: auch beim GPU-Run zieht der CPU noch ordentlich Strom ($\sim$79\,W) wegen Datenvorbereitung etc., das war vorher komplett unsichtbar. Accuracy ist bei beiden gleich.}
 
+\todo[inline]{Break-Even-Implementierung beschreiben: \texttt{plot\_results.py} (Plot 4) liest alle HIGGS-Subset-Ergebnisse aus results.csv (wo \texttt{nrows != "all"} und Modell in \{XGBoost, XGBoost\_GPU\}). Log-log-Fit via \texttt{numpy.polyfit} auf $\log_{10}(nrows)$ vs.\ $\log_{10}(CO_2)$ --- ein Fit pro Gerät. Analytischer Schnittpunkt: $\log_{10}(n_{BE}) = (b_{GPU} - b_{CPU}) / (a_{CPU} - a_{GPU})$. \textbf{Gemessener Break-Even: $\approx$\,24\,040 Instanzen} (9 HIGGS-Subsets, 1k--11M, gleiche Hyperparameter). Als Ergebnis der RQ3 interpretieren: unterhalb dieser Schwelle ist XGBoost CPU energieeffizienter, oberhalb GPU.}
+
+\todo[inline]{Zur Aussagekraft des Break-Even-Points: Der berechnete Wert basiert auf einem log-log Potenzgesetz-Fit über nur drei Datenpunkte (Wine=178, Credit=30k, Higgs=11M) mit unterschiedlichen Hyperparametern pro Dataset --- die Aussagekraft ist daher begrenzt und sollte als Größenordnung verstanden werden, nicht als präziser Schwellenwert. Limitierungen explizit benennen: (1) Verschiedene Hyperparameter pro Dataset machen den Vergleich nicht rein dataset-größen-getrieben. (2) Ein Potenzgesetz ist eine Approximation. (3) Mit nur 3 Punkten ist der Fit empfindlich gegenüber Ausreißern. --- Für einen methodisch sauberen und thesis-tauglichen Break-Even: Higgs-Subset-Runs mit 8--9 verschiedenen \texttt{nrows}-Werten durchführen (z.B.\ 1k, 5k, 10k, 50k, 100k, 500k, 1M, 5M, 11M). Gleicher Datensatz, gleiche Hyperparameter (aus Higgs-Tuning), nur Größe variiert --- das isoliert den Dataset-Größen-Effekt sauber. 20 verschiedene Datasets wären \textit{keine} bessere Alternative, da unterschiedliche Verteilungen, Feature-Räume und Komplexitäten den Effekt verwässern würden. Der Break-Even aus den Subset-Runs ist dann ein echter messbarer Schwellenwert und direkt als Ergebnis der RQ verwendbar.}
+
 Additionally, XGBoost has a specific technical requirement for handling target variables. While the Random Forest algorithm natively adapts to different class structures, XGBoost requires explicit instructions for its learning objective. As mentioned in \Cref{experimental_dataset}, the \textit{Wine} dataset consists of three distinct categories. Therefore, the objective parameter is set to \texttt{multi:softmax}, paired with the \texttt{mlogloss} evaluation metric and a specified number of classes. In contrast, the \textit{Credit} and \textit{Higgs} datasets contain only two categories. Consequently, their objective is configured as \texttt{binary:logistic} and evaluated using the standard \texttt{logloss} metric.
 
 Similar to the previous baseline algorithm, the parameters tailored to each dataset were determined using the Optuna optimization framework. Furthermore, the algorithm processes the unscaled feature matrix $X$ directly. It also uses the globally defined random state parameter to guarantee a deterministic execution across all hardware setups. The resulting configurations used for the final training phase are detailed in Table \ref{tab:xgb_params}.
@@ -299,37 +303,54 @@ The placement of the tracker boundaries was a deliberate choice. Data loading an
 
 \begin{figure}[htbp]
 \centering
-\scalebox{0.85}{%
+\scalebox{0.9}{%
 \begin{tikzpicture}[
-    node distance=0.6cm,
     box/.style={rectangle, rounded corners, draw=black,
-                minimum width=6cm, minimum height=0.8cm,
+                minimum width=5.0cm, minimum height=0.75cm,
                 text centered, font=\small},
     tracker/.style={rectangle, rounded corners, draw=black,
-                    dashed, minimum width=7cm, minimum height=0.7cm,
+                    dashed, minimum width=4.2cm, minimum height=0.7cm,
                     text centered, font=\small, fill=gray!10},
+    hwmon/.style={rectangle, rounded corners, draw=black,
+                  dashed, minimum width=4.2cm, minimum height=0.7cm,
+                  text centered, font=\small, fill=blue!8},
+    combine/.style={rectangle, rounded corners, draw=black,
+                    minimum width=5.0cm, minimum height=0.75cm,
+                    text centered, font=\small, fill=yellow!15},
     arrow/.style={-{Stealth}, thick}
 ]
 
-\node[box] (load)    {Load dataset};
-\node[box, below=of load] (prep)    {Preprocess / scale features};
-\node[tracker, below=of prep] (start)   {Start \texttt{EmissionsTracker}};
-\node[box, below=of start] (cv)      {5-fold cross-validation};
-\node[box, below=of cv] (train)   {Train \& evaluate model per fold};
-\node[tracker, below=of train] (stop)    {Stop \texttt{EmissionsTracker}};
-\node[box, below=of stop] (save)    {Save results to \texttt{results.csv}};
+\node[box]     (load)     at ( 0,   0  ) {Load dataset};
+\node[box]     (prep)     at ( 0,  -1.3) {Preprocess / scale features};
+\coordinate    (fork)                    at ( 0,  -2.1);
+\node[tracker] (cc_start) at (-3,  -2.9) {Start \texttt{EmissionsTracker}};
+\node[hwmon]   (hw_start) at ( 3,  -2.9) {Start \texttt{CPUPowerMonitor}};
+\node[box]     (cv)       at ( 0,  -4.1) {5-fold cross-validation};
+\node[box]     (train)    at ( 0,  -5.3) {Train \& evaluate model per fold};
+\coordinate    (join)                    at ( 0,  -6.1);
+\node[tracker] (cc_stop)  at (-3,  -6.9) {Stop \texttt{EmissionsTracker}};
+\node[hwmon]   (hw_stop)  at ( 3,  -6.9) {Stop \texttt{CPUPowerMonitor}};
+\node[combine] (correct)  at ( 0,  -8.1) {\texttt{compute\_corrected\_co2(...)}};
+\node[box]     (save)     at ( 0,  -9.3) {Save results to \texttt{results.csv}};
 
-\draw[arrow] (load)  -- (prep);
-\draw[arrow] (prep)  -- (start);
-\draw[arrow] (start) -- (cv);
-\draw[arrow] (cv)    -- (train);
-\draw[arrow] (train) -- (stop);
-\draw[arrow] (stop)  -- (save);
+\draw[arrow] (load.south)     -- (prep.north);
+\draw[arrow] (prep.south)     -- (fork);
+\draw[arrow] (fork)           -| (cc_start);
+\draw[arrow] (fork)           -| (hw_start);
+\draw[arrow] (cc_start.south) |- (cv.west);
+\draw[arrow] (hw_start.south) |- (cv.east);
+\draw[arrow] (cv.south)       -- (train.north);
+\draw[arrow] (train.south)    -- (join);
+\draw[arrow] (join)           -| (cc_stop);
+\draw[arrow] (join)           -| (hw_stop);
+\draw[arrow] (cc_stop.south)  |- (correct.west);
+\draw[arrow] (hw_stop.south)  |- (correct.east);
+\draw[arrow] (correct.south)  -- (save.north);
 
 \end{tikzpicture}%
 }
 \caption{Training and emissions tracking procedure per model-dataset combination.
-         Dashed boxes indicate CodeCarbon \texttt{EmissionsTracker} calls.}
+Dashed gray boxes indicate CodeCarbon \texttt{EmissionsTracker} calls; dashed blue boxes indicate \texttt{CPUPowerMonitor} calls (background thread, 0.25\,s sampling). Both run in parallel during cross-validation. After training, \texttt{compute\_corrected\_co2} replaces CodeCarbon's TDP-based CPU estimate with the hardware sensor value.}
 \label{fig:emissions_flow}
 \end{figure}
 
@@ -376,3 +397,9 @@ repeated inference can accumulate significant energy costs
 \label{implementation_orchestration}
 
 \todo[inline]{run\_models.py: subprocess.run() pro Dataset × Modell-Kombination. Prozess-Isolation wichtig für CodeCarbon (prozessbasierte Messung). Fehlertoleranz: einzelne fehlgeschlagene Scripts blockieren nicht den Gesamtlauf.}
+
+\todo[inline]{Zwei weitere Orchestrierungs-Scripts beschreiben: (1) \texttt{run\_higgs\_subsets.py} --- läuft XGBoost CPU und GPU direkt (kein subprocess) auf 9 HIGGS-Subset-Größen (1k bis 11M). Setzt \texttt{TEST\_NROWS} per \texttt{os.environ} vor jedem \texttt{load\_data()}-Aufruf. Wird für die Break-Even-Analyse verwendet (RQ3). (2) \texttt{run\_scaling\_subsets.py} --- läuft alle Modelle (außer Random Forest) via subprocess mit \texttt{TEST\_NROWS} als Umgebungsvariable auf 5 Größen (100k bis 11M). Wird für die Scaling-Analyse (RQ4) verwendet. In beiden Scripts: ntfy.sh-Benachrichtigungen nach jeder Kombination und am Ende. Begründung für subprocess vs.\ direkter Import: Prozess-Isolation garantiert, dass CodeCarbon-State zwischen Runs nicht überläuft.}
+
+\todo[inline]{\texttt{TEST\_NROWS}-Mechanismus erklären: Umgebungsvariable, die in \texttt{load\_data()} und \texttt{get\_nrows()} ausgelesen wird. Wenn gesetzt, überschreibt sie den \texttt{nrows}-Wert aus der Config. Wird in \texttt{nrows}-Spalte der results.csv als konkreter Integer gespeichert (statt "all"), sodass Subset-Ergebnisse direkt filterbar und plottbar sind. Zentrale Designentscheidung: kein Code-Änderung in den Modell-Scripts nötig --- nur Umgebungsvariable setzen.}
+
+\todo[inline]{Analyse-Scripts beschreiben: \texttt{analysis/plots/plot\_results.py} erzeugt fünf Plots. (1) Haupt-Dashboard: CO2, Trainingszeit, Inference-Time, Accuracy, F1, Carbon-Score pro Dataset. (2) CodeCarbon vs.\ HardwareMonitor: direkter Vergleich der CO2-Schätzung pro Modell und Dataset. (3) XGBoost CPU vs.\ GPU Übersicht mit Break-Even-Kandidaten aus den drei Haupt-Datasets. (4) \texttt{xgb\_breakeven\_higgs.png}: echter Break-Even aus Higgs-Subset-Daten (Plot 4 --- nur verfügbar nach \texttt{run\_higgs\_subsets.py}). (5) \texttt{scaling\_higgs.png}: Linienplots CO2, Zeit, F1 über nrows für alle Modelle aus Subset-Run (Plot 5 --- nur verfügbar nach \texttt{run\_scaling\_subsets.py}). Beide letzten Plots werden automatisch übersprungen wenn die Daten noch fehlen. Finalen Break-Even-Wert und Scaling-Kurven hier referenzieren wenn Runs abgeschlossen.}

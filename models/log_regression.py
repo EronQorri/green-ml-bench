@@ -4,7 +4,7 @@ import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils import load_data, save_results, save_inference_time
+from utils import load_data, save_results, save_inference_time, get_nrows
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
 
 from sklearn.pipeline import make_pipeline
@@ -20,7 +20,7 @@ DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 X, y = load_data(DATASET)
-nrows = config[DATASET].get("nrows")
+nrows = get_nrows(DATASET)
 
 pipeline = make_pipeline(
     StandardScaler(),

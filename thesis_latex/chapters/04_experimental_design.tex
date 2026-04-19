@@ -14,6 +14,10 @@ The following sub-questions will also be addressed in the course of this thesis:
 
 \todo[inline]{Letzte Unterfrage in der Diskussion ausführlicher behandeln: CodeCarbon unterschätzt CPU-Verbrauch empirisch um Faktor 2--9$\times$ (gemessen via LibreHardwareMonitor CPU Package Power Sensor). Begründung: TDP-basierte Schätzung skaliert linear mit CPU-Auslastung, bildet aber weder Boost-Verhalten noch Uncore-Komponenten ab. Konkrete Messwerte als Beleg vorhanden (z.B.\ LogReg Credit: 6.6\,W CodeCarbon vs.\ 57.8\,W HardwareMonitor; LogReg Higgs: Faktor $\sim$2.3$\times$).}
 
+\todo[inline]{RQ4 (Scaling): Kurz das experimentelle Design für den Subset-Run beschreiben. Die Kernidee: statt verschiedener Datasets wird \textit{derselbe} Datensatz (HIGGS) in fünf Größen aufgeteilt (100k, 500k, 1M, 5M, 11M Instanzen via \texttt{TEST\_NROWS} Umgebungsvariable). Alle Modelle außer Random Forest werden mit denselben Hyperparametern (aus dem HIGGS-Tuning) auf jeder Größe trainiert. So wird der Dataset-Größen-Effekt isoliert, ohne dass unterschiedliche Hyperparameter oder Feature-Räume den Vergleich verfälschen. Ergebnis: CO2, Trainingszeit und F1 als Funktion von nrows für alle Modelle.}
+
+\todo[inline]{RQ3 (Break-Even CPU vs GPU): Die methodische Grundlage für den Break-Even-Point erklären. Für einen validen Break-Even braucht man denselben Datensatz in vielen Größen mit gleichen Hyperparametern --- nicht drei verschiedene Datasets. Deshalb: \texttt{run\_higgs\_subsets.py} läuft XGBoost CPU und GPU auf 9 HIGGS-Subsets (1k, 5k, 10k, 50k, 100k, 500k, 1M, 5M, 11M). Fit-Methode: log-log Potenzgesetz ($\log CO_2 = a \cdot \log n + b$) über alle Punkte --- dann analytischer Schnittpunkt der beiden Geraden als Break-Even. Warum log-log statt linear: CO2-Skalierung ist superlinear, ein lineares Modell würde systematisch falsch extrapolieren.}
+
 To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
 
 \section{Datasets}

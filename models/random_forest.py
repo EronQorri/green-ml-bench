@@ -4,7 +4,7 @@ import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils import load_data, save_results, save_inference_time, load_best_params
+from utils import load_data, save_results, save_inference_time, load_best_params, get_nrows
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold, cross_validate
@@ -23,7 +23,7 @@ cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 _tuned = load_best_params("rfc", DATASET)["best_params"]
 
 X, y = load_data(DATASET)
-nrows = config[DATASET].get("nrows")
+nrows = get_nrows(DATASET)
 
 model = RandomForestClassifier(
     **_tuned, random_state=RANDOM_STATE, n_jobs=-1

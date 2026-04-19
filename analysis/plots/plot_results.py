@@ -28,9 +28,14 @@ df_results = df_results[df_results["accuracy"].notna() & (df_results["accuracy"]
 df_results = df_results.drop_duplicates(subset=["dataset", "nrows", "model"], keep="last")
 df_inf = df_inf.drop_duplicates(subset=["dataset", "nrows", "model"], keep="last")
 
+# Split: main runs (nrows="all") vs. subset runs (nrows=integer)
+df_results_main = df_results[df_results["nrows"].astype(str) == "all"]
+df_results_sub  = df_results[df_results["nrows"].astype(str) != "all"]
+
+# df = main runs only — used for Plots 1, 2, 3
 df = pd.merge(
-    df_results,
-    df_inf[["model", "dataset", "nrows", "inference_time"]],
+    df_results_main,
+    df_inf[df_inf["nrows"].astype(str) == "all"][["model", "dataset", "nrows", "inference_time"]],
     on=["model", "dataset", "nrows"],
     how="left",
 )
@@ -144,16 +149,186 @@ if all(c in df.columns for c in cc_cols):
         value_name="co2_kg",
     )
 
-    fig, ax = plt.subplots(figsize=(12, 5))
-    sns.barplot(data=df_melt, x="model", y="co2_kg", hue="method", ax=ax)
-    ax.set_yscale("log")
-    ax.set_title("CO₂ Estimate: CodeCarbon vs. HardwareMonitor-corrected")
-    ax.set_xlabel("")
-    ax.set_ylabel("CO₂ (kg, log)")
-    ax.tick_params(axis="x", rotation=20)
+    datasets = ["wine", "credit", "higgs"]
+    fig, axes = plt.subplots(1, len(datasets), figsize=(16, 5), sharey=False)
+    fig.suptitle("CO₂ Estimate: CodeCarbon vs. HardwareMonitor-corrected", fontsize=13, fontweight="bold")
+
+    for ax, ds in zip(axes, datasets):
+        subset = df_melt[df_melt["dataset"] == ds]
+        if subset.empty:
+            ax.set_visible(False)
+            continue
+        models_in_ds = [m for m in MODEL_ORDER if m in subset["model"].values]
+        sns.barplot(data=subset, x="model", y="co2_kg", hue="method",
+                    order=models_in_ds, errorbar=None, ax=ax)
+        ax.set_title(ds.capitalize())
+        ax.set_xlabel("")
+        ax.set_ylabel("CO₂ (kg)" if ds == "wine" else "")
+        ax.tick_params(axis="x", rotation=30)
+        if ax.get_legend():
+            ax.get_legend().remove()
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper right", fontsize=10)
     plt.tight_layout()
     plt.savefig(PLOTS_DIR / "codecarbon_vs_hw.png", dpi=150, bbox_inches="tight")
     print("Saved: results/codecarbon_vs_hw.png")
     plt.close()
 else:
     print("Skipping CodeCarbon vs. HardwareMonitor plot — columns not found.")
+
+
+# ── Plot 3: XGBoost CPU vs GPU ────────────────────────────────────────────────
+
+df_xgb = df[df["model"].isin(["XGBoost", "XGBoost_GPU"])].copy()
+
+if not df_xgb.empty:
+    XGB_PALETTE = {"XGBoost": MODEL_PALETTE["XGBoost"], "XGBoost_GPU": MODEL_PALETTE["XGBoost_GPU"]}
+    xgb_kwargs = dict(hue="model", hue_order=["XGBoost", "XGBoost_GPU"],
+                      palette=XGB_PALETTE, errorbar=None)
+
+    fig, axes = plt.subplots(1, 4, figsize=(16, 5))
+    axes = dict(zip(["co2", "time", "acc", "inf"], axes))
+    fig.suptitle("XGBoost: CPU vs. GPU", fontsize=13, fontweight="bold")
+
+    metrics = [
+        ("co2eq_kg",        "co2", "CO₂ (kg, log)",          True),
+        ("training_time_s", "time","Training Time (s, log)",  True),
+        ("accuracy",        "acc", "Accuracy",                False),
+        ("inference_time",  "inf", "Inference Time (s, log)", True),
+    ]
+
+    for col, key, ylabel, log in metrics:
+        ax = axes[key]
+        sns.barplot(data=df_xgb, x="dataset", y=col, ax=ax, **xgb_kwargs)
+        ax.set_title(ylabel.split(" (")[0])
+        ax.set_xlabel("")
+        ax.set_ylabel(ylabel)
+        if log:
+            ax.set_yscale("log")
+        for container in ax.containers:
+            labels = [custom_format(v) for v in container.datavalues]
+            ax.bar_label(container, labels=labels, padding=4, fontsize=8)
+        if ax.get_legend():
+            ax.get_legend().remove()
+
+    handles, labels = axes["co2"].get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.98),
+               ncol=2, fontsize=10)
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "xgb_cpu_vs_gpu.png", dpi=150, bbox_inches="tight")
+    print("Saved: results/xgb_cpu_vs_gpu.png")
+    plt.close()
+else:
+    print("Skipping XGBoost CPU vs GPU plot — no data found.")
+
+
+# ── Plot 4: Higgs Subset Break-Even (from run_higgs_subsets.py data) ──────────
+
+df_higgs_sub = df_results_sub[
+    (df_results_sub["dataset"] == "higgs") &
+    (df_results_sub["model"].isin(["XGBoost", "XGBoost_GPU"]))
+].copy()
+
+df_higgs_sub["nrows_int"] = pd.to_numeric(df_higgs_sub["nrows"], errors="coerce")
+df_higgs_sub = df_higgs_sub.dropna(subset=["nrows_int", "co2eq_kg"])
+df_higgs_sub["co2eq_kg"] = pd.to_numeric(df_higgs_sub["co2eq_kg"], errors="coerce")
+df_higgs_sub = df_higgs_sub.dropna(subset=["co2eq_kg"])
+
+cpu_sub = df_higgs_sub[df_higgs_sub["model"] == "XGBoost"].set_index("nrows_int")["co2eq_kg"]
+gpu_sub = df_higgs_sub[df_higgs_sub["model"] == "XGBoost_GPU"].set_index("nrows_int")["co2eq_kg"]
+common_sub = sorted(set(cpu_sub.index) & set(gpu_sub.index))
+
+if len(common_sub) >= 3:
+    XGB_PALETTE_BE = {"XGBoost": MODEL_PALETTE["XGBoost"], "XGBoost_GPU": MODEL_PALETTE["XGBoost_GPU"]}
+    x = np.array(common_sub, dtype=float)
+    y_cpu = np.array([cpu_sub[n] for n in common_sub])
+    y_gpu = np.array([gpu_sub[n] for n in common_sub])
+
+    log_x = np.log10(x)
+    a_cpu, b_cpu = np.polyfit(log_x, np.log10(y_cpu), 1)
+    a_gpu, b_gpu = np.polyfit(log_x, np.log10(y_gpu), 1)
+
+    n_be = None
+    if (a_cpu - a_gpu) != 0:
+        log_be = (b_gpu - b_cpu) / (a_cpu - a_gpu)
+        n_be = 10 ** log_be
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    fig.suptitle("XGBoost CPU vs GPU — Break-Even (Higgs Subsets)", fontsize=13, fontweight="bold")
+
+    x_line = np.logspace(np.log10(x.min()) - 0.3, np.log10(x.max()) + 0.3, 400)
+    ax.plot(x_line, 10 ** (a_cpu * np.log10(x_line) + b_cpu),
+            color=XGB_PALETTE_BE["XGBoost"], label="XGBoost CPU (fit)")
+    ax.plot(x_line, 10 ** (a_gpu * np.log10(x_line) + b_gpu),
+            color=XGB_PALETTE_BE["XGBoost_GPU"], label="XGBoost GPU (fit)")
+    ax.scatter(x, y_cpu, color=XGB_PALETTE_BE["XGBoost"], zorder=5, s=60)
+    ax.scatter(x, y_gpu, color=XGB_PALETTE_BE["XGBoost_GPU"], zorder=5, s=60)
+
+    if n_be and x_line[0] < n_be < x_line[-1]:
+        co2_be = 10 ** (a_cpu * np.log10(n_be) + b_cpu)
+        ax.axvline(n_be, color="gray", linestyle="--", linewidth=1.2)
+        ax.annotate(
+            f"Break-Even\n~{n_be:,.0f} rows",
+            xy=(n_be, co2_be), xytext=(n_be * 1.5, co2_be * 5),
+            fontsize=9, arrowprops=dict(arrowstyle="->", color="gray"),
+        )
+
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Dataset size (rows)")
+    ax.set_ylabel("CO₂ (kg)")
+    ax.legend(fontsize=9)
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "xgb_breakeven_higgs.png", dpi=150, bbox_inches="tight")
+    print("Saved: analysis/plots/xgb_breakeven_higgs.png")
+    plt.close()
+else:
+    print(f"Skipping Higgs break-even plot — need ≥3 common nrows, got {len(common_sub)}.")
+    print("  Run run_higgs_subsets.py first to collect subset data.")
+
+
+# ── Plot 5: Dataset-size scaling — all models on Higgs subsets ────────────────
+
+df_scaling = df_results_sub[df_results_sub["dataset"] == "higgs"].copy()
+df_scaling["nrows_int"] = pd.to_numeric(df_scaling["nrows"], errors="coerce")
+df_scaling = df_scaling.dropna(subset=["nrows_int"])
+df_scaling["co2eq_kg"] = pd.to_numeric(df_scaling["co2eq_kg"], errors="coerce")
+df_scaling["training_time_s"] = pd.to_numeric(df_scaling["training_time_s"], errors="coerce")
+df_scaling["f1"] = pd.to_numeric(df_scaling["f1"], errors="coerce")
+
+scaling_models = [m for m in MODEL_ORDER if m in df_scaling["model"].unique()]
+
+if len(scaling_models) >= 2 and df_scaling["nrows_int"].nunique() >= 3:
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+    fig.suptitle("Scaling Analysis: Higgs Subsets — All Models", fontsize=13, fontweight="bold")
+
+    for ax, (col, title, log) in zip(axes, [
+        ("co2eq_kg",        "CO₂ (kg)",         True),
+        ("training_time_s", "Training Time (s)", True),
+        ("f1",              "F1-Score",          False),
+    ]):
+        for model in scaling_models:
+            sub = df_scaling[df_scaling["model"] == model].sort_values("nrows_int")
+            if sub.empty:
+                continue
+            ax.plot(sub["nrows_int"], sub[col],
+                    marker="o", label=model, color=MODEL_PALETTE[model])
+        ax.set_xscale("log")
+        if log:
+            ax.set_yscale("log")
+        ax.set_title(title)
+        ax.set_xlabel("Dataset size (rows)")
+        ax.set_ylabel(title)
+
+    handles = [plt.Line2D([0], [0], color=MODEL_PALETTE[m], marker="o", label=m)
+               for m in scaling_models]
+    fig.legend(handles=handles, loc="lower center", ncol=len(scaling_models),
+               bbox_to_anchor=(0.5, -0.05), fontsize=9)
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "scaling_higgs.png", dpi=150, bbox_inches="tight")
+    print("Saved: analysis/plots/scaling_higgs.png")
+    plt.close()
+else:
+    print(f"Skipping scaling plot — need ≥2 models and ≥3 nrows, got {len(scaling_models)} models / {df_scaling['nrows_int'].nunique() if not df_scaling.empty else 0} nrows.")
+    print("  Run run_scaling_subsets.py first.")

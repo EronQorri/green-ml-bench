@@ -12,6 +12,12 @@ from config import RANDOM_STATE, config, BASE_DIR
 PARAMS_FILE = BASE_DIR / "models" / "best_params.json"
 
 
+def get_nrows(dataset):
+    """Returns actual nrows used — respects TEST_NROWS env var."""
+    test_nrows = os.environ.get("TEST_NROWS")
+    return int(test_nrows) if test_nrows else config[dataset].get("nrows")
+
+
 def load_data(dataset):
     cfg = config[dataset]
     if dataset == "higgs":
