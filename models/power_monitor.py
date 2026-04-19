@@ -51,13 +51,13 @@ class CPUPowerMonitor:
     """
     Misst CPU Package Power parallel zu einem Experiment.
     Nutzung:
-        monitor = CPUPowerMonitor(interval=0.5)
+        monitor = CPUPowerMonitor()
         monitor.start()
         # ... dein Training ...
         result = monitor.stop()  # {"energy_wh": ..., "avg_watt": ..., "duration_s": ...}
     """
 
-    def __init__(self, interval: float = 0.5):
+    def __init__(self, interval: float = 0.25):
         self.interval = interval
         self._readings = []
         self._running = False

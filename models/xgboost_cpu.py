@@ -31,7 +31,7 @@ model = XGBClassifier(**xgb_base[DATASET], **_tuned, random_state=RANDOM_STATE)
 tracker = EmissionsTracker(
     output_dir=str(BASE_DIR / "emissions"), project_name=f"xgb_{DATASET}"
 )
-cpu_monitor = CPUPowerMonitor(interval=0.5)
+cpu_monitor = CPUPowerMonitor()
 
 cpu_monitor.start()
 tracker.start()

@@ -87,7 +87,7 @@ pipeline = make_pipeline(StandardScaler(), net)
 tracker = EmissionsTracker(
     output_dir=str(BASE_DIR / "emissions"), project_name=f"mlp_{DATASET}"
 )
-cpu_monitor = CPUPowerMonitor(interval=0.5)
+cpu_monitor = CPUPowerMonitor()
 
 cpu_monitor.start()
 tracker.start()

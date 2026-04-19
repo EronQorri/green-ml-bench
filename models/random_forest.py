@@ -32,7 +32,7 @@ model = RandomForestClassifier(
 tracker = EmissionsTracker(
     output_dir=str(BASE_DIR / "emissions"), project_name=f"rf_{DATASET}"
 )
-cpu_monitor = CPUPowerMonitor(interval=0.5)
+cpu_monitor = CPUPowerMonitor()
 
 cpu_monitor.start()
 tracker.start()
