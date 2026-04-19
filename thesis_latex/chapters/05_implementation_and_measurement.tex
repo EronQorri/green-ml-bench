@@ -51,7 +51,7 @@ To ensure reproducibility, a fixed random seed of 42 was used for all data split
 \section{Dataset Integration}
 \label{implementation_datasets}
 
-The three datasets used in this study — \textit{Wine}, \textit{Credit}, and \textit{HIGGS} — were introduced in \Cref{experimental_dataset}. This section describes how they are integrated into the software architecture, covering the central configuration file, the data loading pipeline, and dataset-specific constraints.
+The three datasets used in this study, \textit{Wine}, \textit{Credit}, and \textit{HIGGS}, were introduced in \Cref{experimental_dataset}. This section describes how they are integrated into the software architecture, covering the central configuration file, the data loading pipeline, and dataset-specific constraints.
 
 \subsection{Configuration Architecture}
 \label{implementation_config}
@@ -121,7 +121,7 @@ Due to the substantial scale of the \textit{Higgs} dataset, several constraints 
 \section{Reproducibility and Evaluation Design}
 \label{implementation_reproducibility}
 
-To ensure fully reproducible results across all experiments, a global constant \texttt{RANDOM\_STATE} with a value of 42 is utilized in every model script. This constant is applied to all functions requiring stochastic consistency. It is specifically passed to the \texttt{KFold} splitter, the \texttt{train\_test\_split} method, and the initialization of the machine learning models. For the multilayer perceptron, the random seed is explicitly set using \path{torch.manual_seed(RANDOM_STATE)} to guarantee deterministic weight initialization and training behavior.
+To ensure fully reproducible results across all experiments, a global constant \path{RANDOM_STATE} with a value of 42 is utilized in every model script. This constant is applied to all functions requiring stochastic consistency. It is specifically passed to the \texttt{KFold} splitter, the \texttt{train\_test\_split} method, and the initialization of the machine learning models. For the multilayer perceptron, the random seed is explicitly set using \path{torch.manual_seed(RANDOM_STATE)} to guarantee deterministic weight initialization and training behavior.
 
 The evaluation process relies on a standardized cross validation setup implemented uniformly across all scripts. The data is partitioned using \texttt{KFold} configured with five splits, enabled shuffling, and the aforementioned random state. The execution is handled by the \texttt{cross\_validate()} function.
 
@@ -218,59 +218,91 @@ The neural network is embedded within a scikit-learn \texttt{Pipeline} together 
 The maximum number of training epochs is set to 200. This value acts as an upper boundary rather than a strict target. An early stopping callback (\path{skorch.callbacks.EarlyStopping}) monitors the validation loss after each individual epoch. It halts the training process immediately if no improvement is observed for 10 consecutive epochs. This mechanism prevents unnecessarily long training runs and provides an additional layer of protection against overfitting. Consequently, the upper limit of 200 epochs is rarely reached in practice.
 
 \todo[inline]{hier vielleicht eine visualisierung der layers einfügen}
+
+
+
+
+
 \section{Hyperparameter Optimization}
 \label{implementation_tuning}
 
-\subsection{Optuna as Tuning Framework}
-\label{implementation_optuna}
+Building on the theoretical motivation outlined in \Cref{design_hyperparameter}, this section describes how Optuna was integrated into the evaluation pipeline and which search spaces were defined for each model. The tuning procedure is kept deliberately uniform across all models and datasets, so that the energy consumed during tuning is directly comparable between configurations and can be added to the overall emissions budget of this study without methodological asymmetries.
 
-\todo[inline]{Nur Implementation, keine Begründung (die steht in \Cref{design_hyperparameter}): 
 
-optuna.create\_study(direction="maximize"). 
 
-TPESampler(seed=RANDOM\_STATE) für MLP (reproduzierbare Trial-Reihenfolge). study.optimize(objective, n\_trials=50). Tuning-Ergebnisse werden direkt als Hyperparameter-Dicts in die jeweiligen Model-Scripts übernommen.}
+As motivated in \Cref{design_hyperparameter}, Optuna serves as the tuning framework throughout this study. The tuning logic is encapsulated in three dedicated scripts (\texttt{tune\_xgb.py}, \texttt{tune\_rfc.py}, and \texttt{tune\_mlp.py}), one per tunable model. All three follow the same structural pattern and differ only in the model that is instantiated and the search space that is queried from the trial object. The target dataset is selected via a command-line argument, and the number of trials is read from the \texttt{N\_TRIALS} environment variable, with a default of 50. This separation between configuration and code allows individual tuning runs to be triggered without modifying the source files. The search spaces used across all three tuning scripts are summarized in \Cref{tab:search_spaces}. Integer and continuous parameters define an inclusive range, while categorical parameters list the discrete choices available to the sampler.
 
-\subsection{Search Spaces per Model}
-\label{implementation_search_spaces}
+\begin{table}[htbp]
+\centering
+\caption{Hyperparameter search spaces defined in the Optuna tuning scripts.}
+\label{tab:search_spaces}
+\begin{tabular}{llll}
+\toprule
+\textbf{Model} & \textbf{Parameter} & \textbf{Type} & \textbf{Range / Values} \\
+\midrule
+\multirow{5}{*}{Random Forest}
+  & \path{n_estimators}     & integer     & [100, 500] \\
+  & \path{max_depth}        & integer     & [3, 20] \\
+  & \path{min_samples_split}& integer     & [2, 20] \\
+  & \path{min_samples_leaf} & integer     & [1, 10] \\
+  & \path{max_features}     & categorical & \{\path{sqrt}, \path{log2}, \path{None}\} \\
+\midrule
+\multirow{6}{*}{XGBoost}
+  & \path{n_estimators}     & integer          & [100, 500] \\
+  & \path{max_depth}        & integer          & [3, 8] \\
+  & \path{learning_rate}    & float (log)      & [0.01, 0.3] \\
+  & \path{subsample}        & float            & [0.6, 1.0] \\
+  & \path{colsample_bytree} & float            & [0.6, 1.0] \\
+  & \path{min_child_weight} & integer          & [1, 10] \\
+\midrule
+\multirow{5}{*}{MLP}
+  & \path{n_layers}         & integer          & [1, 4] \\
+  & \path{layer_i} (per layer) & categorical   & \{64, 128, 256, 512\} \\
+  & \path{dropout_rate}     & float            & [0.0, 0.5] \\
+  & \path{lr}               & float (log)      & [$10^{-4}$, $10^{-1}$] \\
+  & \path{batch_size}       & categorical      & \{1024, 4096, 8192\} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\todo[inline]{Suchräume für XGB (n\_estimators, max\_depth, learning\_rate, subsample, colsample\_bytree, min\_child\_weight), RF (n\_estimators, max\_depth, min\_samples\_split, min\_samples\_leaf, max\_features), MLP (n\_layers, layer\_sizes, dropout\_rate, lr, batch\_size). Tabelle oder kompakte Auflistung.}
+After the dataset has been loaded through the shared \texttt{load\_data()} function described in \Cref{implementation_data_loading}, each script constructs a \texttt{KFold} splitter using the same global constants \texttt{CV\_FOLDS} and \texttt{RANDOM\_STATE} that are also applied during the final evaluation. Reusing the identical splitter ensures that the F1 score returned to Optuna is computed under the same validation conditions as the metrics reported later in \Cref{results}, eliminating any discrepancy between the score the optimizer maximizes and the score the study ultimately reports.
 
-\subsection{Tuning Strategy for HIGGS}
-\label{implementation_tuning_higgs}
+The core of every script is an \texttt{objective(trial)} function that draws a candidate hyperparameter configuration from the trial object, instantiates the corresponding classifier, and returns the mean weighted F1 score obtained from a five-fold cross-validation via \texttt{cross\_val\_score} with \texttt{make\_scorer(f1\_score, average="weighted")}. This is the only output that Optuna is exposed to. Everything else, such as emissions tracking and timing, is handled outside the objective function.
 
-\todo[inline]{MLP-Tuning auf HIGGS: stratifiziertes Subset via --tune-sample-size statt vollem Dataset. Train-Test-Split (80/20) statt CV für Tuning (Begründung: Laufzeit). Ergebnisse in best\_params\_mlp\_higgs.json.}
+Each study is created via \texttt{optuna.create\_study(direction="maximize")} and parameterized with a \texttt{TPESampler} seeded with \texttt{RANDOM\_STATE}. Seeding the sampler is what makes the trial sequence reproducible across re-runs. Without it, the suggested hyperparameter combinations would differ on every execution, and the resulting tuning emissions would no longer be comparable. The optimization itself is launched through \texttt{study.optimize(objective, n\_trials=N\_TRIALS)}.
+
+To capture the energy footprint of the tuning process itself, the entire \path{study.optimize} call is wrapped in a CodeCarbon \texttt{EmissionsTracker} with a script-specific \texttt{project\_name} (e.g.\ \texttt{tune\_mlp\_higgs}), so that tuning runs are clearly distinguishable from training runs in the \texttt{emissions/} directory. The same tracker is used across all three scripts and is configured identically to the trackers used during training, as described in \Cref{implementation_emissions}.
+
+Once a study completes, the best score, the corresponding hyperparameter dictionary, the duration, the emissions reported by the tracker, and the trial count are written to a shared \texttt{best\_params.json} file via the \texttt{save\_best\_params()} utility. The function performs an upsert keyed by model and dataset, so that re-running a single tuning configuration overwrites only its own entry and leaves the other results untouched. The model scripts introduced in \Cref{implementation_models} consume this file through the corresponding \texttt{load\_best\_params()} helper, which decouples tuning from training entirely: the final training pipeline never instantiates Optuna, it merely reads the previously persisted hyperparameter dictionary and passes it to the classifier constructor.
+
+
+
+
 
 \section{Emissions Measurement}
 \label{implementation_emissions}
 
-Energy consumption and CO\textsubscript{2} emissions were tracked using \textit{CodeCarbon} as described in \Cref{sec:theoretical_codecarbon}. For the hardware configuration used in this study, GPU power was measured directly via hardware counters, while RAM was estimated at 10W. CPU power could not be measured directly on Windows and was therefore estimated at 32.5W based on 50\% of the AMD Ryzen 7 5700X TDP, as discussed in \Cref{sec:theoretical_codecarbon}. \Cref{fig:emissions_flow} shows a visual representation of the process, from pre-processing to saving the results. Prior to training, data is loaded from the respective
-dataset and, where required, features are normalized using
-\texttt{StandardScaler}. Specifically, scaling was applied to Logistic
-Regression and MLP, as these models are sensitive to the magnitude of input
-features. Tree-based models (Random Forest, XGBoost) do not require
-feature scaling and were trained on the raw input data.
+Measuring energy consumption and CO\textsubscript{2} emissions is the central objective of this study, and the measurement infrastructure therefore required particularly careful design. The following subsections describe how CodeCarbon was integrated into each script, how measurement coverage was defined across model and dataset combinations, and what hardware-specific constraints and limitations apply to the collected values.
 
-Each training run was wrapped in an \texttt{EmissionsTracker} instance, which
-monitored energy consumption across the full 5-fold cross-validation procedure.
-Upon completion, the tracker was
-stopped and the resulting emissions value, alongside accuracy, weighted F1-score,
-training time, and dataset size, was saved to a central \texttt{results.csv}
-file via the \texttt{save\_results()} utility function. In addition,
-\textit{CodeCarbon} writes its own emissions log to the \texttt{emissions/}
-directory, providing a detailed record of all tracked runs. The same tracking
-approach was applied during hyperparameter tuning, ensuring that the energy
-cost of the tuning process is also accounted for in the overall energy budget
-of this study.
+\subsection{CodeCarbon Integration}
+\label{implementation_emissions_integration}
 
-\begin{figure}[H]
+Energy consumption and CO\textsubscript{2} emissions were tracked using \textit{CodeCarbon} as described in \Cref{sec:theoretical_codecarbon}. In each model script, an \texttt{EmissionsTracker} instance is created before the cross-validation loop begins and configured with two key parameters: \texttt{output\_dir}, which points to the shared \texttt{emissions/} directory at the project root, and \texttt{project\_name}, which uniquely identifies the run. The tracker is then started by calling \texttt{tracker.start()} immediately before the \texttt{cross\_validate()} call, and stopped via \texttt{tracker.stop()} once all folds have completed. The return value of \texttt{tracker.stop()} is a single float representing the total CO\textsubscript{2}-equivalent emissions in kilograms accumulated over the entire tracked interval. This value is what gets passed to \texttt{save\_results()} and written to \texttt{results.csv}.
+
+The placement of the tracker boundaries was a deliberate choice. Data loading and preprocessing happen before \texttt{tracker.start()}, so they are excluded from the measurement. Only the cross-validation itself, which includes all five training and evaluation passes, falls inside the tracked interval. This ensures that the reported emissions value reflects the cost of model training and evaluation exclusively, and that values are directly comparable across models and datasets without interference.
+
+\Cref{fig:emissions_flow} illustrates this structure. Prior to training, data is loaded and, where required, features are normalized using \texttt{StandardScaler}. Scaling was applied to Logistic Regression and MLP, as these models are sensitive to the magnitude of input features, while tree-based models (Random Forest, XGBoost) were trained on the raw input data.
+
+\begin{figure}[htbp]
 \centering
+\scalebox{0.85}{%
 \begin{tikzpicture}[
-    node distance=1cm,
+    node distance=0.6cm,
     box/.style={rectangle, rounded corners, draw=black,
-                minimum width=6cm, minimum height=1cm,
+                minimum width=6cm, minimum height=0.8cm,
                 text centered, font=\small},
     tracker/.style={rectangle, rounded corners, draw=black,
-                    dashed, minimum width=7cm, minimum height=0.8cm,
+                    dashed, minimum width=7cm, minimum height=0.7cm,
                     text centered, font=\small, fill=gray!10},
     arrow/.style={-{Stealth}, thick}
 ]
@@ -290,13 +322,27 @@ of this study.
 \draw[arrow] (train) -- (stop);
 \draw[arrow] (stop)  -- (save);
 
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{Training and emissions tracking procedure per model-dataset combination.
          Dashed boxes indicate CodeCarbon \texttt{EmissionsTracker} calls.}
 \label{fig:emissions_flow}
 \end{figure}
 
-\todo[inline]{Ggf. noch Subsections ergänzen: 5.6.1 CodeCarbon Integration, 5.6.2 Measurement Granularity (pro Modell × Dataset, eindeutige project\_names), 5.6.3 Limitations (CPU-Schätzung auf Windows, Background-Prozesse)}
+\subsection{Measurement Scope and Naming}
+\label{implementation_emissions_scope}
+
+To allow fine-grained analysis of emissions across all experimental configurations, each model–dataset combination receives its own \texttt{EmissionsTracker} instance with a unique \texttt{project\_name}. The naming convention follows the pattern \texttt{<model>\_<dataset>}, for example \texttt{lr\_wine}, \texttt{rf\_credit}, or \texttt{xgb\_gpu\_higgs}. This scheme makes individual runs immediately identifiable in the \texttt{emissions/} directory, where CodeCarbon writes one CSV file per tracked run in addition to returning the scalar value in code. In the same manner, the tuning scripts save the results with the \texttt{<model>\_<dataset>} pattern, preceded by a \texttt{tune\_}, for example \texttt{tune\_mlp\_higgs} or \texttt{tune\_xgb\_cpu\_wine}.
+
+In total, the experiment produces tracked emissions records for 14 training runs (all five models across all three datasets, minus the Random Forest on HIGGS which is explicitly skipped) and up to eight tuning runs (Random Forest across two datasets, XGBoost and MLP across all three). The separate CSV files written by CodeCarbon to the \texttt{emissions/} directory serve as a raw audit trail, while the values extracted via \texttt{tracker.stop()} are the primary source for the analysis presented in \Cref{results}.
+
+\subsection{Hardware Measurement and Limitations}
+\label{implementation_emissions_limitations}
+
+The general measurement approach used by CodeCarbon, including direct GPU readout via NVML, RAM estimation per DIMM slot, and TDP-based CPU fallback on Windows, is described in \Cref{sec:theoretical_codecarbon}. This subsection focuses on the concrete implications for the hardware used in this study.
+
+\todo[inline]{hardware library monitor versuchen weil das wäre schon eine dumme limitation tbh}
+A secondary limitation is that CodeCarbon measures at the process level, meaning background system activity on Windows 11 contributes to the recorded energy. This effect is expected to be small relative to the dominant training workload but cannot be fully eliminated.
 
 \section{Inference Latency Measurement}
 \label{implementation_inference}
