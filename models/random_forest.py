@@ -5,6 +5,7 @@ import time
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import load_data, save_results, save_inference_time, load_best_params
+from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold, cross_validate
 from sklearn.metrics import f1_score, make_scorer
@@ -31,6 +32,9 @@ model = RandomForestClassifier(
 tracker = EmissionsTracker(
     output_dir=str(BASE_DIR / "emissions"), project_name=f"rf_{DATASET}"
 )
+cpu_monitor = CPUPowerMonitor(interval=0.5)
+
+cpu_monitor.start()
 tracker.start()
 
 start = time.time()
@@ -43,7 +47,11 @@ cv_results = cross_validate(
     return_estimator=True,
 )
 training_time = time.time() - start
-emissions = tracker.stop()
+emissions_cc = tracker.stop()
+cpu_result = cpu_monitor.stop()
+
+co2_corrected = compute_corrected_co2(tracker, cpu_result)
+print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
 trained_model = cv_results["estimator"][0]
 single_row = X[:1]
@@ -57,8 +65,10 @@ save_results(
     DATASET,
     cv_results["test_accuracy"].mean(),
     cv_results["test_f1"].mean(),
-    emissions,
+    co2_corrected,
+    emissions_cc,
+    cpu_result,
     training_time,
     nrows,
 )
-save_inference_time("RandomForest", DATASET, emissions, nrows, inference_time)
+save_inference_time("RandomForest", DATASET, co2_corrected, nrows, inference_time)

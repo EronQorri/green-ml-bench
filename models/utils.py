@@ -62,7 +62,7 @@ def load_best_params(model_key, dataset):
     return params[model_key][dataset]
 
 
-def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
+def save_results(model, dataset, accuracy, f1, co2_corrected, co2_codecarbon, cpu_result, training_time, nrows):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     results_dir = os.path.join(base_dir, "results")
     os.makedirs(results_dir, exist_ok=True)
@@ -79,6 +79,9 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
                 "accuracy",
                 "f1",
                 "co2eq_kg",
+                "co2eq_codecarbon_kg",
+                "cpu_power_hw_w",
+                "cpu_energy_hw_wh",
                 "training_time_s",
             ],
         )
@@ -92,7 +95,10 @@ def save_results(model, dataset, accuracy, f1, emissions, training_time, nrows):
                 "nrows": nrows if nrows else "all",
                 "accuracy": round(accuracy, 4),
                 "f1": round(f1, 4),
-                "co2eq_kg": emissions,
+                "co2eq_kg": co2_corrected,
+                "co2eq_codecarbon_kg": co2_codecarbon,
+                "cpu_power_hw_w": round(cpu_result["avg_watt"], 4),
+                "cpu_energy_hw_wh": round(cpu_result["energy_wh"], 6),
                 "training_time_s": round(training_time, 2),
             }
         )

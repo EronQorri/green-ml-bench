@@ -15,6 +15,7 @@ from codecarbon import EmissionsTracker
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils import load_data, save_inference_time, save_results, load_best_params
+from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
 from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 
 EPOCHS = 200  # the earlyStopping will be reached before the 200 anyway
@@ -86,6 +87,9 @@ pipeline = make_pipeline(StandardScaler(), net)
 tracker = EmissionsTracker(
     output_dir=str(BASE_DIR / "emissions"), project_name=f"mlp_{DATASET}"
 )
+cpu_monitor = CPUPowerMonitor(interval=0.5)
+
+cpu_monitor.start()
 tracker.start()
 
 start = time.time()
@@ -98,7 +102,11 @@ cv_results = cross_validate(
     return_estimator=True,
 )
 training_time = time.time() - start
-emissions = tracker.stop()
+emissions_cc = tracker.stop()
+cpu_result = cpu_monitor.stop()
+
+co2_corrected = compute_corrected_co2(tracker, cpu_result)
+print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
 
 trained_model = cv_results["estimator"][0]
@@ -113,8 +121,10 @@ save_results(
     DATASET,
     cv_results["test_accuracy"].mean(),
     cv_results["test_f1"].mean(),
-    emissions,
+    co2_corrected,
+    emissions_cc,
+    cpu_result,
     training_time,
     nrows,
 )
-save_inference_time("MLP_PyTorch", DATASET, emissions, nrows, inference_time)
+save_inference_time("MLP_PyTorch", DATASET, co2_corrected, nrows, inference_time)

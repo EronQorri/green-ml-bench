@@ -5,7 +5,7 @@ import time
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from utils import load_data, save_results, save_inference_time
-from power_monitor import CPUPowerMonitor
+from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
 
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -45,16 +45,11 @@ cv_results = cross_validate(
     return_estimator=True,
 )
 training_time = time.time() - start
-emissions = tracker.stop()
+emissions_cc = tracker.stop()
 cpu_result = cpu_monitor.stop()
 
-print(f"\n--- CPU Power Monitor ---")
-print(f"Avg CPU power:  {cpu_result['avg_watt']:.2f} W")
-print(f"CPU energy:     {cpu_result['energy_wh']*1000:.4f} Wh")
-print(f"Duration:       {cpu_result['duration_s']:.2f} s")
-print(f"Samples taken:  {cpu_result['n_samples']}")
-print(f"CodeCarbon CPU estimate would have been: {32.5 * (cpu_result['duration_s'] / 3600) * 1000:.4f} Wh")
-print(f"-------------------------\n")
+co2_corrected = compute_corrected_co2(tracker, cpu_result)
+print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
 # Take the first run in the cv and run a single row on it to measure the inference time
 trained_model = cv_results["estimator"][0]
@@ -69,8 +64,10 @@ save_results(
     DATASET,
     cv_results["test_accuracy"].mean(),
     cv_results["test_f1"].mean(),
-    emissions,
+    co2_corrected,
+    emissions_cc,
+    cpu_result,
     training_time,
     nrows,
 )
-save_inference_time("LogisticRegression", DATASET, emissions, nrows, inference_time)
+save_inference_time("LogisticRegression", DATASET, co2_corrected, nrows, inference_time)

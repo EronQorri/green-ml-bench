@@ -1,6 +1,8 @@
 import threading
 import time
 
+CARBON_KG_PER_KWH = 0.485  # German grid ~485 gCO2/kWh
+
 _computer = None
 
 def _init_computer():
@@ -89,8 +91,27 @@ class CPUPowerMonitor:
 
         return {
             "energy_wh": energy_wh,
-            "energy_kg_co2": energy_wh * 0.000485,  # DE carbon intensity ~485 gCO2/kWh
+            "energy_kg_co2": energy_wh * CARBON_KG_PER_KWH / 1000,
             "avg_watt": avg_watt,
             "duration_s": duration_s,
             "n_samples": len(self._readings),
         }
+
+
+def compute_corrected_co2(tracker, cpu_result):
+    """CO2 mit HardwareMonitor-CPU statt CodeCarbon-CPU-Schätzung."""
+    data = tracker.final_emissions_data
+    gpu_ram_kwh = (data.gpu_energy or 0.0) + (data.ram_energy or 0.0)
+    cpu_kwh = cpu_result["energy_wh"] / 1000.0
+    return (gpu_ram_kwh + cpu_kwh) * CARBON_KG_PER_KWH
+
+
+def print_cpu_summary(cpu_result, cc_cpu_energy_kwh=None):
+    print(f"\n--- CPU Power Monitor ---")
+    print(f"Avg CPU power:  {cpu_result['avg_watt']:.2f} W")
+    print(f"CPU energy:     {cpu_result['energy_wh']:.4f} Wh")
+    print(f"Duration:       {cpu_result['duration_s']:.2f} s")
+    print(f"Samples taken:  {cpu_result['n_samples']}")
+    if cc_cpu_energy_kwh is not None:
+        print(f"CodeCarbon CPU estimate: {cc_cpu_energy_kwh * 1000:.4f} Wh")
+    print(f"-------------------------\n")
