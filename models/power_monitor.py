@@ -1,7 +1,7 @@
 import threading
 import time
 
-CARBON_KG_PER_KWH = 0.485  # German grid ~485 gCO2/kWh
+CARBON_KG_PER_KWH = 0.381  # Daten aus global_energy_mix.json CodeCarbon
 
 _computer = None
 
