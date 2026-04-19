@@ -9,7 +9,10 @@ The following sub-questions will also be addressed in the course of this thesis:
     \item How does energy consumption and CO2 output scale with increasing neural network complexity (number of layers and neurons)?
     \item How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?
     \item How does reducing the number of training instances on large datasets affect model accuracy and energy consumption across different algorithms?
+    \item How accurate are software-based energy estimation tools compared to direct hardware sensor measurements, and how does this affect reported CO\textsubscript{2} emissions?
 \end{itemize}
+
+\todo[inline]{Letzte Unterfrage in der Diskussion ausführlicher behandeln: CodeCarbon unterschätzt CPU-Verbrauch empirisch um Faktor 2--9$\times$ (gemessen via LibreHardwareMonitor CPU Package Power Sensor). Begründung: TDP-basierte Schätzung skaliert linear mit CPU-Auslastung, bildet aber weder Boost-Verhalten noch Uncore-Komponenten ab. Konkrete Messwerte als Beleg vorhanden (z.B.\ LogReg Credit: 6.6\,W CodeCarbon vs.\ 57.8\,W HardwareMonitor; LogReg Higgs: Faktor $\sim$2.3$\times$).}
 
 To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
 

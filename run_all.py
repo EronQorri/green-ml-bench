@@ -71,7 +71,8 @@ def _save_tuning_result(model_label, dataset, best_f1, emissions_kg, duration_s)
     with open(file_path, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=[
             "timestamp", "model", "dataset", "nrows",
-            "accuracy", "f1", "co2eq_kg", "training_time_s",
+            "accuracy", "f1", "co2eq_kg", "co2eq_codecarbon_kg",
+            "cpu_power_hw_w", "cpu_energy_hw_wh", "training_time_s",
         ])
         if not file_exists:
             writer.writeheader()
@@ -83,6 +84,9 @@ def _save_tuning_result(model_label, dataset, best_f1, emissions_kg, duration_s)
             "accuracy": "",
             "f1": round(best_f1, 4) if best_f1 is not None else "",
             "co2eq_kg": emissions_kg if emissions_kg is not None else "",
+            "co2eq_codecarbon_kg": emissions_kg if emissions_kg is not None else "",
+            "cpu_power_hw_w": "",
+            "cpu_energy_hw_wh": "",
             "training_time_s": round(duration_s, 2),
         })
 
