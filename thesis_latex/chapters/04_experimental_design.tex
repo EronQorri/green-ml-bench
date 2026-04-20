@@ -16,7 +16,19 @@ The following sub-questions will also be addressed in the course of this thesis:
 
 \todo[inline]{RQ4 (Scaling): Kurz das experimentelle Design für den Subset-Run beschreiben. Die Kernidee: statt verschiedener Datasets wird \textit{derselbe} Datensatz (HIGGS) in fünf Größen aufgeteilt (100k, 500k, 1M, 5M, 11M Instanzen via \texttt{TEST\_NROWS} Umgebungsvariable). Alle Modelle außer Random Forest werden mit denselben Hyperparametern (aus dem HIGGS-Tuning) auf jeder Größe trainiert. So wird der Dataset-Größen-Effekt isoliert, ohne dass unterschiedliche Hyperparameter oder Feature-Räume den Vergleich verfälschen. Ergebnis: CO2, Trainingszeit und F1 als Funktion von nrows für alle Modelle.}
 
-\todo[inline]{RQ3 (Break-Even CPU vs GPU): Die methodische Grundlage für den Break-Even-Point erklären. Für einen validen Break-Even braucht man denselben Datensatz in vielen Größen mit gleichen Hyperparametern --- nicht drei verschiedene Datasets. Deshalb: \texttt{run\_higgs\_subsets.py} läuft XGBoost CPU und GPU auf 9 HIGGS-Subsets (1k, 5k, 10k, 50k, 100k, 500k, 1M, 5M, 11M). Fit-Methode: log-log Potenzgesetz ($\log CO_2 = a \cdot \log n + b$) über alle Punkte --- dann analytischer Schnittpunkt der beiden Geraden als Break-Even. Warum log-log statt linear: CO2-Skalierung ist superlinear, ein lineares Modell würde systematisch falsch extrapolieren.}
+\subsection{Break-Even Analysis}
+\label{design_breakeven}
+
+To determine at which dataset size GPU training becomes more energy-efficient than CPU training for XGBoost, a break-even analysis was designed as part of this study. The analysis is based on nine HIGGS subsets ranging from 1{,}000 to 11{,}000{,}000 instances, using identical hyperparameters for both devices. This controlled setup isolates the effect of dataset size without confounding factors from different feature spaces or hyperparameter configurations.
+
+The relationship between dataset size and CO\textsubscript{2} emissions is modelled as a power law, fitted separately for CPU and GPU by applying a linear regression to $\log_{10}(\text{nrows})$ versus $\log_{10}(\text{CO}_2)$. A log-log fit is used because emissions scale super-linearly with data size, and a linear model would systematically misrepresent the relationship. The break-even point $n_{BE}$ is then derived analytically as the intersection of the two fitted lines:
+
+\begin{equation}
+\log_{10}(n_{BE}) = \frac{b_{\text{GPU}} - b_{\text{CPU}}}{a_{\text{CPU}} - a_{\text{GPU}}}
+\label{eq:breakeven}
+\end{equation}
+
+where $a$ and $b$ are the slope and intercept of each fit. Below $n_{BE}$, CPU training is more energy-efficient; above it, GPU training is. The results are presented in \Cref{results}.
 
 To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
 

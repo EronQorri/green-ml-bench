@@ -8,7 +8,7 @@
 
 A critical decision in the experimental design was the selection of the computing platform on which all experiments would be conducted. Two options were considered: the university's shared computing infrastructure or a local machine. The latter was ultimately chosen, as it provides several key advantages for this study. First, it ensures complete reproducibility, since all experiments are executed on identical hardware configuration, eliminating interfering variables that could arise from shared resource conflicts or system variability. Second, it provides consistent availability and direct control over system configuration, which is particularly important given the extended runtime of the large-scale experiments (particularly on the 11M-instance HIGGS dataset). Third, local execution facilitates fine-grained performance monitoring and measurement of energy consumption, a primary objective of this study.
 
-The hardware platform selected for all experiments is a consumer-grade desktop system with the following specifications: an NVIDIA RTX 4070 graphics processing unit (12 GB GDDR6 memory, 5,888 CUDA cores), an AMD Ryzen 7 5700X processor (8 cores / 16 threads, base clock 3.6 GHz), and 32 GB of DDR4 RAM. The system runs Windows 11 with all code implemented in Python 3.12.0.
+The hardware platform selected for all experiments is a consumer-grade desktop system with the following specifications: an NVIDIA RTX 4070 graphics processing unit (12 GB GDDR6 memory, 5,888 CUDA cores), an AMD Ryzen 7 5700X processor (8 cores / 16 threads, base clock 3.6 GHz), and 32 GB of DDR4 RAM. The system runs Windows 11 with all code implemented in Python 3.13.0.
 
 \begin{table}[htbp]
 \centering
@@ -47,7 +47,15 @@ Carbon emissions and energy consumption were tracked using CodeCarbon \cite{cour
 
 To ensure reproducibility, a fixed random seed of 42 was used for all data splits, cross-validation folds, and model initialization. A \texttt{requirements.txt} file is provided so that the exact library versions used in this study can be reproduced.
 
-\newpage
+The implementation code was developed with the assistance of Claude Code \cite{anthropicClaudeCode2025}, an AI-powered development tool by Anthropic. All generated code was reviewed, tested, and integrated by the author.
+
+\subsection{Reproducibility and Evaluation Design}
+\label{implementation_reproducibility}
+
+To ensure fully reproducible results across all experiments, a global constant \path{RANDOM_STATE} with a value of 42 is used in every model script. It is passed to the \texttt{KFold} splitter and all model constructors. For the MLP, the seed is additionally set via \path{torch.manual_seed(RANDOM_STATE)} to guarantee deterministic weight initialization.
+
+The evaluation relies on \texttt{KFold} with five splits and shuffling enabled, executed through \texttt{cross\_validate()}. Performance is measured using a scoring dictionary that tracks both accuracy and weighted F1 score via \texttt{make\_scorer(f1\_score, average="weighted")}. Final scores are the mean across all five folds.
+
 \section{Dataset Integration}
 \label{implementation_datasets}
 
@@ -87,6 +95,7 @@ Due to the substantial scale of the \textit{Higgs} dataset, several constraints 
 
 \begin{figure}[htbp]
 \centering
+\scalebox{0.75}{%
 \begin{tikzpicture}[
     node distance=1.5cm and 2cm,
     process/.style={rectangle, draw, rounded corners, minimum width=3.5cm, minimum height=1cm, text centered, font=\sffamily},
@@ -113,19 +122,11 @@ Due to the substantial scale of the \textit{Higgs} dataset, several constraints 
 \draw [arrow] (offset) -- node[anchor=south] {Yes} (apply);
 \draw [arrow] (offset) -- node[anchor=east] {No} (return);
 \draw [arrow] (apply) |- (return);
-\end{tikzpicture}
+\end{tikzpicture}%
+}
 \caption{Visualization of the data loading pipeline and preprocessing steps within the \texttt{load\_data()} method.}
 \label{fig:data_loading_pipeline}
 \end{figure}
-
-\section{Reproducibility and Evaluation Design}
-\label{implementation_reproducibility}
-
-To ensure fully reproducible results across all experiments, a global constant \path{RANDOM_STATE} with a value of 42 is utilized in every model script. This constant is applied to all functions requiring stochastic consistency. It is specifically passed to the \texttt{KFold} splitter, the \texttt{train\_test\_split} method, and the initialization of the machine learning models. For the multilayer perceptron, the random seed is explicitly set using \path{torch.manual_seed(RANDOM_STATE)} to guarantee deterministic weight initialization and training behavior.
-
-The evaluation process relies on a standardized cross validation setup implemented uniformly across all scripts. The data is partitioned using \texttt{KFold} configured with five splits, enabled shuffling, and the aforementioned random state. The execution is handled by the \texttt{cross\_validate()} function.
-
-The performance metrics are evaluated using a custom scoring dictionary. This dictionary tracks both the standard accuracy and a weighted F1 score constructed via \texttt{make\_scorer(f1\_score, average="weighted")}. Once the evaluation is complete, the overall performance is aggregated by calculating the mean of the individual fold results, which is accessed through \texttt{cv\_results["test\_accuracy"].mean()} alongside the corresponding F1 score array. Having defined the measures of reproducibility and testing, the focus now shifts to the actual implementation of the predictive models.
 
 \section{Model Implementations}
 \label{implementation_models}
@@ -141,14 +142,14 @@ The regression is configured to use the Stochastic Average Gradient (SAG) algori
 
 This model setup deliberately excludes any hyperparameter optimization. Instead, it acts as a stable baseline to evaluate the raw computational time without the extra overhead of complex search processes.
 
-\todo[inline]{Erwähnen: SAG-Solver ist single-threaded und läuft nur auf 1 CPU-Core (~10\% Auslastung bei 16 Threads / 8 Cores). cross\_validate() nutzt ebenfalls kein n\_jobs, d.h.\ die 5 Folds laufen sequenziell. Im Gegensatz dazu nutzt Random Forest n\_jobs=-1 (alle Cores) und XGBoost intern multi-threading. Dies ist eine bewusste Designentscheidung: jedes Modell läuft mit seiner natürlichen Parallelisierungseigenschaft, was die algorithmische Charakteristik widerspiegelt. Diskutieren ob das die Energievergleichbarkeit beeinflusst (kürzere Laufzeit bei RF/XGBoost vs.\ niedrigere Wattzahl bei LogReg — Gesamtenergie in Wh ist die faire Vergleichsgröße).}
+It is worth noting that the SAG solver is single-threaded and runs on a single CPU core, resulting in roughly 10\% utilisation on the 8-core system used in this study. The \texttt{cross\_validate()} call also uses no \texttt{n\_jobs} parameter, so the five folds run sequentially. Each model in this study runs with its natural parallelisation behaviour; the implications of this for energy comparability are discussed in \Cref{implementation_emissions_limitations}.
 
 \subsection{Random Forest}
 \label{implementation_rf}
 
 The second baseline algorithm is the Random Forest classifier. This method belongs to the family of ensemble learning techniques. Unlike logistic regression, this algorithm does not require prior feature scaling. To maximize computational efficiency, the execution is fully parallelized across all available CPU cores by setting the \texttt{n\_jobs} parameter to \texttt{-1}. This configuration allows the processor to run at maximum capacity, which directly influences the subsequent energy consumption tracking and overall runtime measurements.
 
-An important methodological decision is the explicit exclusion of the \textit{Higgs} dataset for this specific classifier. As established in \Cref{implementation_data_loading}, training a Random Forest on such a massive volume of data leads to unmanageable runtimes. The primary research question focuses on the balance between energy consumption and predictive performance across varying dataset sizes and model complexities. Forcing this algorithm to process the \textit{Higgs} data would result in a massive energy footprint and an excessive runtime. This extreme resource consumption would severely skew the comparative baseline without providing proportional insights into the underlying scaling behavior. Therefore, this execution is bypassed to maintain a sensible and fair evaluation framework.
+As established in \Cref{implementation_data_loading}, Random Forest is explicitly excluded from the \textit{Higgs} dataset due to unmanageable training times at 11M instances. Including it would produce extreme runtimes without contributing meaningful insight into the scaling behaviour studied here.
 
 To ensure maximum predictive capabilities for the remaining data, the model configurations were optimized using Optuna. The optimization process specifically targeted maximizing the weighted F1 score. For strict reproducibility, the final parameter combinations for the \textit{Wine} and \textit{Credit} datasets are documented in \Cref{tab:rf_params}.
 
@@ -176,11 +177,10 @@ Parameter & \textit{Wine} & \textit{Credit} \\
 
 The next tree-based ensemble model is the XGBoost classifier. This model serves as a direct point of comparison to the Random Forest. A primary reason for including XGBoost in this study is that it allows for a direct comparison of computational efficiency between CPU and GPU processing. To achieve this, the configuration dictionaries are kept identical for both executions. The only difference is the hardware device parameter, which is set to use the GPU. This controlled setup ensures a precise evaluation of the energy and emissions generated by the exact same model architecture on different hardware. This setup directly addresses the third research question: \textit{How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?}.
 
-\todo[inline]{Finale Zahlen aus results.csv eintragen und das hier in der Diskussion ausführen. Jeanne hatte recht --- bei kleinen Datasets (Wine) ist die GPU langsamer und verbraucht mehr, bei großen (Higgs) dreht sich das komplett um. Den Break-Even-Point unbedingt ansprechen. Interessant ist auch dass mit der echten HardwareMonitor-Messung der Break-Even weiter nach oben verschoben wird, weil CodeCarbon kurze Runs stärker unterschätzt als lange --- das hätte ich mit CodeCarbon allein nicht gesehen. Außerdem: auch beim GPU-Run zieht der CPU noch ordentlich Strom ($\sim$79\,W) wegen Datenvorbereitung etc., das war vorher komplett unsichtbar. Accuracy ist bei beiden gleich.}
+The break-even analysis described in \Cref{design_breakeven} is computed in the plotting pipeline by reading all HIGGS subset rows from \texttt{results.csv} and fitting the log-log model separately for CPU and GPU using \texttt{numpy.polyfit}. The intersection is calculated analytically using \Cref{eq:breakeven}.
 
-\todo[inline]{Break-Even-Implementierung beschreiben: \texttt{plot\_results.py} (Plot 4) liest alle HIGGS-Subset-Ergebnisse aus results.csv (wo \texttt{nrows != "all"} und Modell in \{XGBoost, XGBoost\_GPU\}). Log-log-Fit via \texttt{numpy.polyfit} auf $\log_{10}(nrows)$ vs.\ $\log_{10}(CO_2)$ --- ein Fit pro Gerät. Analytischer Schnittpunkt: $\log_{10}(n_{BE}) = (b_{GPU} - b_{CPU}) / (a_{CPU} - a_{GPU})$. \textbf{Gemessener Break-Even: $\approx$\,24\,040 Instanzen} (9 HIGGS-Subsets, 1k--11M, gleiche Hyperparameter). Als Ergebnis der RQ3 interpretieren: unterhalb dieser Schwelle ist XGBoost CPU energieeffizienter, oberhalb GPU.}
+\todo[inline]{Break-Even-Wert aus finalem Run eintragen und in Results referenzieren.}
 
-\todo[inline]{Zur Aussagekraft des Break-Even-Points: Der berechnete Wert basiert auf einem log-log Potenzgesetz-Fit über nur drei Datenpunkte (Wine=178, Credit=30k, Higgs=11M) mit unterschiedlichen Hyperparametern pro Dataset --- die Aussagekraft ist daher begrenzt und sollte als Größenordnung verstanden werden, nicht als präziser Schwellenwert. Limitierungen explizit benennen: (1) Verschiedene Hyperparameter pro Dataset machen den Vergleich nicht rein dataset-größen-getrieben. (2) Ein Potenzgesetz ist eine Approximation. (3) Mit nur 3 Punkten ist der Fit empfindlich gegenüber Ausreißern. --- Für einen methodisch sauberen und thesis-tauglichen Break-Even: Higgs-Subset-Runs mit 8--9 verschiedenen \texttt{nrows}-Werten durchführen (z.B.\ 1k, 5k, 10k, 50k, 100k, 500k, 1M, 5M, 11M). Gleicher Datensatz, gleiche Hyperparameter (aus Higgs-Tuning), nur Größe variiert --- das isoliert den Dataset-Größen-Effekt sauber. 20 verschiedene Datasets wären \textit{keine} bessere Alternative, da unterschiedliche Verteilungen, Feature-Räume und Komplexitäten den Effekt verwässern würden. Der Break-Even aus den Subset-Runs ist dann ein echter messbarer Schwellenwert und direkt als Ergebnis der RQ verwendbar.}
 
 Additionally, XGBoost has a specific technical requirement for handling target variables. While the Random Forest algorithm natively adapts to different class structures, XGBoost requires explicit instructions for its learning objective. As mentioned in \Cref{experimental_dataset}, the \textit{Wine} dataset consists of three distinct categories. Therefore, the objective parameter is set to \texttt{multi:softmax}, paired with the \texttt{mlogloss} evaluation metric and a specified number of classes. In contrast, the \textit{Credit} and \textit{Higgs} datasets contain only two categories. Consequently, their objective is configured as \texttt{binary:logistic} and evaluated using the standard \texttt{logloss} metric.
 
@@ -215,9 +215,7 @@ As discussed in \Cref{design_models}, a Multilayer Perceptron was selected to re
 
 A dynamic architecture was chosen to ensure the network structure directly reflects the optimal parameters found during the Optuna tuning process. At runtime, the script reads the best parameter set from a JSON file generated during the tuning phase. It extracts the number of hidden layers via \texttt{n\_layers} and the neuron count for each individual layer via \texttt{layer\_i}. These values are then assembled into a list called \texttt{layer\_sizes}. This list is subsequently passed to the \texttt{MLPModule} class. This class constructs the full network dynamically upon instantiation, making the architecture entirely data-driven.
 
-The \texttt{MLPModule} inherits from \texttt{nn.Module} and builds the hidden layers by iterating over the previously mentioned list. Each hidden block consists of four sequential operations. It starts with a fully connected linear transformation using \texttt{nn.Linear}, followed by a batch normalization step using \texttt{nn.BatchNorm1d}, a ReLU activation function, and a final dropout layer. Batch normalization normalizes the activations across the current mini-batch. This step stabilizes the training process and reduces internal covariate shifts \cite{ioffeBatchNormalizationAccelerating2015a}. The dropout layer randomly deactivates a fraction of neurons during the training phase. It serves as a regularization technique to prevent the network from memorizing the data \cite{srivastavaDropoutSimpleWay2014}. After processing all hidden blocks, a single linear output layer maps the final representations to raw class logits. The dimension of this output equals the exact number of target classes. No activation function is applied to this final layer, because the \texttt{CrossEntropyLoss} function explicitly expects unnormalized inputs.
-
-\todo[inline]{das alles ist ziemlich theoretisch und sollte in die 02 eher rein}
+The \texttt{MLPModule} inherits from \texttt{nn.Module} and builds the hidden layers by iterating over the layer size list. Each hidden block consists of \texttt{nn.Linear} followed by \texttt{nn.BatchNorm1d}, a ReLU activation, and a dropout layer (see \Cref{sec:theoretical_mlp} for the theoretical background on these components). After all hidden blocks, a single linear output layer maps to the number of target classes with no activation, since \texttt{CrossEntropyLoss} expects raw logits.
 
 To minimize the overall training time, the implementation checks for CUDA availability using \texttt{torch.cuda.is\_available()}. The algorithm runs on the GPU if one is present and automatically falls back to the CPU otherwise. PyTorch requires highly specific numeric types, and neural networks react sensitively to implicit type mismatches. Therefore, the feature matrix $X$ is explicitly cast to \texttt{float32} and the target vector $y$ to \texttt{int64} before the training begins.
 
@@ -225,7 +223,6 @@ The neural network is embedded within a scikit-learn \texttt{Pipeline} together 
 
 The maximum number of training epochs is set to 200. This value acts as an upper boundary rather than a strict target. An early stopping callback (\path{skorch.callbacks.EarlyStopping}) monitors the validation loss after each individual epoch. It halts the training process immediately if no improvement is observed for 10 consecutive epochs. This mechanism prevents unnecessarily long training runs and provides an additional layer of protection against overfitting. Consequently, the upper limit of 200 epochs is rarely reached in practice.
 
-\todo[inline]{hier vielleicht eine visualisierung der layers einfügen}
 
 
 
@@ -234,11 +231,7 @@ The maximum number of training epochs is set to 200. This value acts as an upper
 \section{Hyperparameter Optimization}
 \label{implementation_tuning}
 
-Building on the theoretical motivation outlined in \Cref{design_hyperparameter}, this section describes how Optuna was integrated into the evaluation pipeline and which search spaces were defined for each model. The tuning procedure is kept deliberately uniform across all models and datasets, so that the energy consumed during tuning is directly comparable between configurations and can be added to the overall emissions budget of this study without methodological asymmetries.
-
-
-
-As motivated in \Cref{design_hyperparameter}, Optuna serves as the tuning framework throughout this study. The tuning logic is encapsulated in three dedicated scripts (\texttt{tune\_xgb.py}, \texttt{tune\_rfc.py}, and \texttt{tune\_mlp.py}), one per tunable model. All three follow the same structural pattern and differ only in the model that is instantiated and the search space that is queried from the trial object. The target dataset is selected via a command-line argument, and the number of trials is read from the \texttt{N\_TRIALS} environment variable, with a default of 50. This separation between configuration and code allows individual tuning runs to be triggered without modifying the source files. The search spaces used across all three tuning scripts are summarized in \Cref{tab:search_spaces}. Integer and continuous parameters define an inclusive range, while categorical parameters list the discrete choices available to the sampler.
+Building on the design outlined in \Cref{design_hyperparameter}, this section describes how Optuna was integrated into the evaluation pipeline and which search spaces were defined for each model. The tuning logic is encapsulated in three dedicated scripts (\texttt{tune\_xgb.py}, \texttt{tune\_rfc.py}, and \texttt{tune\_mlp.py}), one per tunable model. All three follow the same structural pattern and differ only in the model that is instantiated and the search space that is queried from the trial object. The target dataset is selected via a command-line argument, and the number of trials is read from the \texttt{N\_TRIALS} environment variable, with a default of 50. This separation between configuration and code allows individual tuning runs to be triggered without modifying the source files. The search spaces used across all three tuning scripts are summarized in \Cref{tab:search_spaces}. Integer and continuous parameters define an inclusive range, while categorical parameters list the discrete choices available to the sampler.
 
 \begin{table}[htbp]
 \centering
@@ -366,9 +359,11 @@ In total, the experiment produces tracked emissions records for 14 training runs
 
 The general measurement approach used by CodeCarbon, including direct GPU readout via NVML, RAM estimation per DIMM slot, and TDP-based CPU fallback on Windows, is described in \Cref{sec:theoretical_codecarbon}. This subsection focuses on the concrete implications for the hardware used in this study.
 
-CodeCarbon's TDP-based CPU estimation on Windows has been replaced in this study by direct hardware sensor readout via the \textit{LibreHardwareMonitor} library (\texttt{HardwareMonitor} Python package). This library reads the CPU Package Power sensor directly from the hardware (requiring administrator privileges), providing ground-truth power values rather than a utilization-scaled TDP approximation. In practice, CodeCarbon underestimated CPU power by a factor of roughly 9$\times$ compared to the hardware sensor (e.g.\ 6.6\,W vs.\ 57.8\,W for Logistic Regression on the Credit dataset). The corrected CO\textsubscript{2} value in \texttt{results.csv} therefore replaces CodeCarbon's CPU contribution with the hardware-measured value, while GPU and RAM energy are still taken from CodeCarbon. The original CodeCarbon total is retained as \texttt{co2eq\_codecarbon\_kg} for reference.
+CodeCarbon's TDP-based CPU estimation on Windows has been replaced in this study by direct hardware sensor readout via the \textit{LibreHardwareMonitor} library (\texttt{HardwareMonitor} Python package). This library reads the CPU Package Power sensor directly from the hardware, providing true power values rather than a TDP approximation. In practice, CodeCarbon underestimated CPU power by a factor of roughly 9$\times$ compared to the hardware sensor (e.g.\ 6.6\,W vs.\ 57.8\,W for Logistic Regression on the Credit dataset). The corrected CO\textsubscript{2} value in \texttt{results.csv} therefore replaces CodeCarbon's CPU contribution with the hardware-measured value, while GPU and RAM energy are still taken from CodeCarbon. The original CodeCarbon total is retained as \texttt{co2eq\_codecarbon\_kg} for reference.
 
-\todo[inline]{Limitations noch erwähnen: (1) HardwareMonitor benötigt Admin-Rechte — alle Messungen in dieser Arbeit wurden als Administrator ausgeführt. (2) Die unterschiedliche CPU-Parallelisierung zwischen Modellen (LogReg: 1 Core, RF: alle Cores, XGBoost: multi-threaded intern) beeinflusst die gemessene Wattzahl, aber nicht notwendigerweise die Gesamtenergie in Wh — dies sollte in der Diskussion der Ergebnisse adressiert werden.}
+This approach does, however, come with notable limitations. Because LibreHardwareMonitor requires privileged access to hardware sensors, all measurements in this study were conducted with the process running under administrator privileges. Without elevated rights, the \texttt{CPUPowerMonitor} fails to retrieve sensor data and the corrected CO\textsubscript{2} estimate cannot be computed.
+
+A second limitation concerns the differences in CPU parallelisation across models. Logistic Regression, for instance, relies on the SAG solver, which executes on a single core, whereas Random Forest and XGBoost exploit multi-threading across all available threads. This disparity directly affects the instantaneous power draw: a single-threaded workload draws considerably fewer watts. However, the reduced wattage is largely offset by a proportionally longer runtime, meaning that the total energy in watt-hours may converge to a similar value. The implications of this trade-off for the comparability of emissions estimates are discussed in \Cref{discussion}.
 
 A secondary limitation is that CodeCarbon measures at the process level, meaning background system activity on Windows 11 contributes to the recorded energy. This effect is expected to be small relative to the dominant training workload but cannot be fully eliminated.
 
@@ -383,23 +378,74 @@ per-sample prediction latency, which is relevant in deployment scenarios where
 repeated inference can accumulate significant energy costs
 \cite{desislavovTrendsAIInference2023}.
 
-\todo[inline]{Ergänzen: Begründung Single-Row statt Batch (Isolation von Training vs. Inference, kein Batch-Effekt). Modell kommt aus erstem CV-Fold (cv\_results["estimator"][0]).}
+Only a single row was passed to the model rather than a full batch. This was intentional: batching would measure throughput rather than the actual time it takes to process one request, which is the more relevant figure in deployment. A single-prediction latency can be extrapolated to real-world usage, where a model may handle millions of requests and the per-sample cost accumulates into a meaningful energy expenditure.
+
+The model used for this measurement is taken from the first cross-validation fold via \path{cv_results["estimator"][0]}, which is made available by passing \path{return_estimator=True} to \texttt{cross\_validate()}. The single-row slice \texttt{X[:1]} is then passed to \path{trained_model.predict()}, with the elapsed time captured using \path{time.perf_counter()} for sub-millisecond precision.
 
 \section{Results Persistence and Orchestration}
 \label{implementation_results}
 
+This section describes how experimental results are stored and how the individual model scripts are coordinated into complete experiment runs. The two concerns are closely related: the storage format determines what data is available for analysis, while the orchestration layer controls how and in what order the model scripts are executed.
+
 \subsection{Results Schema}
 \label{implementation_results_schema}
 
-\todo[inline]{results.csv Schema beschreiben: timestamp, model, dataset, nrows, accuracy, f1, co2eq\_kg (korrigiert: HW-CPU + CC GPU+RAM), co2eq\_codecarbon\_kg (Original CodeCarbon zum Vergleich), cpu\_power\_hw\_w (HardwareMonitor Durchschnittswatt), cpu\_energy\_hw\_wh (HardwareMonitor Energie), training\_time\_s. Append-Logik (kein Überschreiben) — Hinweis auf mögliche Duplikate bei Mehrfachläufen. inference\_time.csv analog. csv.DictWriter, Header-Check.}
+The results of every model run are written to \texttt{results/results.csv}, which serves as the central data source for all subsequent analysis and visualisation. Each row represents one complete model-dataset combination and is appended to the file rather than overwriting it, so that results from multiple runs accumulate without data loss. The file is managed using Python's \texttt{csv.DictWriter}, which writes a header row on first creation and appends subsequent rows without repeating the header. A consequence of the append-only design is that re-running a configuration produces duplicate rows, which must be filtered during analysis. \Cref{tab:results_schema} lists all columns.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Column schema of \texttt{results.csv}.}
+\label{tab:results_schema}
+\begin{tabular}{lll}
+\toprule
+\textbf{Column} & \textbf{Format} & \textbf{Description} \\
+\midrule
+\texttt{timestamp}             & datetime & Date and time of the run \\
+\texttt{model}                 & string   & Model name \\
+\texttt{dataset}               & string   & Dataset name \\
+\texttt{nrows}                 & int / \texttt{all} & Subset size; \texttt{all} for full dataset \\
+\texttt{accuracy}              & float    & Mean CV accuracy \\
+\texttt{f1}                    & float    & Mean weighted F1 score \\
+\texttt{co2eq\_kg}             & float    & Corrected CO\textsubscript{2} \\
+\texttt{co2eq\_codecarbon\_kg} & float    & Original CodeCarbon estimate \\
+\texttt{cpu\_power\_hw\_w}     & float    & Average CPU package power (W) \\
+\texttt{cpu\_energy\_hw\_wh}   & float    & Total CPU energy (Wh) \\
+\texttt{training\_time\_s}     & float    & Total CV wall-clock time (s) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The primary emissions value is \texttt{co2eq\_kg}, which combines the hardware-sensor CPU reading with CodeCarbon's GPU and RAM estimates as described in \Cref{implementation_emissions_limitations}. The column \texttt{co2eq\_codecarbon\_kg} retains the original CodeCarbon total for reference. The difference between the two columns is examined in \Cref{discussion}.
+
+Inference latency is stored separately in \texttt{results/inference\_time.csv}, as it is measured outside the emissions tracker and has a different structure. Like \texttt{results.csv}, it uses append-only writes via \texttt{csv.DictWriter}. \Cref{tab:inference_schema} shows its columns.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Column schema of \texttt{inference\_time.csv}.}
+\label{tab:inference_schema}
+\begin{tabular}{lll}
+\toprule
+\textbf{Column} & \textbf{Format} & \textbf{Description} \\
+\midrule
+\texttt{timestamp}       & datetime           & Date and time of the run \\
+\texttt{model}           & string             & Model name \\
+\texttt{dataset}         & string             & Dataset name \\
+\texttt{nrows}           & int / \texttt{all} & Subset size; \texttt{all} for full dataset \\
+\texttt{inference\_time} & float              & Single-row prediction latency (s) \\
+\texttt{co2eq\_kg}       & float              & Corrected CO\textsubscript{2} of the training run \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Experimental Orchestration}
 \label{implementation_orchestration}
 
-\todo[inline]{run\_models.py: subprocess.run() pro Dataset × Modell-Kombination. Prozess-Isolation wichtig für CodeCarbon (prozessbasierte Messung). Fehlertoleranz: einzelne fehlgeschlagene Scripts blockieren nicht den Gesamtlauf.}
+Three orchestration scripts coordinate the full experiment. Each model script is launched as an isolated subprocess rather than being imported directly. This is important because CodeCarbon operates at the process level: running multiple trackers within the same process risks state leakage between measurements. Subprocess isolation ensures that each tracker starts and stops cleanly. A failed script does not abort the overall run; failures are collected and reported at the end.
 
-\todo[inline]{Zwei weitere Orchestrierungs-Scripts beschreiben: (1) \texttt{run\_higgs\_subsets.py} --- läuft XGBoost CPU und GPU direkt (kein subprocess) auf 9 HIGGS-Subset-Größen (1k bis 11M). Setzt \texttt{TEST\_NROWS} per \texttt{os.environ} vor jedem \texttt{load\_data()}-Aufruf. Wird für die Break-Even-Analyse verwendet (RQ3). (2) \texttt{run\_scaling\_subsets.py} --- läuft alle Modelle (außer Random Forest) via subprocess mit \texttt{TEST\_NROWS} als Umgebungsvariable auf 5 Größen (100k bis 11M). Wird für die Scaling-Analyse (RQ4) verwendet. In beiden Scripts: ntfy.sh-Benachrichtigungen nach jeder Kombination und am Ende. Begründung für subprocess vs.\ direkter Import: Prozess-Isolation garantiert, dass CodeCarbon-State zwischen Runs nicht überläuft.}
+\texttt{run\_all.py} is the main entry point for the full experiment. It runs in two sequential phases. Phase 1 executes all tuning scripts for Random Forest, XGBoost, and MLP across their respective datasets, and saves the best parameters to \texttt{best\_params.json}. Phase 2 then runs all five model scripts across all three datasets. Each script is launched via \texttt{subprocess.run()} with the working directory set to \texttt{models/}, so that relative imports resolve correctly.
 
-\todo[inline]{\texttt{TEST\_NROWS}-Mechanismus erklären: Umgebungsvariable, die in \texttt{load\_data()} und \texttt{get\_nrows()} ausgelesen wird. Wenn gesetzt, überschreibt sie den \texttt{nrows}-Wert aus der Config. Wird in \texttt{nrows}-Spalte der results.csv als konkreter Integer gespeichert (statt "all"), sodass Subset-Ergebnisse direkt filterbar und plottbar sind. Zentrale Designentscheidung: kein Code-Änderung in den Modell-Scripts nötig --- nur Umgebungsvariable setzen.}
+The other two scripts are used for the subset-based analyses. \texttt{run\_xgb\_breakeven} runs XGBoost CPU and GPU directly on nine HIGGS subset sizes ranging from 1{,}000 to 11{,}000{,}000 rows. Unlike the other orchestration scripts, it calls the model logic directly rather than via subprocess, because it manages the emissions tracker and the cross-validation loop itself. This script provides the data for the break-even analysis in \Cref{results}. \texttt{run\_scaling\_all\_models.py} runs all models except Random Forest via subprocess across five HIGGS subset sizes (100k to 11M rows), and provides the data for the scaling analysis.
 
-\todo[inline]{Analyse-Scripts beschreiben: \texttt{analysis/plots/plot\_results.py} erzeugt fünf Plots. (1) Haupt-Dashboard: CO2, Trainingszeit, Inference-Time, Accuracy, F1, Carbon-Score pro Dataset. (2) CodeCarbon vs.\ HardwareMonitor: direkter Vergleich der CO2-Schätzung pro Modell und Dataset. (3) XGBoost CPU vs.\ GPU Übersicht mit Break-Even-Kandidaten aus den drei Haupt-Datasets. (4) \texttt{xgb\_breakeven\_higgs.png}: echter Break-Even aus Higgs-Subset-Daten (Plot 4 --- nur verfügbar nach \texttt{run\_higgs\_subsets.py}). (5) \texttt{scaling\_higgs.png}: Linienplots CO2, Zeit, F1 über nrows für alle Modelle aus Subset-Run (Plot 5 --- nur verfügbar nach \texttt{run\_scaling\_subsets.py}). Beide letzten Plots werden automatisch übersprungen wenn die Daten noch fehlen. Finalen Break-Even-Wert und Scaling-Kurven hier referenzieren wenn Runs abgeschlossen.}
+Both subset scripts control the dataset size through an environment variable \texttt{TEST\_NROWS}. When set, \texttt{load\_data()} reads this value and draws a stratified sample of that size instead of loading the full dataset. The value is written to the \texttt{nrows} column in \texttt{results.csv} as a concrete integer, making subset results directly filterable during analysis. The key advantage of this approach is that no changes to any model script are required; the subset size is controlled entirely from the outside.

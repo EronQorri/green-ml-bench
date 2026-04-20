@@ -1,12 +1,12 @@
 """
-run_higgs_subsets.py — XGBoost CPU vs GPU on Higgs subsets for break-even analysis.
+run_xgb_breakeven.py — XGBoost CPU vs GPU on Higgs subsets for break-even analysis.
 
 Runs XGBoost (CPU) and XGBoost_GPU on Higgs with increasing nrows.
 Same hyperparameters (from Higgs tuning) across all sizes — only dataset size varies.
 Results are appended to results/results.csv with the actual nrows value recorded.
 
 Usage:
-    python run_higgs_subsets.py
+    python run_xgb_breakeven.py
 
 Must be run as Administrator for HardwareMonitor CPU power measurement.
 """

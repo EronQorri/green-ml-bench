@@ -1,0 +1,8 @@
+\chapter{Discussion}
+\label{discussion}
+
+\todo[inline]{Zur Aussagekraft des Break-Even-Points: Der log-log-Fit basiert auf 9 HIGGS-Subset-Größen (1k--11M) mit gleichen Hyperparametern --- das isoliert den Dataset-Größen-Effekt sauber. Dennoch Limitierungen benennen: (1) Potenzgesetz ist eine Approximation. (2) Ergebnis gilt nur für diese Hardware und diesen Datensatz. (3) Fit empfindlich gegenüber Ausreißern an den Rändern. Break-Even-Wert als Größenordnung interpretieren, nicht als präzisen Schwellenwert.}
+
+\todo[inline]{CodeCarbon vs.\ HardwareMonitor comparison: discuss the systematic underestimation of CPU power by CodeCarbon on Windows (TDP-based fallback vs.\ sensor readout). Show the difference between \texttt{co2eq\_codecarbon\_kg} and \texttt{co2eq\_kg} per model/dataset. Interpret what this means for reproducibility and comparability of emissions studies that rely solely on CodeCarbon.}
+
+\todo[inline]{Parallelisation trade-off: Logistic Regression (SAG solver, single core) draws fewer watts than Random Forest / XGBoost (multi-threaded), but the longer runtime may result in comparable total energy in Wh. Discuss whether watt-based or Wh-based comparison is the fairer metric for cross-model emissions comparability, and what this means for interpreting the results.}

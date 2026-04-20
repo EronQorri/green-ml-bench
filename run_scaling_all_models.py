@@ -1,5 +1,5 @@
 """
-run_scaling_subsets.py — All models on Higgs subsets for dataset-size scaling analysis.
+run_scaling_all_models.py — All models on Higgs subsets for dataset-size scaling analysis.
 
 Addresses RQ: "How does reducing the number of training instances on large datasets
 affect model accuracy and energy consumption across different algorithms?"
@@ -8,7 +8,7 @@ Runs all models (except RandomForest which skips Higgs) on 5 Higgs subset sizes.
 Uses the same hyperparameters as the main run (from best_params.json).
 
 Usage:
-    python run_scaling_subsets.py
+    python run_scaling_all_models.py
 
 Must be run as Administrator for HardwareMonitor CPU power measurement.
 """
