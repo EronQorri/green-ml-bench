@@ -1,5 +1,7 @@
 \chapter{Implementation and Measurement}
 
+This chapter describes how the experimental pipeline was built and how measurements were collected. It covers the hardware and software environment, the data loading architecture, each model implementation, the hyperparameter tuning setup, and the emissions measurement infrastructure including the custom CPU power monitoring solution.
+
 % ─────────────────────────────────────────────
 \section{Experimental Setup}
 
@@ -359,7 +361,7 @@ In total, the experiment produces tracked emissions records for 14 training runs
 
 The general measurement approach used by CodeCarbon, including direct GPU readout via NVML, RAM estimation per DIMM slot, and TDP-based CPU fallback on Windows, is described in \Cref{sec:theoretical_codecarbon}. This subsection focuses on the concrete implications for the hardware used in this study.
 
-CodeCarbon's TDP-based CPU estimation on Windows has been replaced in this study by direct hardware sensor readout via the \textit{LibreHardwareMonitor} library (\texttt{HardwareMonitor} Python package). This library reads the CPU Package Power sensor directly from the hardware, providing true power values rather than a TDP approximation. In practice, CodeCarbon underestimated CPU power by a factor of roughly 9$\times$ compared to the hardware sensor (e.g.\ 6.6\,W vs.\ 57.8\,W for Logistic Regression on the Credit dataset). The corrected CO\textsubscript{2} value in \texttt{results.csv} therefore replaces CodeCarbon's CPU contribution with the hardware-measured value, while GPU and RAM energy are still taken from CodeCarbon. The original CodeCarbon total is retained as \texttt{co2eq\_codecarbon\_kg} for reference.
+CodeCarbon's TDP-based CPU estimation on Windows has been replaced in this study by a custom \texttt{CPUPowerMonitor} class implemented in \texttt{models/power\_monitor.py}. It runs in a background thread and polls the CPU Package Power sensor every 0.25 seconds via the \textit{LibreHardwareMonitor} library (\texttt{HardwareMonitor} Python package). This library reads the CPU Package Power sensor directly from the hardware, providing true power values rather than a TDP approximation. In practice, CodeCarbon underestimated CPU power by a factor of roughly 9$\times$ compared to the hardware sensor (e.g.\ 6.6\,W vs.\ 57.8\,W for Logistic Regression on the Credit dataset). The corrected CO\textsubscript{2} value in \texttt{results.csv} therefore replaces CodeCarbon's CPU contribution with the hardware-measured value, while GPU and RAM energy are still taken from CodeCarbon. The original CodeCarbon total is retained as \texttt{co2eq\_codecarbon\_kg} for reference.
 
 This approach does, however, come with notable limitations. Because LibreHardwareMonitor requires privileged access to hardware sensors, all measurements in this study were conducted with the process running under administrator privileges. Without elevated rights, the \texttt{CPUPowerMonitor} fails to retrieve sensor data and the corrected CO\textsubscript{2} estimate cannot be computed.
 
