@@ -32,7 +32,7 @@ The choice of hardware reflects a deliberate trade-off between experimental scop
 
 It is important to note that energy consumption and CO2 emissions measured in this study are specific to this hardware configuration and the local electricity grid, and may not directly generalize to other systems or geographic regions. However, the relative performance comparisons (e.g., the energy efficiency ranking of different algorithms) are more likely to generalize, as they reflect algorithmic properties rather than hardware specifics alone.
 
-\subsection{Software Environment}
+\subsection{Software Environment and Reproducibility}
 \label{implementation_sw_env}
 
 All experiments were implemented in Python 3.13.0. The main libraries used are described below.
@@ -51,9 +51,6 @@ To ensure reproducibility, a fixed random seed of 42 was used for all data split
 
 The implementation code was developed with the assistance of Claude Code \cite{anthropicClaudeCode2025}, an AI-powered development tool by Anthropic. All generated code was reviewed, tested, and integrated by the author.
 
-\subsection{Reproducibility and Evaluation Design}
-\label{implementation_reproducibility}
-
 To ensure fully reproducible results across all experiments, a global constant \path{RANDOM_STATE} with a value of 42 is used in every model script. It is passed to the \texttt{KFold} splitter and all model constructors. For the MLP, the seed is additionally set via \path{torch.manual_seed(RANDOM_STATE)} to guarantee deterministic weight initialization.
 
 The evaluation relies on \texttt{KFold} with five splits and shuffling enabled, executed through \texttt{cross\_validate()}. Performance is measured using a scoring dictionary that tracks both accuracy and weighted F1 score via \texttt{make\_scorer(f1\_score, average="weighted")}. Final scores are the mean across all five folds.
@@ -62,9 +59,6 @@ The evaluation relies on \texttt{KFold} with five splits and shuffling enabled, 
 \label{implementation_datasets}
 
 The three datasets used in this study, \textit{Wine}, \textit{Credit}, and \textit{HIGGS}, were introduced in \Cref{experimental_dataset}. This section describes how they are integrated into the software architecture, covering the central configuration file, the data loading pipeline, and dataset-specific constraints.
-
-\subsection{Configuration Architecture}
-\label{implementation_config}
 
 To ensure a consistent foundation across all model scripts, a central configuration 
 file (\texttt{config.py}) was created. It serves as a single source of truth for 
@@ -86,9 +80,7 @@ The global constants \texttt{RANDOM\_STATE} and \texttt{CV\_FOLDS} are also defi
 here, ensuring that all scripts use identical values for random seeding and 
 cross-validation, which is essential for the comparability of results.
 
-\subsection{Data Loading Pipeline}
 \label{implementation_data_loading}
-
 To read the datasets from their respective files, a custom \texttt{load\_data} method was implemented. Depending on the dataset, the appropriate loading mechanism is selected. The \textit{Wine} and \textit{Credit} datasets are loaded using pandas' \texttt{read\_csv} function. For the \textit{Higgs} dataset, \texttt{read\_parquet} is utilized. This was a deliberate decision to save storage space by storing the large \textit{Higgs} dataset as a Parquet file rather than a standard CSV.
 
 Following the initial loading phase, the \textit{Higgs} data is reduced to a representative subset using a sampling approach controlled by the \texttt{nrows} parameter. Once the data size is managed, any columns specified in the configuration file are dropped from the respective dataset. The data is then split into the feature matrix $X$ and the target vector $y$. If an offset is defined in the config, which is currently only the case for the \textit{Credit} dataset, it is applied as described in the previous section. Finally, the method returns $X$ and $y$ for further use in the subsequent scripts. This process is visualized in \Cref{fig:data_loading_pipeline}.
@@ -349,12 +341,7 @@ Dashed gray boxes indicate CodeCarbon \texttt{EmissionsTracker} calls; dashed bl
 \label{fig:emissions_flow}
 \end{figure}
 
-\subsection{Measurement Scope and Naming}
-\label{implementation_emissions_scope}
-
-To allow fine-grained analysis of emissions across all experimental configurations, each model–dataset combination receives its own \texttt{EmissionsTracker} instance with a unique \texttt{project\_name}. The naming convention follows the pattern \texttt{<model>\_<dataset>}, for example \texttt{lr\_wine}, \texttt{rf\_credit}, or \texttt{xgb\_gpu\_higgs}. This scheme makes individual runs immediately identifiable in the \texttt{emissions/} directory, where CodeCarbon writes one CSV file per tracked run in addition to returning the scalar value in code. In the same manner, the tuning scripts save the results with the \texttt{<model>\_<dataset>} pattern, preceded by a \texttt{tune\_}, for example \texttt{tune\_mlp\_higgs} or \texttt{tune\_xgb\_cpu\_wine}.
-
-In total, the experiment produces tracked emissions records for 14 training runs (all five models across all three datasets, minus the Random Forest on HIGGS which is explicitly skipped) and up to eight tuning runs (Random Forest across two datasets, XGBoost and MLP across all three). The separate CSV files written by CodeCarbon to the \texttt{emissions/} directory serve as a raw audit trail, while the values extracted via \texttt{tracker.stop()} are the primary source for the analysis presented in \Cref{results}.
+To allow fine-grained analysis, each model–dataset combination receives its own \texttt{EmissionsTracker} instance with a unique \texttt{project\_name}. The naming convention follows the pattern \texttt{<model>\_<dataset>}, for example \texttt{lr\_wine}, \texttt{rf\_credit}, or \texttt{xgb\_gpu\_higgs}. This scheme makes individual runs immediately identifiable in the \texttt{emissions/} directory, where CodeCarbon writes one CSV file per tracked run in addition to returning the scalar value in code. Tuning scripts follow the same pattern preceded by \texttt{tune\_}, for example \texttt{tune\_mlp\_higgs} or \texttt{tune\_xgb\_cpu\_wine}. In total, the experiment produces tracked emissions records for 14 training runs and up to eight tuning runs. The separate CSV files serve as a raw audit trail, while the values extracted via \texttt{tracker.stop()} are the primary source for the analysis presented in \Cref{results}.
 
 \subsection{Hardware Measurement and Limitations}
 \label{implementation_emissions_limitations}

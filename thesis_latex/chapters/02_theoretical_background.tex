@@ -8,10 +8,19 @@ This chapter establishes the theoretical foundations required to understand the 
 \section{Green AI and Red AI}
 \label{sec:theoretical_green_red_ai}
 
+
+
 \todo[inline]{Übergreifende Section-Einleitung: kurz motivieren, warum dieses Framing für die Arbeit zentral ist (es liefert das ökologische Vokabular für RQ und Metriken). Verweis auf \Cref{sec:theoretical_metrics} (EWF1) und \Cref{sec:theoretical_emissions}.}
 
 \subsection{The Rise of Red AI}
 \label{sec:theoretical_red_ai}
+
+In recent years, a paradigm has emerged in Artificial Intelligence (AI) research that \citeauthor{schwartzGreenAI2020} refer to as "Red AI" \cite{schwartzGreenAI2020}. Red AI describes research approaches that primarily aim to improve prediction accuracy or related metrics through the massive use of computational power, data, and parameters, while largely disregarding the associated infrastructural and energetic costs. In this paradigm, new state-of-the-art results are effectively "bought" by employing increasingly vast computational resources.
+
+The background to this development is that the relationship between model performance and model complexity, whether measured by the number of parameters, the size of the dataset, or the number of experiments, is at best logarithmic \cite{schwartzGreenAI2020}. This means that a linear increase in accuracy requires an exponentially larger model or an exponentially greater volume of training data. This dynamic is reflected in empirical scaling laws. Since 2012, the amount of compute used to train state-of-the-art AI models has been doubling approximately every 3.4 months \cite{verdecchiaDataCentricGreenAI2022a}.
+
+This trend toward increasingly resource-intensive models is particularly evident in the evolution of modern deep learning architectures such as Transformers. \citeauthor{strubellEnergyPolicyConsiderations2019} extensively document the massive computational requirements and corresponding energy consumption associated with training these deep neural networks, noting for instance that training a large Transformer model can require days of continuous computation across multiple GPUs \cite{strubellEnergyPolicyConsiderations2019}. This scaling trend is further amplified by the development of massive foundation models: OpenAI's GPT-2 already contains 1.5 billion parameters, while its successor GPT-3 scales up to 175 billion parameters \cite{strubellEnergyPolicyConsiderations2019}. Consequently, the continuous optimization of predictive accuracy objectively necessitates an exponentially growing demand for computational power and energy in modern AI research.
+
 
 \todo[inline]{Definition Red AI nach \citeauthor{schwartzGreenAI2020}: Forschung, die Genauigkeit primär durch immer mehr Compute, Daten und Parameter erkauft. Skalierungsgesetz von Compute pro SOTA-Paper (Verdopplung alle 3.4 Monate, \cite{AICompute2022} bzw. analog). Kosten-Trends: Strubell et al.\ (Transformer-Training), GPT-Skalierung. Wichtig: nicht moralisieren, sondern Phänomen sachlich beschreiben.}
 
@@ -111,27 +120,27 @@ CPU measurement depends on the operating system and processor. On Linux, CodeCar
 
 \todo[inline]{Section-Einleitung: kurz historisch (Perceptron \cite{rosenblattPerceptronProbabilisticModel1958}, dann Mehrschicht via Backprop \cite{rumelhartLearningRepresentationsBackpropagating1986}). Danach modular in Subsubsections — der derzeit in \Cref{implementation_mlp} stehende theoretische Block ("BatchNorm normalisiert Aktivierungen über den Mini-Batch ...") soll hierhin verschoben werden, dort nur noch die Implementation übrig lassen.}
 
-\subsubsection{Perceptron and Feedforward Architecture}
+\paragraph{Perceptron and Feedforward Architecture}
 
 \todo[inline]{Einzelner Perceptron als gewichtete Summe + Aktivierung. Stack zu Schichten: $h^{(l)} = \phi(W^{(l)} h^{(l-1)} + b^{(l)})$. Universal Approximation Theorem in 1–2 Sätzen erwähnen. Architekturparameter: Anzahl Hidden Layers, Neuronen pro Layer — direkter Bezug zu RQ "Skalierung der Architektur".}
 
-\subsubsection{Activation Functions}
+\paragraph{Activation Functions}
 
 \todo[inline]{Sigmoid, Tanh, ReLU vergleichen. Vanishing-Gradient-Problem von Sigmoid/Tanh, daher Dominanz von ReLU \cite{hintonRectifiedLinearUnits2010}. Eigenschaften ReLU: $\max(0, x)$, sparse Aktivierungen, billiger Gradient. Kurze Erwähnung von Varianten (Leaky ReLU, GELU) — aber begründen, warum in dieser Arbeit Standard-ReLU genutzt wird.}
 
-\subsubsection{Backpropagation and Gradient Descent}
+\paragraph{Backpropagation and Gradient Descent}
 
 \todo[inline]{Chain Rule für Gradienten durch das Netz (Backpropagation). Stochastic Gradient Descent (SGD) → Mini-Batch SGD → Adam \cite{kingmaAdamMethodStochastic2015} mit adaptiven Momenten. Formel Adam-Update kompakt. Konzept Learning Rate als wichtigster Hyperparameter (motiviert spätere Tuning-Suchräume).}
 
-\subsubsection{Batch Normalization}
+\paragraph{Batch Normalization}
 
 \todo[inline]{Inhalt aus \Cref{implementation_mlp} hierher verschieben: Normalisierung der Aktivierungen pro Mini-Batch zu Mittelwert 0 / Varianz 1, dann affine Transformation mit lernbaren $\gamma, \beta$. Effekt: Reduktion des Internal Covariate Shift, schnellere Konvergenz, leichte Regularisierung \cite{ioffeBatchNormalizationAccelerating2015a}.}
 
-\subsubsection{Dropout}
+\paragraph{Dropout}
 
 \todo[inline]{Inhalt aus \Cref{implementation_mlp} hierher verschieben: zufälliges Deaktivieren von Neuronen mit Wahrscheinlichkeit $p$ während des Trainings, volle Aktivierung beim Inference (skaliert). Interpretation als implizites Ensemble \cite{srivastavaDropoutSimpleWay2014}. Warum BN + Dropout zusammen funktionieren (mit Vorsicht — bekannte Wechselwirkungen kurz erwähnen).}
 
-\subsubsection{Early Stopping as Regularization}
+\paragraph{Early Stopping as Regularization}
 
 \todo[inline]{Konzept: Training abbrechen, sobald Validation-Loss nicht mehr sinkt. Theoretische Begründung als impliziter Regularisierer (begrenzt effektive Modellkapazität). Patience-Parameter erklären. Querverweis: konkrete Implementation in \Cref{implementation_mlp}.}
 
@@ -151,15 +160,10 @@ CPU measurement depends on the operating system and processor. On Linux, CodeCar
 
 \todo[inline]{Definitionen: Precision = $TP/(TP+FP)$, Recall = $TP/(TP+FN)$, F1 = harmonisches Mittel. Warum harmonisches statt arithmetisches Mittel (penalisiert Extremwerte). Macro / Micro / Weighted F1 unterscheiden — Weighted F1 = pro Klasse gewichtet mit Support, nutzt diese Arbeit. Begründung für Weighted F1 bei den hier verwendeten Datasets (Credit ist imbalanced, HIGGS leicht imbalanced).}
 
-\subsection{Resource Metrics}
-\label{sec:theoretical_resource_metrics}
-
-\todo[inline]{Trainingszeit (Sekunden), Energie (kWh), CO\textsubscript{2}eq (kg), Inference-Latenz (Sekunden / Sample). Querverweis auf \Cref{sec:theoretical_emissions} für Definitionen. Hier nur knapp die Rolle als Evaluationsmetrik begründen.}
-
 \subsection{Composite Efficiency Metrics}
 \label{sec:theoretical_composite}
 
-\todo[inline]{Generelle Idee zusammengesetzter Metriken: ein Score, der Performance gegen Kosten abwägt. Beispiele aus der Literatur: Energy-Efficiency Ratio, Performance-per-Watt, FLOPs-per-Sample. Hier theoretischer Hintergrund — die konkrete EWF1-Definition für diese Arbeit steht in \Cref{design_metrics}, hier nur die methodische Grundlage und Schwächen solcher Composite-Metriken (Gewichtungswillkür, Hardware-Abhängigkeit) diskutieren.}
+\todo[inline]{Kurz die Ressourcenmetriken einführen: Trainingszeit (s), Energie (kWh), CO\textsubscript{2}eq (kg), Inference-Latenz (s/Sample). Querverweis auf \Cref{sec:theoretical_emissions} für Definitionen. Danach: generelle Idee zusammengesetzter Metriken — ein Score, der Performance gegen Kosten abwägt. Beispiele aus der Literatur: Energy-Efficiency Ratio, Performance-per-Watt, FLOPs-per-Sample. Hier theoretischer Hintergrund — die konkrete EWF1-Definition für diese Arbeit steht in \Cref{design_metrics}, hier nur die methodische Grundlage und Schwächen solcher Composite-Metriken (Gewichtungswillkür, Hardware-Abhängigkeit) diskutieren.}
 
 % =============================================================
 \section{Validation Strategies}
@@ -167,31 +171,16 @@ CPU measurement depends on the operating system and processor. On Linux, CodeCar
 
 \todo[inline]{Section-Einleitung: warum nicht einfach auf Trainingsdaten evaluieren (Overfitting-Risiko, Generalisierung). Wird aus \Cref{design_validation} referenziert.}
 
-\subsection{Hold-Out Train-Test Split}
-\label{sec:theoretical_holdout}
-
-\todo[inline]{Einfachste Strategie: $X$ in train/test aufteilen (z.B.\ 80/20). Vorteile (schnell, einfach), Nachteile (hohe Varianz bei kleinen Datasets, Performance-Schätzung hängt stark vom konkreten Split ab).}
-
-\subsection{K-Fold Cross-Validation}
+\subsection{Cross-Validation}
 \label{sec:theoretical_kfold}
 
-\todo[inline]{K-Fold-Algorithmus: Daten in $k$ Folds, $k$-mal trainieren, jeweils ein Fold als Test. Mittelwert über Folds als Performance-Schätzer, Standardabweichung als Stabilitätsmaß. Trade-off $k$: kleines $k$ → schneller, höherer Bias; großes $k$ (LOOCV) → niedriger Bias, sehr teuer. $k=5$ und $k=10$ als Standardwerte \cite{hastieModelAssessmentSelection2009}. Rechtfertigung für $k=5$ in dieser Arbeit verlinken auf \Cref{design_validation}.}
-
-\subsection{Stratified Sampling}
-\label{sec:theoretical_stratified}
-
-\todo[inline]{Stratifizierte Splits erhalten Klassenverhältnisse in jedem Fold. Wichtig bei imbalanced Datasets (Credit, HIGGS). Kurz erklären, dass scikit-learn's StratifiedKFold dies automatisch tut — hier nur das Prinzip, keine API-Details.}
+\todo[inline]{Als Einstieg kurz Hold-Out (80/20-Split) beschreiben: einfach, aber hohe Varianz bei kleinen Datasets — motiviert K-Fold. K-Fold-Algorithmus: Daten in $k$ Folds, $k$-mal trainieren, jeweils ein Fold als Test. Mittelwert über Folds als Performance-Schätzer, Standardabweichung als Stabilitätsmaß. Trade-off $k$: kleines $k$ → schneller, höherer Bias; großes $k$ (LOOCV) → niedriger Bias, sehr teuer. $k=5$ und $k=10$ als Standardwerte \cite{hastieModelAssessmentSelection2009}. Rechtfertigung für $k=5$ in dieser Arbeit verlinken auf \Cref{design_validation}. Abschließend: Stratifizierung — Klassenverhältnisse in jedem Fold erhalten, wichtig bei imbalanced Datasets (Credit, HIGGS).}
 
 % =============================================================
 \section{Hyperparameter Optimization}
 \label{sec:theoretical_hpo}
 
-\todo[inline]{Section-Einleitung: aus \Cref{design_hyperparameter} wird hierher referenziert für die genaue theoretische Erklärung von Bayesian Optimization / Optuna.}
-
-\subsection{Hyperparameters vs.\ Parameters}
-\label{sec:theoretical_hp_vs_p}
-
-\todo[inline]{Klare Abgrenzung: Parameter = während Training gelernt (Gewichte), Hyperparameter = vor Training festgelegt (Lernrate, Tiefe, Anzahl Bäume). Suchraum als Cartesian Product der HP-Wertebereiche. Begriff Validation-Set / inneres CV für HP-Selektion.}
+\todo[inline]{Section-Einleitung: kurze Abgrenzung Parameter (während Training gelernt) vs.\ Hyperparameter (vor Training festgelegt: Lernrate, Tiefe, Anzahl Bäume). Suchraum als Cartesian Product der HP-Wertebereiche. Verweis auf \Cref{design_hyperparameter} für die konkrete Begründung der Methodenwahl in dieser Arbeit.}
 
 \subsection{Grid Search and Random Search}
 \label{sec:theoretical_grid_random}
