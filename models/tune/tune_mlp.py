@@ -20,6 +20,12 @@ import time
 import json
 from codecarbon import EmissionsTracker
 
+# NOTE: MLP Higgs tuning (run 2026-04-21 22:33 → crash 2026-04-26 11:15, PC MCE/overheat)
+# Completed 45/49 trials in 108.70 h before crash. Best F1 seen: 0.7807 (params not recorded).
+# Best params for higgs in best_params.json are taken from MLP credit run (fallback).
+# CO₂ extrapolated to full 49 trials: 118.36 h × 68.83 W (avg MLP hw power) = 8146.6 Wh → 3.1039 kg CO₂
+# Method: linear scale by trial ratio (49/45); power from HardwareMonitor MLP wine+credit avg.
+
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
 N_TRIALS = int(os.environ.get("N_TRIALS", 50))
 mlp_config = {
@@ -95,8 +101,11 @@ tracker = EmissionsTracker(
 tracker.start()
 
 study = optuna.create_study(
+    study_name=f"mlp_{DATASET}",
+    storage=f"sqlite:///{BASE_DIR}/optuna_mlp_{DATASET}.db",
     direction="maximize",
     sampler=optuna.samplers.TPESampler(seed=RANDOM_STATE),
+    load_if_exists=True,
 )
 study.optimize(objective, n_trials=N_TRIALS)
 
