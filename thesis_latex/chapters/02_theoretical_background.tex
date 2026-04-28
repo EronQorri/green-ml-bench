@@ -10,7 +10,7 @@ This chapter establishes the theoretical foundations required to understand the 
 
 
 
-\todo[inline]{Übergreifende Section-Einleitung: kurz motivieren, warum dieses Framing für die Arbeit zentral ist (es liefert das ökologische Vokabular für RQ und Metriken). Verweis auf \Cref{sec:theoretical_metrics} (EWF1) und \Cref{sec:theoretical_emissions}.}
+The evaluation framework of this study assesses machine learning models not only by predictive performance, but explicitly by their ecological cost. This section introduces the conceptual distinction between Red AI and Green AI, which provides the vocabulary for the research questions and motivates the treatment of efficiency as a first-class evaluation criterion. The metrics used to operationalize ecological cost are defined in \Cref{sec:theoretical_metrics}, and the corresponding measurement infrastructure is described in \Cref{sec:theoretical_emissions}.
 
 \subsection{The Rise of Red AI}
 \label{sec:theoretical_red_ai}
@@ -27,88 +27,125 @@ This trend toward increasingly resource-intensive models is particularly evident
 \subsection{Green AI as a Counter-Movement}
 \label{sec:theoretical_green_ai}
 
-\todo[inline]{Definition Green AI: Forschung, die Effizienz neben Genauigkeit als Erstklass-Metrik behandelt. Kernforderung von \cite{schwartzGreenAI2020}: Reporting von FLOPs / Energie / CO\textsubscript{2} als Standardpraxis. Abgrenzung Green AI vs.\ "AI for Green" (KI \textit{für} Nachhaltigkeit, z.B.\ Smart Grids) — letzteres ist NICHT Thema dieser Arbeit. Erwähnung verwandter Initiativen: ML CO\textsubscript{2} Impact, MLCO2 Calculator, Green Software Foundation.}
+In response to the resource-intensive trends described in the previous section, the concept of \textit{Green AI} has emerged as a counter-movement within the machine learning community. Green AI is defined as research that yields novel results while explicitly accounting for computational costs, with the goal of reducing the resources required to produce them \cite{schwartzGreenAI2020}. A core principle of this movement is the elevation of efficiency to a primary evaluation criterion, placing it alongside traditional metrics such as predictive accuracy \cite{schwartzGreenAI2020}.
+
+A central demand of the Green AI movement is the establishment of standardized reporting practices. Specifically, researchers advocate that the computational work required to generate a result, quantified in floating-point operations (FLOPs), as well as the corresponding energy consumption and carbon emissions, should become standard practice in the machine learning community \cite{schwartzGreenAI2020}. This transparency serves two purposes: it enables fair comparison between different approaches, and it establishes baselines that future work can build upon.
+
+An important distinction in this context is between Green AI and the concept of \textit{AI for sustainability} (also referred to as \textit{AI for Green}). AI for sustainability focuses on applying machine learning as a tool to address broader environmental challenges, such as optimizing industrial processes, managing forest fires, or supporting animal conservation efforts \cite{schwartzGreenAI2020}. Green AI, by contrast, is exclusively concerned with reducing the environmental footprint of AI systems themselves \cite{GreenAIPosition}. These two goals are orthogonal: deploying AI for sustainable purposes does not make those AI systems inherently more efficient, and is therefore outside the scope of this thesis.
+
+To support the adoption of Green AI principles in practice, several tools and frameworks have been developed to quantify the ecological impact of model training. Tools such as the ML CO\textsubscript{2} Impact Calculator \cite{lacosteQuantifyingCarbonEmissions2019} and the experiment-impact-tracker \cite{hendersonSystematicReportingEnergy2022} allow practitioners to estimate carbon emissions based on hardware configuration, execution time, and the carbon intensity of the local electricity grid. At the organizational level, the Green Software Foundation has been working to formalize these efforts through the Software Carbon Intensity (SCI) specification, which aims to provide a standardized and comparable basis for sustainability metrics in software and AI systems \cite{eilamMethodologyFrameworkAI2023}.
 
 \subsection{Efficiency as a First-Class Metric}
 \label{sec:theoretical_efficiency_metric}
 
-\todo[inline]{Konzeptueller Übergang: Wie operationalisiert man "Effizienz"? Diskussion möglicher Proxies — FLOPs (hardware-unabhängig, aber abstrakt), Parameteranzahl (irreführend bei Sparse Models), Trainingszeit (hardware-abhängig), Energie in kWh, CO\textsubscript{2}eq. Trade-offs jeder Metrik kurz benennen. Begründung, warum diese Arbeit auf kWh + CO\textsubscript{2}eq + Trainingszeit setzt — leitet direkt zu \Cref{sec:theoretical_metrics} über. KEIN Vorgriff auf EWF1-Formel (das gehört zu Metrics).}
+To counter the resource-intensive trends of Red AI, the Green AI movement advocates for making efficiency a primary evaluation criterion, alongside accuracy \cite{schwartzGreenAI2020}. Evaluating models based on both performance and efficiency aligns incentives towards sustainable research and allows for a more rigorous cost-benefit analysis \cite{hendersonSystematicReportingEnergy2022}.
+
+Realizing this in practice, however, requires defining how efficiency should be measured. The literature suggests several proxies, each with distinct trade-offs that determine their suitability for empirical comparison.
+
+Floating-point operations (FLOPs) provide a hardware-independent estimate of computational work and allow algorithmic comparisons independent of the underlying infrastructure \cite{schwartzGreenAI2020}. Their limitation is that FLOPs do not translate directly to energy consumption or execution time, as these depend on hardware architecture, memory access patterns, and parallelization \cite{hendersonSystematicReportingEnergy2022}. Parameter count is another common proxy, but it can be misleading: models with similar parameter counts can perform vastly different amounts of computational work depending on their depth, width, or sparsity structure \cite{schwartzGreenAI2020}.
+
+Training time is more intuitive and directly observable, but it is hardware-dependent and therefore difficult to compare across different computational environments \cite{schwartzGreenAI2020}. Energy consumption in kWh and CO\textsubscript{2} equivalents (CO\textsubscript{2}eq) sidestep this limitation by capturing the actual physical and ecological footprint of a run. Although these metrics are tied to a specific hardware configuration and electricity grid, they provide directly comparable sustainability figures when experiments are conducted under controlled conditions \cite{hendersonSystematicReportingEnergy2022, dodgeMeasuringCarbonIntensity2022}.
 
 % =============================================================
 \section{Energy and Carbon Emissions in Machine Learning}
 \label{sec:theoretical_emissions}
 
-\todo[inline]{Section-Einleitung: Brücke von Konzept (Effizienz) zu Messung. Erklären, dass Energieverbrauch und Emissionen \textit{nicht dasselbe} sind — Energie ist eine physikalische Größe (kWh), Emissionen hängen vom Strommix ab.}
+Operationalizing efficiency requires distinguishing two related but distinct quantities. Energy consumption is a hardware-level physical quantity, the product of power draw and time expressed in kilowatt-hours, where the actual power draw depends on hardware utilization and thermal design rather than being a fixed property of the components \cite{hendersonSystematicReportingEnergy2022}. Carbon emissions then translate that energy into an ecological footprint, measured in carbon dioxide equivalents (CO\textsubscript{2}eq), by multiplying it with the \textit{carbon intensity} of the local electricity grid \cite{lacosteQuantifyingCarbonEmissions2019}. Two identical training runs can therefore produce the same energy consumption yet vastly different emissions, depending solely on the fuel mix of the grid supplying them \cite{dodgeMeasuringCarbonIntensity2022}. In practice, empirical studies have shown that identical workloads can vary in their carbon footprint by a factor of 40 depending on geographic location \cite{lacosteQuantifyingCarbonEmissions2019}, and can even fluctuate based on the time of day the models are trained \cite{dodgeMeasuringCarbonIntensity2022}.
 
-\subsection{Energy Consumption of Computing Hardware}
+\subsection{From Energy to Carbon Emissions}
 \label{sec:theoretical_energy}
 
-\todo[inline]{Physikalische Grundlagen: Leistung (Watt) vs.\ Energie (Joule, kWh). Beziehung $E = P \cdot t$. Welche Komponenten verbrauchen Strom beim ML-Training: CPU, GPU, RAM, ggf.\ Speicher / Netzwerk. Konzept TDP (Thermal Design Power) — was es ist und was es \textit{nicht} ist (kein durchschnittlicher Verbrauch, sondern thermische Auslegungsgrenze). Idle vs.\ Last-Verbrauch. Wichtig für später: GPUs haben deutlich höhere Peak-Leistung, aber auch deutlich höheren Durchsatz — Effizienz pro Sample ist entscheidend.}
+To understand the ecological footprint of machine learning, it is first necessary to distinguish between power and energy. Power, measured in Watts (W) or Joules per second, represents the instantaneous rate at which electricity is drawn by a system. Energy, on the other hand, is the total quantity of electricity consumed over a specific duration, calculated as the product of power and time ($E = P \cdot t$), and is typically expressed in kilowatt-hours (kWh) or Joules \cite{hendersonSystematicReportingEnergy2022}.
 
-\subsection{From Energy to CO\texorpdfstring{\textsubscript{2}}{2} Equivalents}
-\label{sec:theoretical_co2}
+The execution of machine learning models relies on a combination of hardware components, primarily the Central Processing Unit (CPU), Graphics Processing Unit (GPU), and dynamic random-access memory (DRAM) \cite{hendersonSystematicReportingEnergy2022}. Modern AI workloads rely heavily on GPUs because their highly parallelized architectures provide significant computational acceleration compared to traditional CPUs \cite{dodgeMeasuringCarbonIntensity2022}. However, this increased throughput comes at a steep energetic cost: while CPUs typically consume between 10W and 150W under load, GPUs are significantly more power-hungry, often drawing between 250W and 350W \cite{dodgeMeasuringCarbonIntensity2022}. As a result, the GPU typically accounts for the vast majority, often nearly three-quarters, of the total electrical energy consumed during deep learning training \cite{dodgeMeasuringCarbonIntensity2022}. Nevertheless, the energy drawn by the CPU and DRAM remains a non-negligible factor that must be recorded for comprehensive and accurate sustainability accounting \cite{dodgeMeasuringCarbonIntensity2022}.
 
-\todo[inline]{Definition Carbon Intensity (gCO\textsubscript{2}eq/kWh), Abhängigkeit vom Strommix (Kohle vs.\ Wind/Solar/Atom). Konzept CO\textsubscript{2}-Äquivalent: warum nicht nur CO\textsubscript{2}, sondern auch CH\textsubscript{4}, N\textsubscript{2}O etc.\ über GWP (Global Warming Potential) zusammengefasst werden \cite{lacosteQuantifyingCarbonEmissions2019}. Formel: $\text{Emissions} = E \cdot \text{CarbonIntensity}$. Beispielhafter Vergleich: 1 kWh in Frankreich (\~50 g) vs.\ Polen (\~700 g). Verweis auf \Cref{sec:implementation_hardware} für den konkreten deutschen Strommix.}
+When evaluating the power profile of these computing components, the Thermal Design Power (TDP) is a frequently referenced specification. TDP defines the maximum heat flow generated by a CPU or GPU that its cooling system is designed to dissipate, serving as a theoretical indicator of the maximum power the component can draw \cite{rodriguezEvaluatingEnergyConsumption2024}. Because direct, real-time power measurement can be complex, some simplified methodologies attempt to estimate total energy consumption by simply multiplying a component's TDP by the total execution time of the model \cite{rodriguezEvaluatingEnergyConsumption2024}.
+
+However, this approach is fundamentally flawed \cite{hendersonSystematicReportingEnergy2022}. TDP represents an absolute peak thermal limit rather than an average operational consumption, and actual power draw fluctuates significantly based on hardware utilization, varying greatly between idle states and active load \cite{hendersonSystematicReportingEnergy2022}. Empirical studies demonstrate that estimating efficiency solely via TDP and time, while neglecting real-time hardware utilization and memory effects, leads to severe over- or underestimations of a model's true energy consumption and carbon footprint \cite{hendersonSystematicReportingEnergy2022}. Consequently, reliable sustainability metrics require direct measurements of the hardware rather than abstract, TDP-based extrapolations.
+
+Translating this measured energy consumption into a quantifiable environmental impact requires the concept of carbon intensity \cite{lacosteQuantifyingCarbonEmissions2019}. Carbon intensity represents the amount of greenhouse gas emissions produced per unit of electricity generated, expressed in grams of CO\textsubscript{2} equivalents per kilowatt-hour (gCO\textsubscript{2}eq/kWh), and standardizes the global warming potential of various greenhouse gases into a single comparable value \cite{hendersonSystematicReportingEnergy2022}.
+
+The operational carbon footprint of a machine learning model is derived by multiplying the total energy consumed ($E$, in kWh) by the carbon intensity of the local electricity grid ($I$), yielding $\text{CO}_2\text{eq} = E \cdot I$ \cite{dodgeMeasuringCarbonIntensity2022}. Because different geographic regions rely on vastly different fuel mixes, from coal and natural gas to nuclear and renewables, carbon intensity varies drastically by location \cite{hendersonSystematicReportingEnergy2022}. Empirical data illustrates this range clearly: training a model in Quebec, Canada, which is heavily reliant on hydroelectricity, faces a carbon intensity of approximately 20 gCO\textsubscript{2}eq/kWh, whereas training the same model in a fossil-fuel-dependent region such as Iowa, USA, results in a carbon intensity of over 736 gCO\textsubscript{2}eq/kWh \cite{lacosteQuantifyingCarbonEmissions2019}.
+
+Carbon intensity is not merely a static geographic property but also a temporally variable one \cite{dodgeMeasuringCarbonIntensity2022}. The emissions factor of a grid can fluctuate significantly throughout the day based on the real-time availability of renewable sources, such as solar during daylight hours or wind at night \cite{dodgeMeasuringCarbonIntensity2022}. Consequently, accurately evaluating the ecological footprint of a machine learning model requires integrating both the spatial location and the temporal characteristics of the local energy grid into the final CO\textsubscript{2}eq conversion \cite{dodgeMeasuringCarbonIntensity2022}.
 
 \subsection{Measurement Approaches}
 \label{sec:theoretical_measurement}
 
-\todo[inline]{Drei Hauptansätze für Energiemessung gegenüberstellen: (1) \textbf{Hardware-Counter}: RAPL für Intel/AMD CPUs (Linux), NVML für NVIDIA-GPUs. Genauigkeit, aber OS-/Hardware-abhängig \cite{khanRAPLActionExperiences2018}. (2) \textbf{TDP-basierte Schätzung}: Annahme eines festen Prozentsatzes (z.B.\ 50\,\%) der TDP. Ungenau, aber überall verfügbar. (3) \textbf{Externe Wattmeter}: Hardware-Steckdosenmessung. Genau, aber nur Gesamtsystem, keine Komponentenauflösung. Klarstellen, warum diese Arbeit auf Software-Ebene misst (Reproduzierbarkeit, keine Hardware-Investition, granular nach Komponenten). Limitationen ehrlich benennen.}
+Accurately evaluating the energy consumption of machine learning models relies on a spectrum of methodologies, broadly categorized into physical measurements, estimation models, and on-chip sensors \cite{rodriguezEvaluatingEnergyConsumption2024}. The baseline for ground-truth measurement is the External Power Meter (EPM), which tracks power directly at the wall outlet or motherboard \cite{rodriguezEvaluatingEnergyConsumption2024}. While EPMs capture the true consumption of the entire system, they are often costly to deploy at scale and cannot provide fine-grained decomposition to isolate the energy used by specific software processes or individual hardware components \cite{rodriguezEvaluatingEnergyConsumption2024}.
+
+To achieve component-level granularity without external hardware, many approaches utilize estimation models. These models calculate energy based on abstract hardware specifications, such as multiplying execution time by the Thermal Design Power (TDP) or counting Floating-Point Operations (FLOPs), or by leveraging Performance Monitoring Counters (PMCs) to track utilization rates \cite{rodriguezEvaluatingEnergyConsumption2024}. However, as established in \Cref{sec:theoretical_energy}, relying solely on abstract analytical models or TDP often leads to severe inaccuracies under dynamic workloads, failing to capture the true, fluctuating real-time power draw of the hardware \cite{hendersonSystematicReportingEnergy2022}.
+
+Consequently, modern sustainability accounting strongly prefers direct measurements obtained from vendor-specific on-chip sensors \cite{hendersonSystematicReportingEnergy2022}. For GPUs, the industry standard is the NVIDIA Management Library (NVML), which polls instantaneous power consumption during execution \cite{hendersonSystematicReportingEnergy2022}. For CPUs and DRAM, the standard interface is the Running Average Power Limit (RAPL), provided by Intel and AMD, which accesses hardware performance counters to deliver accurate, fine-grained energy measurements directly from the CPU package \cite{rodriguezEvaluatingEnergyConsumption2024}.
+
+Despite its high accuracy, a significant practical limitation of RAPL is its strict dependency on the underlying operating system \cite{hendersonSystematicReportingEnergy2022}. RAPL interfaces are primarily supported on Linux environments and often require elevated administrator privileges to access the hardware counters securely \cite{hendersonSystematicReportingEnergy2022}. When direct sensor access is unavailable due to these constraints, software tracking tools often revert to problematic TDP-based estimation models as a fallback, which severely compromises measurement accuracy \cite{rodriguezEvaluatingEnergyConsumption2024}.
 
 \subsection{CodeCarbon}
 \label{sec:theoretical_codecarbon}
 
-\todo[inline]{Diese Subsection existiert bereits inhaltlich — bei der Überarbeitung des Chapters den bestehenden Text leicht straffen und sicherstellen, dass er logisch auf \Cref{sec:theoretical_measurement} aufbaut (CodeCarbon ist eine konkrete Realisierung des Software-Messansatzes). Label \texttt{sec:theoretical\_codecarbon} unbedingt beibehalten — wird aus \Cref{implementation_emissions} referenziert.}
+To practically implement the sustainability accounting principles advocated by the Green AI movement, researchers require standardized tools that bridge the gap between physical hardware metrics and environmental impacts. Initially, the machine learning community relied on a fragmented landscape of independent measurement approaches and preliminary software packages \cite{bannourEvaluatingCarbonFootprint2021}. Early solutions largely consisted of web-based calculators, such as the ML CO\textsubscript{2} Impact calculator \cite{lacosteQuantifyingCarbonEmissions2019} and Green Algorithms (cite: Lannelongue et al.), which required practitioners to manually input hardware specifications, execution times, and locations to estimate carbon footprints.
 
-\todo[inline]{Hier kurz erklären: CPU Package Power Sensor vs.\ TDP-basierte Schätzung. TDP (Thermal Design Power) ist die maximale Wärmeleistung unter Dauerlast --- kein Echtzeitwert. Der CPU Package Power Sensor liefert dagegen den tatsächlichen Momentanverbrauch direkt vom Hardware-Monitor-Chip (ausgelesen via LibreHardwareMonitor). Relevant weil CodeCarbon auf Windows auf TDP-Schätzung zurückfällt --- der empirische Unterschied wird in \Cref{implementation_emissions_limitations} gezeigt.}
+While these online calculators successfully raised awareness, they lacked real-time monitoring capabilities and had to rely on broad estimations rather than ground-truth physical power draw \cite{bannourEvaluatingCarbonFootprint2021}. To address this, several independent Python packages were developed to track energy dynamically during model training. Tools such as the experiment-impact-tracker \cite{hendersonSystematicReportingEnergy2022}, CarbonTracker (cite: Anthony et al.), and Energy Usage (cite: Lottick et al.) were introduced to directly poll hardware sensors during execution \cite{bannourEvaluatingCarbonFootprint2021}. However, the proliferation of tools with varying methodologies, carbon intensity data sources, and hardware support led to inconsistent reporting and discrepancies in carbon footprint measurements across the literature \cite{bannourEvaluatingCarbonFootprint2021}.
 
-\textit{CodeCarbon} is an open-source Python library for measuring the carbon footprint of code running on local hardware. Emissions are calculated as the product of two factors: the energy consumed by the hardware in kWh, and the carbon intensity of the local electricity grid in gCO\textsubscript{2}eq/kWh. Carbon intensity is determined based on the country in which the experiment is run, using data from Our World in Data. The resulting emissions are expressed in kilograms of CO\textsubscript{2}-equivalents (kgCO\textsubscript{2}eq), a standardized measure that accounts for the global warming potential of different greenhouse gases \cite{lacosteQuantifyingCarbonEmissions2019}.
+To unify these fragmented efforts into a reliable standard, the CodeCarbon initiative was established \cite{bannourEvaluatingCarbonFootprint2021}. CodeCarbon is an open-source software library that evolved directly from previous tracking projects, serving as the official successor to the Energy Usage tool \cite{rodriguezEvaluatingEnergyConsumption2024} and integrating the efforts of the ML CO\textsubscript{2} Impact project \cite{bannourEvaluatingCarbonFootprint2021}. By providing a unified tracking interface, it enables practitioners to quantify the environmental cost of their algorithms and report these metrics transparently (cite: Schmidt et al.).
 
-Power consumption is sampled at 15-second intervals. Rather than relying on instantaneous power readings, \textit{CodeCarbon} derives average power from accumulated hardware energy counters. Instead, it computes the energy delta between two consecutive measurements and divides by the elapsed time to derive average power. This approach is more robust against short-term fluctuations and provides a stable average over each measurement interval \cite{HowPowerEstimation}. For NVIDIA GPUs, energy is read directly from hardware counters via the \texttt{nvidia-ml-py} library, providing accurate device-level measurements. RAM is estimated by \textit{CodeCarbon}, specifically using a flat value of 5 watts per DIMM slot.
+To evaluate a model's energy consumption, the framework leverages the direct measurement approaches introduced in \Cref{sec:theoretical_measurement}. Specifically, it interfaces with vendor-specific on-chip sensors, such as NVML for GPUs and RAPL for Intel and AMD processors, to collect fine-grained power draw measurements directly from the underlying hardware \cite{rodriguezEvaluatingEnergyConsumption2024}. By periodically polling these hardware counters during execution, the tool computes the total electrical energy consumed by the computing components in kilowatt-hours \cite{rodriguezEvaluatingEnergyConsumption2024}.
 
-CPU measurement depends on the operating system and processor. On Linux, CodeCarbon reads energy directly from \textit{RAPL} (Running Average Power Limit) hardware counters, which support both Intel and AMD processors \cite{khanRAPLActionExperiences2018}. On Windows, however, \textit{RAPL} is not accessible. \textit{CodeCarbon} therefore falls back to a TDP-based estimation: it identifies the CPU model from a database of over 2000 processors and assumes an average consumption of 50\% of TDP. On systems where direct CPU energy measurement is unavailable, this TDP-based fallback may introduce inaccuracies, as TDP represents peak power rather than typical operating consumption.
+Once the physical energy consumption is recorded, the framework translates it into greenhouse gas emissions using the conversion detailed in \Cref{sec:theoretical_emissions}. The tool determines the carbon intensity of the local electricity grid based on the geographic location of the computing infrastructure, then multiplies the measured energy by this value to produce the final operational carbon footprint expressed in kilograms of CO\textsubscript{2}-equivalents (kgCO\textsubscript{2}eq) (cite: Schmidt et al.). By combining hardware-level energy tracking with grid-level carbon intensity data in a single standardized framework, CodeCarbon automates the translation from computational work to ecological impact \cite{hendersonSystematicReportingEnergy2022}.
 
 % =============================================================
-\section{Foundations of Supervised Classification}
+\section{Supervised Classification Algorithms}
 \label{sec:theoretical_classification}
-
-\todo[inline]{Section-Einleitung: kurze Einordnung, warum Klassifikation als Task gewählt wurde (siehe \Cref{experimental_dataset}) — hier nur die theoretischen Grundbegriffe.}
-
-\subsection{Supervised Learning}
-\label{sec:theoretical_supervised}
-
-\todo[inline]{Formale Definition: gegeben Trainingsmenge $\{(x_i, y_i)\}_{i=1}^{n}$, lerne Funktion $f: \mathcal{X} \to \mathcal{Y}$. Abgrenzung zu Unsupervised und Reinforcement Learning in 1–2 Sätzen. Begriff \textit{Generalisierung}, Overfitting/Underfitting in einem Satz (Detail kommt in Validation Strategies).}
-
-\subsection{Binary and Multiclass Classification}
-\label{sec:theoretical_binary_multiclass}
-
-\todo[inline]{Definition binär ($|\mathcal{Y}|=2$) vs.\ multiklass ($|\mathcal{Y}|>2$). Bezug zu den drei Datasets (Wine = 3-Klassen, Credit/HIGGS = binär). One-vs-Rest und Softmax-Erweiterung als Standardstrategien für lineare/Softmax-Modelle. Hier noch keine Modell-Details — die kommen in \Cref{sec:theoretical_models}.}
-
-\subsection{Loss Functions for Classification}
-\label{sec:theoretical_loss}
-
-\todo[inline]{Cross-Entropy-Loss formal einführen — sowohl binär (Log-Loss) als auch multiklass (Categorical Cross-Entropy / mlogloss). Formeln angeben. Kurz erwähnen, warum Cross-Entropy gegenüber MSE bei Klassifikation bevorzugt wird (Gradientenverlauf, probabilistische Interpretation). Querverweise: wird in MLP (\Cref{sec:theoretical_mlp}) und XGBoost (\Cref{sec:theoretical_xgboost}) als Lernziel verwendet.}
-
-% =============================================================
-\section{Classification Algorithms}
 \label{sec:theoretical_models}
 
-\todo[inline]{Section-Einleitung: Modelle in Reihenfolge wachsender Komplexität (Linear → Tree → Ensemble → Boosting → NN), wie auch in \Cref{design_models} motiviert. WICHTIG: hier rein theoretische Beschreibung — keine Konfigurationsdetails, keine Hyperparameter-Werte, keine Library-Erwähnungen. Implementation in \Cref{implementation_models}.}
+In machine learning, supervised classification is the task of inferring a predictive model from historical, annotated data in order to make accurate categorical predictions on new data \cite{bommasaniOpportunitiesRisksFoundation2022}. Formally, given a training dataset $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^{n}$ consisting of $n$ examples, where each $x_i \in \mathcal{X}$ represents a vector of input features and $y_i \in \mathcal{Y}$ represents the corresponding ground-truth label, the objective is to learn a mapping function $f: \mathcal{X} \to \mathcal{Y}$ that reliably predicts the target output for any given input \cite{gorishniyRevisitingDeepLearning2021}. This reliance on an explicitly provided label space distinguishes supervised learning from unsupervised learning, where algorithms discover hidden structures in unannotated data, and from reinforcement learning, where an agent learns to make sequential decisions by maximizing a reward signal within an interactive environment \cite{bommasaniOpportunitiesRisksFoundation2022}.
+
+The fundamental objective when learning $f$ is achieving strong \textit{generalization}: the model must perform reliably on new, unseen data drawn from the same underlying distribution rather than merely memorizing training inputs \cite{srivastavaDropoutSimpleWay2014}. A central challenge during training is therefore finding the optimal balance to prevent \textit{underfitting}, where the model is too simple to capture the true data patterns, and \textit{overfitting}. Overfitting occurs when a model excessively adapts to the specific ``sampling noise'' present in the training data, fitting it so closely that its predictive performance on new, unseen data actively degrades \cite{srivastavaDropoutSimpleWay2014, friedmanGreedyFunctionApproximation2001}.
+
+The structure of the label space $\mathcal{Y}$ determines the nature of the classification task. In binary classification, $\mathcal{Y} = \{0, 1\}$; when more than two categories are involved it becomes a multiclass problem with $\mathcal{Y} = \{1, \ldots, C\}$ \cite{gorishniyRevisitingDeepLearning2021}. Multiclass problems are typically handled via One-vs-Rest strategies or by extending binary formulations with a Softmax output that produces a normalized probability distribution across all $C$ classes.
+
+To optimize $f$ during training, a loss function $\mathcal{L}(y, f(x))$ quantifies the discrepancy between predicted outputs and true labels \cite{friedmanGreedyFunctionApproximation2001}. For classification, the standard objective is Cross-Entropy Loss. In the binary case this reduces to the negative binomial log-likelihood; for multiclass problems it generalizes to Categorical Cross-Entropy:
+\begin{equation}
+    \mathcal{L} = -\sum_{k=1}^{C} y_k \log\bigl(p_k(x)\bigr)
+\end{equation}
+where $y_k$ is the binary indicator for the true class $k$ and $p_k(x)$ is the model's predicted probability for that class \cite{friedmanGreedyFunctionApproximation2001}. Cross-Entropy is preferred over Mean Squared Error for classification because it produces steeper, more informative gradients when a confident prediction is wrong, and provides a direct probabilistic interpretation of the model output. This foundational loss objective drives the gradient-based optimization for both the deep learning and advanced ensemble architectures discussed in the following subsections.
 
 \subsection{Logistic Regression}
 \label{sec:theoretical_lr}
 
-\todo[inline]{Lineares Modell mit Sigmoid-Aktivierung: $P(y=1|x) = \sigma(w^\top x + b)$. Sigmoid-Funktion und ihre Eigenschaften. Optimierung über Maximum Likelihood / Cross-Entropy-Minimierung. Solver kurz erwähnen (LBFGS, SAG, Newton-CG) — aber NUR theoretisch, der konkrete \texttt{sag}-Solver wird in \Cref{implementation_lr} begründet. Erweiterung auf Multinomial Logistic Regression (Softmax). Vor- und Nachteile: interpretable, schnell, aber linear → keine Feature-Interaktionen.}
+Logistic regression, formalized as a statistical classification method by Cox \cite{coxRegressionAnalysisBinary1958}, is a parametric linear model that remains a standard baseline for binary classification tasks where interpretability and computational efficiency are paramount.
+
+For a binary classification task ($\mathcal{Y} = \{0, 1\}$), logistic regression predicts the probability that an instance $x$ belongs to the positive class. To ensure the output is bounded strictly between 0 and 1, the linear combination of input features and learned weights $w$ with bias $b$ is passed through the logistic sigmoid function $\sigma(z) = \frac{1}{1 + e^{-z}}$, giving:
+\begin{equation}
+    P(y=1 \mid x) = \sigma(w^\top x + b) = \frac{1}{1 + e^{-(w^\top x + b)}}
+\end{equation}
+This functional form stems from modeling the log-odds (logit) as a linear function of the inputs: $\ln\!\left(\frac{P(y=1 \mid x)}{P(y=0 \mid x)}\right) = w^\top x + b$ \cite{cramerOriginsLogisticRegression2002}.
+
+The optimal parameters are estimated via Maximum Likelihood Estimation (MLE), which in practice is equivalent to minimizing the binary Cross-Entropy Loss over the training set \cite{cramerOriginsLogisticRegression2002}. Since no closed-form solution exists, iterative numerical solvers are required. Standard approaches include second-order methods such as Newton-Conjugate Gradient (Newton-CG) and Limited-memory BFGS (L-BFGS), as well as first-order methods such as Stochastic Average Gradient (SAG) descent.
+
+Logistic regression extends naturally to multiclass problems ($\mathcal{Y} = \{1, \ldots, C\}$) via a One-vs-Rest (OvR) strategy or by replacing the sigmoid with a Softmax function, yielding Multinomial Logistic Regression.
+
+A key advantage of logistic regression is its interpretability: each feature weight directly represents its directional influence on the log-odds of the prediction. It also trains quickly and is robust to overfitting on simple datasets. Its fundamental limitation is linearity. Without manual feature engineering, the model cannot capture non-linear patterns or feature interactions, making it considerably less expressive than the tree-based and deep learning architectures described in the following subsections.
 
 \subsection{Decision Trees}
 \label{sec:theoretical_dt}
 
-\todo[inline]{Grundlage für RF und XGBoost — daher zuerst eingeführt. CART-Algorithmus: rekursive binäre Splits, Greedy-Auswahl nach Gini-Impurity oder Entropie. Formeln für Gini und Entropie. Konzept Tree Depth, Leaf Nodes, Pruning. Stärken (nicht-linear, interpretable) und Schwächen (Overfitting bei tiefen Bäumen, instabil gegenüber kleinen Datenänderungen) — letzteres motiviert direkt Ensembles.}
+Decision trees are a family of non-parametric, non-linear classification models. Unlike logistic regression, which assumes a linear decision boundary, decision trees partition the input feature space into a set of disjoint, piece-wise constant regions \cite{friedmanGreedyFunctionApproximation2001,grinsztajnWhyTreebasedModels2022}. This property allows them to naturally learn highly irregular patterns and high-frequency functions that linear models and even standard neural networks often struggle to fit \cite{gorishniyRevisitingDeepLearning2021}.
+
+Structurally, a decision tree is constructed from the training data by mapping these disjoint regions to terminal leaf nodes \cite{friedmanGreedyFunctionApproximation2001}. The internal nodes represent binary tests on input features, while the terminal leaf nodes represent the final predicted class labels. To classify an input vector, the algorithm routes the sample down the tree by applying a sequence of these binary tests until a leaf is reached.
+
+During training, the tree is typically grown using the CART (Classification and Regression Trees) methodology \cite{breimanRandomForests2001, friedmanGreedyFunctionApproximation2001}. This employs a recursive, greedy splitting procedure: at each internal node, the algorithm evaluates possible split points across all features and greedily selects the one that maximizes class homogeneity in the resulting child nodes \cite{chenXGBoostScalableTree2016}. For classification tasks, this homogeneity is traditionally measured using criteria such as Gini Impurity or Information Gain (Entropy).
+
+One of the primary advantages of decision trees is their high interpretability; the sequential decision rules can be explicitly visualized and understood. Furthermore, they are inherently capable of capturing complex, non-linear relationships and interaction effects between variables without requiring extensive feature engineering or data scaling.
+
+However, single decision trees suffer from severe theoretical limitations. If allowed to grow to their maximum depth without regularization, they are highly prone to overfitting: they excessively adapt to the specific ``sampling noise'' present in the training data, fitting it so closely that their predictive performance on new, unseen data actively degrades \cite{friedmanGreedyFunctionApproximation2001}. Additionally, single trees are notoriously unstable, meaning a minor perturbation in the training dataset can cause a drastically different tree structure to be generated. This inherent instability, high variance, and overfitting risk serve as the primary motivation for aggregating multiple trees into ensemble methods such as Random Forests and Gradient Boosting \cite{breimanRandomForests2001}.
 
 \subsection{Random Forest}
 \label{sec:theoretical_rf}
 
 \todo[inline]{Bagging-Prinzip nach \cite{breimanRandomForests2001}: $n$ Bootstrap-Samples → $n$ Bäume → Majority Vote / Mittelwert. Zusätzliche Randomisierung über zufällige Feature-Subsets pro Split (mtry / max\_features). Warum das die Varianz reduziert (Bias-Varianz-Zerlegung kurz). Begriff Out-of-Bag (OOB) Error. Parallelisierbarkeit über Bäume hinweg → Ankerpunkt für CPU-Multi-Threading-Diskussion in \Cref{sec:theoretical_hardware}. Skalierungsverhalten: superlinear in $n$ bei tiefen Bäumen — Begründung, warum RF auf HIGGS in \Cref{implementation_rf} ausgeschlossen wurde, schon hier theoretisch andeuten.}
+
+shouldnt grinsztajn be cited more often seeing as this name of the paper aligns best with the decision tree subsection
 
 \subsection{Gradient Boosting and XGBoost}
 \label{sec:theoretical_xgboost}
@@ -144,6 +181,28 @@ CPU measurement depends on the operating system and processor. On Linux, CodeCar
 
 \todo[inline]{Konzept: Training abbrechen, sobald Validation-Loss nicht mehr sinkt. Theoretische Begründung als impliziter Regularisierer (begrenzt effektive Modellkapazität). Patience-Parameter erklären. Querverweis: konkrete Implementation in \Cref{implementation_mlp}.}
 
+\subsection{Tree-based Models vs.\ Deep Learning on Tabular Data}
+\label{sec:theoretical_tabular}
+
+Neural networks have achieved state-of-the-art results on image and text data, but their advantage does not straightforwardly transfer to tabular data. Recent benchmark studies show that tree-based methods consistently match or outperform deep learning models on tabular datasets, even after extensive tuning of the neural architectures \cite{grinsztajnWhyTreebasedModels2022, gorishniyRevisitingDeepLearning2021}. A key reason is that neural networks exhibit an inductive bias toward smooth, continuous functions, whereas tabular features often exhibit irregular, non-monotonic interactions that decision tree splits capture naturally without requiring the network to learn them implicitly \cite{grinsztajnWhyTreebasedModels2022}.
+
+This has a direct implication for the energy efficiency analysis in this thesis. On the tabular datasets used here, the MLP may require substantially more hyperparameter search and training compute to reach the accuracy levels achieved by XGBoost or Random Forest, with no guarantee of matching their predictive performance. The inherent difficulty of fitting a neural network to tabular data can therefore inflate its energy cost well beyond what its architectural throughput alone would suggest.
+
+\subsection{Algorithmic Suitability for CPU vs.\ GPU}
+\label{sec:theoretical_cpu_vs_gpu}
+
+\todo[inline]{Zusammenfassend: welche Algorithmen profitieren wovon? Logistic Regression: meist CPU (Datentransfer-Overhead lohnt sich nicht). Random Forest: CPU (irreguläre Tree-Traversal). XGBoost: beides möglich (\texttt{hist} auf CPU, \texttt{gpu\_hist} auf GPU) — dieser Vergleich ist Kern einer RQ. MLP: GPU klar überlegen ab nicht-trivialer Größe. Energiebetrachtung anschließen: GPU hat höhere Peak-Leistung, aber bei passenden Workloads deutlich mehr Sample/J → bessere Energieeffizienz, NICHT zwangsläufig weniger Energieverbrauch absolut. Diese Theorie wird in \Cref{results} empirisch geprüft.}
+
+% =============================================================
+\section{Dataset Scaling and Learning Curves}
+\label{sec:theoretical_learning_curves}
+
+A learning curve plots a model's predictive performance as a function of the number of training samples $n$. The general pattern observed across model families is consistent: performance improves rapidly when training data is scarce, then exhibits diminishing returns as $n$ grows \cite{althnianImpactDatasetSize2021}. This relationship is often approximated as a power law $P(n) \propto n^\alpha$ with $\alpha \in (0,1)$, meaning that each successive doubling of the dataset yields a smaller absolute gain in performance than the previous one \cite{hastieModelAssessmentSelection2009}.
+
+This diminishing-returns property has a direct implication for computational cost. Training time and energy consumption scale roughly linearly with dataset size for most algorithms: processing twice as many samples requires approximately twice the compute. The combination of linear cost growth and sub-linear performance growth creates a fundamental tension — achieving a marginal gain in accuracy at the upper end of a learning curve demands a disproportionately large investment in additional data, time, and energy \cite{schwartzGreenAI2020}.
+
+This tension is central to the research questions of this thesis. By training and evaluating each algorithm at multiple dataset scales, the empirical study can locate where a model's learning curve begins to flatten relative to its energy consumption, and determine whether the performance gain from scaling up justifies the additional ecological cost. The specific dataset sizes examined in this study are described in \Cref{experimental_dataset}.
+
 % =============================================================
 \section{Evaluation Metrics}
 \label{sec:theoretical_metrics}
@@ -164,12 +223,6 @@ CPU measurement depends on the operating system and processor. On Linux, CodeCar
 \label{sec:theoretical_composite}
 
 \todo[inline]{Kurz die Ressourcenmetriken einführen: Trainingszeit (s), Energie (kWh), CO\textsubscript{2}eq (kg), Inference-Latenz (s/Sample). Querverweis auf \Cref{sec:theoretical_emissions} für Definitionen. Danach: generelle Idee zusammengesetzter Metriken — ein Score, der Performance gegen Kosten abwägt. Beispiele aus der Literatur: Energy-Efficiency Ratio, Performance-per-Watt, FLOPs-per-Sample. Hier theoretischer Hintergrund — die konkrete EWF1-Definition für diese Arbeit steht in \Cref{design_metrics}, hier nur die methodische Grundlage und Schwächen solcher Composite-Metriken (Gewichtungswillkür, Hardware-Abhängigkeit) diskutieren.}
-
-% =============================================================
-\section{Validation Strategies}
-\label{sec:theoretical_validation}
-
-\todo[inline]{Section-Einleitung: warum nicht einfach auf Trainingsdaten evaluieren (Overfitting-Risiko, Generalisierung). Wird aus \Cref{design_validation} referenziert.}
 
 \subsection{Cross-Validation}
 \label{sec:theoretical_kfold}
@@ -195,7 +248,7 @@ CPU measurement depends on the operating system and processor. On Linux, CodeCar
 \subsection{Optuna as a Practical Framework}
 \label{sec:theoretical_optuna}
 
-\todo[inline]{Optuna \cite{akibaOptunaNextgenerationHyperparameter2019} als define-by-run-Framework: Suchraum wird im Objective-Code dynamisch konstruiert (statt vorab als Config). Standardsampler ist TPE. Pruner-Konzept (frühes Abbrechen schlechter Trials, z.B.\ MedianPruner) — nur theoretisch, ob diese Arbeit Pruning nutzt steht in \Cref{implementation_tuning}. Reproducibility über Sampler-Seed. KEINE Code-Snippets hier — die gehören in Chapter 5.}
+\todo[inline]{Optuna \cite{akibaOptunaNextgenerationHyperparameter2019} als define-by-run-Framework: Suchraum wird im Objective-Code dynamisch konstruiert (statt vorab als Config). Standardsampler ist TPE. Pruner-Konzept (frühes Abbrechen schlechter Trials, z.B.\ MedianPruner) — nur theoretisch, ob diese Arbeit Pruning nutzt steht in \Cref{implementation_tuning}. Reproducibility über Sampler-Seed. KEINE Code-Snippets hier — die gehören in Chapter 5. Zum Abschluss: ökologischer Aspekt von HPO — Gesamtkosten eines Ergebnisses wachsen linear mit der Anzahl der Trials \cite{schwartzGreenAI2020}. Grid Search verschwendet Trials in irrelevanten Regionen des Suchraums; Bayesian Optimization (und damit Optuna) ist daher nicht nur mathematisch effizienter, sondern auch eine Green-AI-Strategie: weniger Trials = weniger Energie = kleinerer CO\textsubscript{2}-Fußabdruck des gesamten Entwicklungsprozesses.}
 
 % =============================================================
 \section{Hardware Considerations for Machine Learning}
@@ -212,11 +265,6 @@ CPU measurement depends on the operating system and processor. On Linux, CodeCar
 \label{sec:theoretical_gpu}
 
 \todo[inline]{GPU-Architektur: tausende einfache Cores, SIMT-Execution, durchsatzoptimiert. CUDA als NVIDIA-Programmiermodell. Warum Matrixmultiplikation (und damit NN-Training) ideal für GPUs ist: dichte parallele Operationen mit regelmäßigem Speichermuster. Memory-Hierarchie GPU (HBM/GDDR vs.\ Shared Memory) kurz erwähnen, nur soweit für Verständnis nötig.}
-
-\subsection{Algorithmic Suitability for CPU vs.\ GPU}
-\label{sec:theoretical_cpu_vs_gpu}
-
-\todo[inline]{Zusammenfassend: welche Algorithmen profitieren wovon? Logistic Regression: meist CPU (Datentransfer-Overhead lohnt sich nicht). Random Forest: CPU (irreguläre Tree-Traversal). XGBoost: beides möglich (\texttt{hist} auf CPU, \texttt{gpu\_hist} auf GPU) — dieser Vergleich ist Kern einer RQ. MLP: GPU klar überlegen ab nicht-trivialer Größe. Energiebetrachtung anschließen: GPU hat höhere Peak-Leistung, aber bei passenden Workloads deutlich mehr Sample/J → bessere Energieeffizienz, NICHT zwangsläufig weniger Energieverbrauch absolut. Diese Theorie wird in \Cref{results} empirisch geprüft.}
 
 % =============================================================
 \section{Chapter Summary}
