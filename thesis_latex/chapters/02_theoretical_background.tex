@@ -2,7 +2,6 @@
 
 This chapter establishes the theoretical foundations required to understand the empirical study presented in the remainder of this thesis. It first frames the research within the broader debate between \textit{Red AI} and \textit{Green AI}, then formalizes the concepts of energy consumption and carbon emissions in machine learning. Subsequently, the relevant classification algorithms are described from a purely theoretical standpoint, followed by the metrics used to evaluate their predictive performance, the validation strategy, and hyperparameter optimization techniques. All implementation details are deliberately deferred to \Cref{implementation_models}.
 
-\todo[inline]{Diese Einleitung ist nur ein Platzhalter. Am Ende des Chapters nochmal anpassen, sobald die finalen Sections feststehen.}
 
 % =============================================================
 \section{Green AI and Red AI}
@@ -99,6 +98,8 @@ The optimal parameters are estimated via Maximum Likelihood Estimation (MLE), wh
 Logistic regression extends naturally to multiclass problems ($\mathcal{Y} = \{1, \ldots, C\}$) via a One-vs-Rest (OvR) strategy or by replacing the sigmoid with a Softmax function, yielding Multinomial Logistic Regression.
 
 A key advantage of logistic regression is its interpretability: each feature weight directly represents its directional influence on the log-odds of the prediction. It also trains quickly and is robust to overfitting on simple datasets. Its fundamental limitation is linearity. Without manual feature engineering, the model cannot capture non-linear patterns or feature interactions, making it considerably less expressive than the tree-based and deep learning architectures described in the following subsections.
+
+\todo[inline]{zu wenige citations}
 
 \subsection{Decision Trees}
 \label{sec:theoretical_dt}
