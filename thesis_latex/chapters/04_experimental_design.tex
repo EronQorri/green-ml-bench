@@ -116,7 +116,7 @@ It should be noted that both $\hat{t}$ and $\hat{c}$ are inherently hardware- an
 
 To obtain reliable and generalizable performance estimates, a cross-validation strategy was employed rather than a single train-test split, as described in Section 2.x.
 
-Specifically, K-Fold cross-validation was applied with $k=5$ folds, a value widely recommended in the literature as a practical balance between computational cost and estimation stability \cite{hastieModelAssessmentSelection2009}. Each model is trained and evaluated five times on non-overlapping subsets of the data, and the final performance score is averaged across all folds. This approach is consistent across all models and datasets, ensuring comparability of results.
+Specifically, K-Fold cross-validation was applied with $k=5$ folds, a value widely recommended in the literature as a practical balance between computational cost and estimation stability \cite{hastieElementsStatisticalLearning2017}. Each model is trained and evaluated five times on non-overlapping subsets of the data, and the final performance score is averaged across all folds. This approach is consistent across all models and datasets, ensuring comparability of results.
 
 To ensure reproducibility, a fixed random state was used for all cross-validation splits, model initialization, and data shuffling. The specific value and its technical implementation are described in \Cref{implementation_sw_env}.
 

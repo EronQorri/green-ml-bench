@@ -5,6 +5,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
+from scipy.interpolate import make_interp_spline
+from scipy.optimize import brentq
 
 BASE_DIR = Path(__file__).parent.parent.parent
 RESULTS_DIR = BASE_DIR / "results"
@@ -246,27 +248,32 @@ if len(common_sub) >= 3:
     y_gpu = np.array([gpu_sub[n] for n in common_sub])
 
     log_x = np.log10(x)
-    a_cpu, b_cpu = np.polyfit(log_x, np.log10(y_cpu), 1)
-    a_gpu, b_gpu = np.polyfit(log_x, np.log10(y_gpu), 1)
+    k = min(2, len(common_sub) - 1)
+    spl_cpu = make_interp_spline(log_x, np.log10(y_cpu), k=k)
+    spl_gpu = make_interp_spline(log_x, np.log10(y_gpu), k=k)
 
     n_be = None
-    if (a_cpu - a_gpu) != 0:
-        log_be = (b_gpu - b_cpu) / (a_cpu - a_gpu)
+    log_x_search = np.linspace(log_x[0], log_x[-1], 2000)
+    diff_vals = spl_cpu(log_x_search) - spl_gpu(log_x_search)
+    sign_changes = np.where(np.diff(np.sign(diff_vals)))[0]
+    if len(sign_changes) > 0:
+        idx = sign_changes[0]
+        log_be = brentq(lambda lx: spl_cpu(lx) - spl_gpu(lx), log_x_search[idx], log_x_search[idx + 1])
         n_be = 10 ** log_be
 
     fig, ax = plt.subplots(figsize=(9, 5))
     fig.suptitle("XGBoost CPU vs GPU — Break-Even (Higgs Subsets)", fontsize=13, fontweight="bold")
 
-    x_line = np.logspace(np.log10(x.min()) - 0.3, np.log10(x.max()) + 0.3, 400)
-    ax.plot(x_line, 10 ** (a_cpu * np.log10(x_line) + b_cpu),
-            color=XGB_PALETTE_BE["XGBoost"], label="XGBoost CPU (fit)")
-    ax.plot(x_line, 10 ** (a_gpu * np.log10(x_line) + b_gpu),
-            color=XGB_PALETTE_BE["XGBoost_GPU"], label="XGBoost GPU (fit)")
+    x_line = np.logspace(log_x[0], log_x[-1], 400)
+    ax.plot(x_line, 10 ** spl_cpu(np.log10(x_line)),
+            color=XGB_PALETTE_BE["XGBoost"], label="XGBoost CPU (spline)")
+    ax.plot(x_line, 10 ** spl_gpu(np.log10(x_line)),
+            color=XGB_PALETTE_BE["XGBoost_GPU"], label="XGBoost GPU (spline)")
     ax.scatter(x, y_cpu, color=XGB_PALETTE_BE["XGBoost"], zorder=5, s=60)
     ax.scatter(x, y_gpu, color=XGB_PALETTE_BE["XGBoost_GPU"], zorder=5, s=60)
 
-    if n_be and x_line[0] < n_be < x_line[-1]:
-        co2_be = 10 ** (a_cpu * np.log10(n_be) + b_cpu)
+    if n_be:
+        co2_be = 10 ** spl_cpu(np.log10(n_be))
         ax.axvline(n_be, color="gray", linestyle="--", linewidth=1.2)
         ax.annotate(
             f"Break-Even\n~{n_be:,.0f} rows",
