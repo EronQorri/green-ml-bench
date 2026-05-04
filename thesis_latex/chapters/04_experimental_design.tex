@@ -1,4 +1,5 @@
 \chapter{Experimental Design}
+\label{experimental_design}
 This chapter outlines the experimental design used to evaluate the ecological efficiency of different machine learning classification algorithms. It describes the datasets, models, evaluation metrics, hyperparameter tuning and measurement setup that form the basis of this empirical analysis.
 
 \section{Research Questions}
@@ -84,7 +85,7 @@ Logistic Regression serves as the lightweight baseline in this study. Despite it
 
 Random Forest was selected as a mid-complexity representative of tree-based ensemble methods, as extensively described in Section 2.x \todo{}. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
 
-Building on the tree-based approach, XGBoost was chosen as a second mid-complexity model, with the key distinction that it also supports GPU-accelerated training. This makes it possible to directly compare the energy consumption and training time of CPU- and GPU-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study.
+Building on the tree-based approach, XGBoost was chosen as a second mid-complexity model, with the key distinction that it also supports GPU-accelerated training. This makes it possible to directly compare the energy consumption and training time of CPU- and GPU-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study. The suitability of GPU-accelerated XGBoost for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based GPU implementation can process a dataset of 10 million instances with 28 features entirely within GPU memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
 
 The MLP was selected as the most complex model, representing the deep learning category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption. A more detailed description of the MLP architecture is provided in Section 2.x.
 
