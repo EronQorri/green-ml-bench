@@ -1,1 +1,66 @@
 \chapter{Related Work}
+\label{related_work}
+
+This chapter surveys empirical studies that have measured the energy consumption and carbon emissions of machine learning systems. The focus is on what prior work has concretely found, not on the underlying concepts, which are established in \Cref{theoretical_background}. Each section closes by identifying what prior studies leave unmeasured or unresolved, collectively motivating the specific design choices of this study.
+
+% =============================================================
+\section{Empirical Energy Benchmarks for Machine Learning}
+\label{sec:related_benchmarks}
+
+\todo[inline]{
+Surveye Studien die tatsächlich Energie/CO2 für ML-Training gemessen haben (keine rein theoretischen Arbeiten).
+Kernfragen pro Studie: Welche Modelle? Welche Datasets? Welche Hardware? Was wurde gemessen (TDP-Schätzung, RAPL, Strommesser)?
+Wichtige Paper: Strubell et al.\ (2019) -- konkrete kWh-Zahlen für NLP-Modelle; Patterson et al.\ (2021) -- Google-Scale-Zahlen für GPT-3, T5; Henderson et al.\ (2022) -- Benchmarking-Studie mit experiment-impact-tracker; Rodriguez et al.\ (2024) -- einer der wenigen Vergleiche klassischer ML-Algorithmen auf tabellarischen Daten.
+Abgrenzung am Ende: Fast alle Studien fokussieren auf große DL-Modelle (NLP/CV). Klassische Algorithmen (LR, RF, XGBoost) auf tabellarischen Datasets sind kaum untersucht -- genau das macht diese Thesis.
+NICHT wiederholen: Was CodeCarbon ist, wie RAPL funktioniert, was TDP bedeutet (alles in Kap.\ 2).
+}
+
+% =============================================================
+\section{CPU vs.\ GPU Efficiency: Empirical Evidence}
+\label{sec:related_cpu_gpu}
+
+\todo[inline]{
+Studien die CPU- vs.\ GPU-Training empirisch auf Energie verglichen haben.
+Mitchell \& Frank (2017) -- bereits in Kap.\ 2 für den Algorithmus zitiert; hier die empirischen Laufzeit- und Speicherergebnisse auf 11M-Instanzen-Datasets diskutieren, nicht den Algorithmus selbst.
+Falls vorhanden: Paper die einen energetischen Breakeven-Punkt zwischen CPU und GPU untersuchen (Suchbegriff: ``GPU energy breakeven'', ``CPU GPU carbon tradeoff XGBoost'').
+Kernbotschaft am Ende: Ein expliziter energetischer Breakeven als Funktion der Datensatzgröße für Gradient-Boosting-Modelle auf tabellarischen Daten existiert in der Literatur bisher nicht -- das ist die Lücke die Abschnitt~\ref{design_breakeven} adressiert.
+NICHT wiederholen: SIMT-Architektur, NVML, warum GPUs für Matrixmultiplikation gut sind (Kap.\ 2).
+}
+
+% =============================================================
+\section{Measurement Tool Accuracy: Software Estimation vs.\ Hardware Sensors}
+\label{sec:related_measurement}
+
+\todo[inline]{
+Studien die verschiedene Messmethoden verglichen haben -- nicht was die Tools sind (Kap.\ 2), sondern was sie empirisch messen, wie stark sie abweichen, und warum.
+Wichtige Paper: Bannour et al.\ (2021) -- Vergleich von CodeCarbon, CarbonTracker, experiment-impact-tracker; Rodriguez et al.\ (2024) -- EPM vs.\ RAPL vs.\ TDP-Schätzung; Henderson et al.\ (2022) -- empirische Diskrepanzen zwischen Tools.
+Konkreter Befund aus dieser Thesis als Motivation: CodeCarbon unterschätzt CPU-Verbrauch um Faktor 2--9$\times$ gegenüber LibreHardwareMonitor (z.B.\ LogReg Credit: 6.6\,W vs.\ 57.8\,W). Was sagen andere Studien dazu?
+Forschungslücke: Kein Paper hat bisher direkte Hardware-Sensor-Messungen (HardwareMonitor auf Windows) mit CodeCarbon auf demselben Setup für klassische ML-Algorithmen verglichen.
+}
+
+% =============================================================
+\section{Seasonal and Geographic Carbon Intensity Effects}
+\label{sec:related_carbon_intensity}
+
+\todo[inline]{
+Studien die untersucht haben, wie stark Emissionen durch Ort und Zeitpunkt der Berechnung variieren.
+Wichtige Paper: Dodge et al.\ (2022) -- geografische und temporale Variation der Carbon Intensity im US-Stromnetz; Lannelongue et al.\ (2021) Green Algorithms -- Faktor-40-Unterschied zwischen Regionen bereits in Kap.\ 2 erwähnt, hier aber mit Fokus auf empirische Messungen und praktische Implikationen für Experimentdesign.
+Gibt es Studien die konkret saisonale Effekte (Sommer vs.\ Winter) auf Training-Emissionen quantifizieren? Falls ja: was fanden sie?
+Forschungslücke am Ende: Kein Paper hat diese Effekte konkret für einen ML-Benchmark auf deutschem Stromnetz (Erneuerbare-Anteil Juli vs.\ Dezember) durchgerechnet -- das ist was Abschnitt~X dieser Thesis tut.
+NICHT wiederholen: Definition Carbon Intensity, CO2eq-Formel (Kap.\ 2).
+}
+
+% =============================================================
+\section{Summary and Research Gap}
+\label{sec:related_gap}
+
+\todo[inline]{
+Kurze Synthese (1--2 Absätze) der vier vorherigen Abschnitte.
+Muster: ``Existing work has primarily studied [X]. Studies that compare [Y] are rare. No study has simultaneously addressed [A], [B], and [C] under controlled conditions on tabular data.''
+Dann 3--4 Bullet Points die direkt auf die Forschungsfragen aus Kap.\ 4 verweisen:
+- Kein systematischer Energievergleich klassischer ML vs.\ DL auf tabellarischen Daten mit realer Hardware-Messung
+- Kein empirischer CPU/GPU-Breakeven für Gradient Boosting als Funktion der Datensatzgröße
+- Kein Vergleich Software-Schätzung vs.\ Hardware-Sensor auf Windows für denselben Benchmark
+- Keine Quantifizierung saisonaler Emissionseffekte für einen ML-Benchmark auf deutschem Stromnetz
+Dieser Abschnitt ersetzt keine Einleitung -- er schließt das Kapitel ab und übergibt an das Experimental Design.
+}
