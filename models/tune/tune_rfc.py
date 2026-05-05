@@ -14,7 +14,7 @@ from codecarbon import EmissionsTracker
 import optuna
 
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
-N_TRIALS = int(os.environ.get("N_TRIALS", 50))
+N_TRIALS = int(os.environ.get("N_TRIALS", 40))
 
 X, y = load_data(DATASET)
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)

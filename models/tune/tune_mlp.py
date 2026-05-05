@@ -27,7 +27,7 @@ from codecarbon import EmissionsTracker
 # Method: linear scale by trial ratio (49/45); power from HardwareMonitor MLP wine+credit avg.
 
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
-N_TRIALS = int(os.environ.get("N_TRIALS", 50))
+N_TRIALS = int(os.environ.get("N_TRIALS", 40))
 mlp_config = {
     "wine": {"num_classes": 3},
     "credit": {"num_classes": 2},

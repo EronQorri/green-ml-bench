@@ -127,7 +127,7 @@ To ensure a fair comparison across all models, hyperparameter tuning was applied
 Hyperparameter optimization was performed using Optuna \cite{akibaOptunaNextgenerationHyperparameter2019}, an optimization framework based on Bayesian search (see Section 2.x). 
 \todo[inline]{Hier in 02 die genaue Erklärung}
 Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, evaluated across three datasets and four models, a full grid search would require approximately 150,000 evaluations. 
-Optuna was therefore configured to run 50 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, the latter being a relevant factor given that tuning runs contribute to the overall energy budget of this study, as described in \Cref{design_metrics}.
+Optuna was therefore configured to run 40 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, the latter being a relevant factor given that tuning runs contribute to the overall energy budget of this study, as described in \Cref{design_metrics}.
 
 Weighted F1-score was used as the optimization objective, as it accounts for class imbalance more robustly than accuracy, providing a more reliable estimate of model quality across datasets with varying class distributions.
 
