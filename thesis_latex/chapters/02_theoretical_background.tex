@@ -1,20 +1,20 @@
 \chapter{Theoretical Background}
 \label{theoretical_background}
 
-This chapter establishes the theoretical foundations required to understand the empirical study presented in the remainder of this thesis. It first frames the research within the broader debate between \textit{Red AI} and \textit{Green AI}, then formalizes the concepts of energy consumption and carbon emissions in machine learning. Subsequently, the relevant classification algorithms are described from a purely theoretical standpoint, followed by the metrics used to evaluate their predictive performance, the validation strategy, and hyperparameter optimization techniques. All implementation details are deliberately deferred to \Cref{implementation_models}.
+This chapter establishes the theoretical foundations required to understand the empirical study presented in the remainder of this thesis. It first frames the research within the broader debate between \textit{Red AI} and \textit{Green AI}, then formalizes the concepts of energy consumption and carbon emissions in machine learning. Subsequently, the relevant classification algorithms are described from a purely theoretical standpoint, followed by the metrics used to evaluate their predictive performance, the validation strategy, and hyperparameter optimization techniques. All implementation details are deliberately deferred to \Cref{implementation}.
 
 
 % =============================================================
 \section{Green AI and Red AI}
 \label{sec:theoretical_green_red_ai}
 
-This section introduces the conceptual distinction between Red AI and Green AI, which provides the vocabulary for framing the ecological evaluation of machine learning models and motivates the treatment of efficiency as a first-class evaluation criterion alongside predictive accuracy. The metrics used to operationalize ecological cost are defined in \Cref{sec:theoretical_metrics}, and the corresponding measurement infrastructure is described in \Cref{sec:theoretical_emissions}.
+This section introduces the conceptual distinction between Red AI and Green AI, which provides the vocabulary for framing the ecological evaluation of machine learning models and motivates the treatment of efficiency as a first-class evaluation criterion alongside predictive accuracy. 
 
 In recent years, a paradigm has emerged in AI research that \citeauthor{schwartzGreenAI2020} refer to as "Red AI" \cite{schwartzGreenAI2020}. Red AI describes research approaches that primarily aim to improve prediction accuracy through the massive use of computational power, data, and parameters, while largely disregarding the associated infrastructural and energetic costs. The underlying dynamic driving this trend is that the relationship between model performance and model complexity is at best logarithmic \cite{schwartzGreenAI2020}: a linear increase in accuracy requires an exponentially larger model or exponentially more training data. Empirically, since 2012 the compute used to train state-of-the-art models has been doubling approximately every 3.4 months \cite{verdecchiaDataCentricGreenAI2022a}. This is particularly evident in large Transformer architectures. \citeauthor{strubellEnergyPolicyConsiderations2019} document that training such models can require days of continuous computation across multiple GPUs, while foundation models such as GPT-3 scale to 175 billion parameters \cite{strubellEnergyPolicyConsiderations2019}.
 
 In response, the concept of \textit{Green AI} has emerged as a counter-movement within the machine learning community \cite{schwartzGreenAI2020}. Green AI is defined as research that yields novel results while explicitly accounting for computational costs, elevating efficiency to a primary evaluation criterion alongside predictive accuracy. Beyond the environmental dimension, the movement also addresses inclusivity: the prohibitive financial costs of training massive models increasingly restrict participation to a small number of well-resourced institutions \cite{schwartzGreenAI2020}. A distinction must also be made between Green AI and \textit{AI for Green}, where Green AI concerns reducing the ecological footprint of AI systems themselves, not applying AI to environmental problems \cite{schwartzGreenAI2020,GreenAIPosition}.
 
-A core principle of the Green AI movement is evaluating environmental impacts across the entire lifecycle of an AI system, rather than focusing solely on the training phase \cite{GreenAIPosition, eilamMethodologyFrameworkAI2023}. This holistic view encompasses data engineering, system integration, continuous retraining, and inference operations. Empirical work on data-centric Green AI illustrates the potential of this broader perspective: simple dataset preprocessing modifications, such as extracting smaller representative subsets or reducing feature counts, can decrease training energy consumption by up to 92 percent with negligible loss in accuracy \cite{verdecchiaDataCentricGreenAI2022a}.
+A core principle of the Green AI movement is evaluating environmental impacts across the entire lifecycle of an AI system, rather than focusing solely on the training phase \cite{GreenAIPosition, eilamMethodologyFrameworkAI2023}. This full-lifecycle view encompasses data engineering, system integration, continuous retraining, and inference operations. Empirical work on data-centric Green AI illustrates the potential of this broader perspective: simple dataset preprocessing modifications, such as extracting smaller representative subsets or reducing feature counts, can decrease training energy consumption by up to 92 percent with negligible loss in accuracy \cite{verdecchiaDataCentricGreenAI2022a}.
 
 To translate these principles into practice, researchers advocate for standardized reporting of computational work, energy consumption, and carbon emissions alongside accuracy results \cite{schwartzGreenAI2020, hendersonSystematicReportingEnergy2020}. Several tools have been developed to support this. The ML CO\textsubscript{2} Impact Calculator \cite{lacosteQuantifyingCarbonEmissions2019} and the \texttt{experiment-impact-tracker} \cite{hendersonSystematicReportingEnergy2020} allow practitioners to estimate carbon emissions based on hardware configuration, execution time, and local grid carbon intensity. At the organizational level, the Green Software Foundation's Software Carbon Intensity (SCI) specification provides a standardized, consequential carbon accounting metric aimed at directly reducing AI carbon footprints rather than relying on market-based offsets \cite{dodgeMeasuringCarbonIntensity2022, eilamMethodologyFrameworkAI2023}.
 
@@ -98,7 +98,7 @@ The optimal parameters are estimated via Maximum Likelihood Estimation (MLE), wh
 
 Logistic regression extends naturally to multiclass problems ($\mathcal{Y} = \{1, \ldots, C\}$) via a One-vs-Rest (OvR) strategy or by replacing the sigmoid with a Softmax function, yielding Multinomial Logistic Regression \cite{hastieElementsStatisticalLearning2017}.
 
-A key advantage of logistic regression is its interpretability: each feature weight directly represents its directional influence on the log-odds of the prediction \cite{hastieElementsStatisticalLearning2017}. It also trains quickly and is robust to overfitting on simple datasets \cite{hastieElementsStatisticalLearning2017}. Its fundamental limitation is linearity: without manual feature engineering, the model cannot capture non-linear patterns or feature interactions, making it considerably less expressive than the tree-based and deep learning architectures described in the following subsections \cite{hastieElementsStatisticalLearning2017}.
+A key advantage of logistic regression is its interpretability: each feature weight directly represents its directional influence on the log-odds of the prediction. It also trains quickly and is robust to overfitting on simple datasets. Its fundamental limitation is linearity: without manual feature engineering, the model cannot capture non-linear patterns or feature interactions, making it considerably less expressive than the tree-based and deep learning architectures described in the following subsections \cite{hastieElementsStatisticalLearning2017}.
 
 \subsection{Decision Trees}
 \label{sec:theoretical_dt}
@@ -219,7 +219,7 @@ Among these aggregation strategies, Weighted F1 is particularly well-suited to i
 
 Measuring classification quality, however, captures only one dimension of model evaluation. Evaluating models under the Green AI paradigm requires moving beyond pure predictive quality to measure the physical and environmental costs of achieving that performance \cite{schwartzGreenAI2020}. The primary resource metrics tracked include training time (measured in seconds), energy consumption (measured in kilowatt-hours, kWh), operational carbon emissions (measured in kg of CO\textsubscript{2}eq), and inference latency (seconds per sample). The foundational definitions and physical measurement approaches for these quantities are established in \Cref{sec:theoretical_emissions}.
 
-To holistically evaluate machine learning models, researchers increasingly employ composite efficiency metrics that weigh predictive performance against these resource expenditures in a single score. The general methodological motivation behind these composite metrics is to provide a unified heuristic for identifying algorithms that offer the optimal trade-off between classification quality and ecological impact \cite{schwartzGreenAI2020}. In the literature, such approaches include the Energy-Efficiency Ratio, Performance-per-Watt (which tracks operations or inferences per Joule) \cite{desislavovTrendsAIInference2023}, and FLOPs-per-Sample (or per-inference) \cite{schwartzGreenAI2020}.
+To evaluate machine learning models across both dimensions at once, researchers increasingly employ composite efficiency metrics that weigh predictive performance against these resource expenditures in a single score. The general methodological motivation behind these composite metrics is to provide a unified heuristic for identifying algorithms that offer the optimal trade-off between classification quality and ecological impact \cite{schwartzGreenAI2020}. In the literature, such approaches include the Energy-Efficiency Ratio, Performance-per-Watt (which tracks operations or inferences per Joule) \cite{desislavovTrendsAIInference2023}, and FLOPs-per-Sample (or per-inference) \cite{schwartzGreenAI2020}.
 
 However, composite metrics possess inherent theoretical weaknesses. First, the resource-based components of these metrics, such as energy consumed or execution time, are intrinsically hardware-dependent. A composite score calculated in one environment is tied to the specific computational architecture and local energy grid, meaning it cannot be universally generalized or directly compared across different settings \cite{schwartzGreenAI2020, dodgeMeasuringCarbonIntensity2022}. Second, the weighting between performance and resource cost is highly scenario-dependent. Determining how much a marginal gain in predictive accuracy is worth compared to the energy required to achieve it remains an open question that depends heavily on the specific priorities or economic utility of the deployment scenario \cite{hendersonSystematicReportingEnergy2020}.
 
@@ -268,17 +268,16 @@ Furthermore, TPE offers a substantial computational advantage over both GPs and 
 
 \begin{table}[ht]
 \centering
-\footnotesize
 \caption{Comparison of HPO strategies ($n$: trials, $d$: hyperparameters).}
 \label{tab:hpo_comparison}
-\begin{tabular}{llcll}
+\begin{tabular}{llcl}
 \toprule
-\textbf{Method} & \textbf{Strategy} & \textbf{History} & \textbf{Complexity} & \textbf{Best for} \\
+\textbf{Method} & \textbf{Strategy} & \textbf{History} & \textbf{Complexity} \\
 \midrule
-Grid Search           & Exhaustive          & No  & $\mathcal{O}(n^d)$      & Few hyperparameters \\
-Random Search         & Random sampling     & No  & $\mathcal{O}(n)$        & Low effective dim. \\
-Bayesian (GP)         & Sequential, model-based & Yes & $\mathcal{O}(n^3)$  & Moderate spaces \\
-TPE (\texttt{Optuna}) & Sequential, model-based & Yes & $\mathcal{O}(n \log n)$ & Complex/conditional \\
+Grid Search           & Exhaustive          & No  & $\mathcal{O}(n^d)$  \\
+Random Search         & Random sampling     & No  & $\mathcal{O}(n)$ \\
+Bayesian (GP)         & Sequential, model-based & Yes & $\mathcal{O}(n^3)$ \\
+TPE (\texttt{Optuna}) & Sequential, model-based & Yes & $\mathcal{O}(n \log n)$  \\
 \bottomrule
 \end{tabular}
 \end{table}

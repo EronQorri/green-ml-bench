@@ -11,8 +11,6 @@ The following sub-questions will also be addressed in the course of this thesis:
     \item How does energy consumption and CO2 output scale with increasing neural network complexity (number of layers and neurons)?
     \item How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?
     \item How does reducing the number of training instances on large datasets affect model accuracy and energy consumption across different algorithms?
-    \item To what extent does CodeCarbon's TDP-based CPU estimation fallback underestimate energy consumption for classical machine learning algorithms on tabular data on Windows, compared to direct hardware sensor measurements?
-    \item At what point do additional hyperparameter optimization trials yield diminishing returns in F1-score relative to the energy consumed during the tuning process?
 \end{itemize}
 
 
@@ -67,11 +65,11 @@ Multilayer Perceptron & Neural Network & GPU & High-complexity \\
 
 Logistic Regression serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive accuracy, making it well suited to quantifying whether the additional resource consumption of more complex models yields a meaningful gain in predictive performance.
 
-Random Forest was selected as a mid-complexity representative of tree-based ensemble methods, as extensively described in Section 2.x \todo{}. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
+Random Forest was selected as a mid-complexity representative of tree-based ensemble methods, as extensively described in \Cref{sec:theoretical_rf}. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
 
 Building on the tree-based approach, XGBoost was chosen as a second mid-complexity model, with the key distinction that it also supports GPU-accelerated training. This makes it possible to directly compare the energy consumption and training time of CPU- and GPU-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study. The suitability of GPU-accelerated XGBoost for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based GPU implementation can process a dataset of 10 million instances with 28 features entirely within GPU memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
 
-The MLP was selected as the most complex model, representing the deep learning category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption. A more detailed description of the MLP architecture is provided in Section 2.x.
+The MLP was selected as the most complex model, representing the deep learning category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption. A more detailed description of the MLP architecture is provided in \Cref{sec:theoretical_mlp}.
 
 Together, the selected models cover a broad spectrum of algorithmic complexity, from a linear baseline to gradient boosting and deep learning, enabling a meaningful comparison of both predictive performance and energy efficiency across fundamentally different model types. The following section defines the metrics used to evaluate these dimensions.
 
@@ -98,7 +96,7 @@ It should be noted that both $\hat{t}$ and $\hat{c}$ are inherently hardware- an
 \section{Validation Strategy}
 \label{design_validation}
 
-To obtain reliable and generalizable performance estimates, a cross-validation strategy was employed rather than a single train-test split, as described in Section 2.x.
+To obtain reliable and generalizable performance estimates, a cross-validation strategy was employed rather than a single train-test split, as described in \Cref{sec:theoretical_kfold}.
 
 Specifically, K-Fold cross-validation was applied with $k=5$ folds, a value widely recommended in the literature as a practical balance between computational cost and estimation stability \cite{hastieElementsStatisticalLearning2017}. Each model is trained and evaluated five times on non-overlapping subsets of the data, and the final performance score is averaged across all folds. This approach is consistent across all models and datasets, ensuring comparability of results.
 
@@ -108,9 +106,7 @@ To ensure reproducibility, a fixed random state was used for all cross-validatio
 \label{design_hyperparameter}
 To ensure a fair comparison across all models, hyperparameter tuning was applied to each model prior to evaluation. Without tuning, default parameters tend to favor certain model families over others, potentially skewing the comparison in terms of both predictive performance and resource consumption \cite{bagnallUseDefaultParameter2017}.
 
-Hyperparameter optimization was performed using Optuna \cite{akibaOptunaNextgenerationHyperparameter2019}, an optimization framework based on Bayesian search (see Section 2.x). 
-\todo[inline]{Hier in 02 die genaue Erklärung}
-Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, evaluated across three datasets and four models, a full grid search would require approximately 150,000 evaluations. 
+Hyperparameter optimization was performed using Optuna \cite{akibaOptunaNextgenerationHyperparameter2019}, an optimization framework based on Bayesian search as previously described in \Cref{sec:theoretical_bayes}. Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, evaluated across three datasets and four models, a full grid search would require approximately 150,000 evaluations. 
 Optuna was therefore configured to run 40 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, the latter being a relevant factor given that tuning runs contribute to the overall energy budget of this study, as described in \Cref{design_metrics}.
 
 Weighted F1-score was used as the optimization objective, as it accounts for class imbalance more robustly than accuracy, providing a more reliable estimate of model quality across datasets with varying class distributions.
@@ -120,6 +116,8 @@ Tuning was performed separately for each dataset, as the datasets differ substan
 % =============================================================
 \section{Experiments}
 \label{sec:experiments}
+
+\todo[inline]{Der gesamte Teil muss noch gemacht werden. Bis jetzt nur Placeholder}
 
 Having established the datasets, models, metrics, and tuning strategy, this section describes the individual experiments conducted in this study. Each experiment is motivated by one or more of the research questions stated in \Cref{sec:research_questions} and addresses a specific dimension of the energy-performance trade-off.
 
@@ -156,11 +154,11 @@ where $a$ and $b$ are the slope and intercept of each fit. Below $n_{BE}$, CPU t
 \label{design_codecarbon_validation}
 \todo[inline]{Describe CodeCarbon validation experiment: compare TDP-based CPU estimation (CodeCarbon fallback on Windows) against direct hardware sensor readings from LibreHardwareMonitor across all models. Data in \texttt{results/archive/results\_HMtest.csv}, plot at \texttt{analysis/plots/codecarbon\_vs\_hw.png}.}
 
+\todo[inline]{Fischer et al. already established the core finding (CodeCarbon underestimates by 20--30\%, worse for CPU-only workloads) using the same tool. The specific gap for classical ML under the Windows TDP fallback is too narrow to justify a standalone RQ. Results are included as a methodological validation and discussed as a limitation in \Cref{discussion}.}
+
 \subsection{Seasonal Carbon Intensity Analysis}
 \label{design_seasonal}
 \todo[inline]{Describe seasonal carbon intensity experiment: compare CO\textsubscript{2} emissions of equivalent training runs under July vs.\ December German grid carbon intensity values. Scripts: \texttt{analysis/electricity\_mix\_germany.py}, \texttt{analysis/carbon\_intensity\_analysis.py}.}
 
-\subsection{Hyperparameter Tuning Efficiency}
-\label{design_tuning_efficiency}
-\todo[inline]{Describe tuning efficiency experiment. Current baseline: 40 Optuna trials per model per dataset, with CodeCarbon already tracking tuning emissions (\texttt{models/tune/tune\_xgb.py}, \texttt{tune\_rfc.py}, \texttt{tune\_mlp.py}; \texttt{N\_TRIALS} is configurable via environment variable). Next step: systematically reduce tuning budget by (a) lowering the number of trials (e.g.\ 5, 10, 20, 40) and (b) narrowing the hyperparameter search ranges. Because all other factors are held constant, the resulting F1-scores and tuning CO\textsubscript{2} values are directly comparable. Goal: identify the point of diminishing returns where additional tuning cost is not justified by the marginal gain in predictive performance.}
+% HPO tuning efficiency is discussed in \Cref{discussion} based on the 40-trial tuning data already collected, rather than treated as a separate experiment. The research gap is comparatively small given existing literature, and the finding is better positioned as a reflection on the tuning choices made in this study.
 

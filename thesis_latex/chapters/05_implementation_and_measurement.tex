@@ -1,4 +1,5 @@
 \chapter{Implementation and Measurement}
+\label{implementation}
 
 This chapter describes how the experimental pipeline was built and how measurements were collected. It covers the hardware and software environment, the data loading architecture, each model implementation, the hyperparameter tuning setup, and the emissions measurement infrastructure including the custom CPU power monitoring solution.
 
@@ -10,7 +11,7 @@ This chapter describes how the experimental pipeline was built and how measureme
 
 A critical decision in the experimental design was the selection of the computing platform on which all experiments would be conducted. Two options were considered: the university's shared computing infrastructure or a local machine. The latter was ultimately chosen, as it provides several key advantages for this study. First, it ensures complete reproducibility, since all experiments are executed on identical hardware configuration, eliminating interfering variables that could arise from shared resource conflicts or system variability. Second, it provides consistent availability and direct control over system configuration, which is particularly important given the extended runtime of the large-scale experiments (particularly on the 11M-instance HIGGS dataset). Third, local execution facilitates fine-grained performance monitoring and measurement of energy consumption, a primary objective of this study.
 
-The hardware platform selected for all experiments is a consumer-grade desktop system with the following specifications: an NVIDIA RTX 4070 graphics processing unit (12 GB GDDR6 memory, 5,888 CUDA cores), an AMD Ryzen 7 5700X processor (8 cores / 16 threads, base clock 3.6 GHz), and 32 GB of DDR4 RAM. The system runs Windows 11 with all code implemented in Python 3.13.0.
+The hardware platform selected for all experiments is a consumer-grade desktop system with the following specifications: an NVIDIA RTX 4070 graphics processing unit (12 GB GDDR6 memory, 5,888 CUDA cores), an AMD Ryzen 7 5700X processor (8 cores / 16 threads, base clock 3.6 GHz) and 32 GB of DDR4 RAM. The system runs Windows 11 with all code implemented in Python 3.13.0.
 
 \begin{table}[htbp]
 \centering
@@ -201,6 +202,7 @@ Parameter & \textit{Wine} & \textit{Credit} & \textit{Higgs} \\
 \end{tabular}
 \end{table}
 
+\todo[inline]{hier ebenfalls noch korrekte werte aus dem noch laufenden run eintragen}
 
 \subsection{Multilayer Perceptron}
 \label{implementation_mlp}
@@ -225,7 +227,9 @@ The maximum number of training epochs is set to 200. This value acts as an upper
 \section{Hyperparameter Optimization}
 \label{implementation_tuning}
 
-Building on the design outlined in \Cref{design_hyperparameter}, this section describes how Optuna was integrated into the evaluation pipeline and which search spaces were defined for each model. The tuning logic is encapsulated in three dedicated scripts (\texttt{tune\_xgb.py}, \texttt{tune\_rfc.py}, and \texttt{tune\_mlp.py}), one per tunable model. All three follow the same structural pattern and differ only in the model that is instantiated and the search space that is queried from the trial object. The target dataset is selected via a command-line argument, and the number of trials is read from the \texttt{N\_TRIALS} environment variable, with a default of 50. This separation between configuration and code allows individual tuning runs to be triggered without modifying the source files. The search spaces used across all three tuning scripts are summarized in \Cref{tab:search_spaces}. Integer and continuous parameters define an inclusive range, while categorical parameters list the discrete choices available to the sampler.
+\todo[inline]{Den Teil noch erweitern um das Tuning Efficiency Experiment das noch stattfinden wird}
+
+Building on the design outlined in \Cref{design_hyperparameter}, this section describes how Optuna was integrated into the evaluation pipeline and which search spaces were defined for each model. The tuning logic is encapsulated in three dedicated scripts (\texttt{tune\_xgb.py}, \texttt{tune\_rfc.py}, and \texttt{tune\_mlp.py}), one per tunable model. All three follow the same structural pattern and differ only in the model that is instantiated and the search space that is queried from the trial object. The target dataset is selected via a command-line argument, and the number of trials is read from the \texttt{N\_TRIALS} environment variable, with a default of 40. This separation between configuration and code allows individual tuning runs to be triggered without modifying the source files. The search spaces used across all three tuning scripts are summarized in \Cref{tab:search_spaces}. Integer and continuous parameters define an inclusive range, while categorical parameters list the discrete choices available to the sampler.
 
 \begin{table}[htbp]
 \centering
@@ -341,7 +345,7 @@ Dashed gray boxes indicate CodeCarbon \texttt{EmissionsTracker} calls; dashed bl
 \label{fig:emissions_flow}
 \end{figure}
 
-To allow fine-grained analysis, each model–dataset combination receives its own \texttt{EmissionsTracker} instance with a unique \texttt{project\_name}. The naming convention follows the pattern \texttt{<model>\_<dataset>}, for example \texttt{lr\_wine}, \texttt{rf\_credit}, or \texttt{xgb\_gpu\_higgs}. This scheme makes individual runs immediately identifiable in the \texttt{emissions/} directory, where CodeCarbon writes one CSV file per tracked run in addition to returning the scalar value in code. Tuning scripts follow the same pattern preceded by \texttt{tune\_}, for example \texttt{tune\_mlp\_higgs} or \texttt{tune\_xgb\_cpu\_wine}. In total, the experiment produces tracked emissions records for 14 training runs and up to eight tuning runs. The separate CSV files serve as a raw audit trail, while the values extracted via \texttt{tracker.stop()} are the primary source for the analysis presented in \Cref{results}.
+To allow fine-grained analysis, each model–dataset combination receives its own \texttt{EmissionsTracker} instance with a unique \texttt{project\_name}. The naming convention follows the pattern \texttt{<model>\_<dataset>}, for example \texttt{lr\_wine}, \texttt{rf\_credit}, or \path{xgb_gpu_higgs}. This scheme makes individual runs immediately identifiable in the \texttt{emissions/} directory, where CodeCarbon writes one CSV file per tracked run in addition to returning the scalar value in code. Tuning scripts follow the same pattern preceded by \texttt{tune\_}, for example \texttt{tune\_mlp\_higgs} or \texttt{tune\_xgb\_cpu\_wine}. In total, the experiment produces tracked emissions records for 14 training runs and up to eight tuning runs. The separate CSV files serve as a raw audit trail, while the values extracted via \texttt{tracker.stop()} are the primary source for the analysis presented in \Cref{results}.
 
 \subsection{Hardware Measurement and Limitations}
 \label{implementation_emissions_limitations}
@@ -371,7 +375,7 @@ Only a single row was passed to the model rather than a full batch. This was int
 
 The model used for this measurement is taken from the first cross-validation fold via \path{cv_results["estimator"][0]}, which is made available by passing \path{return_estimator=True} to \texttt{cross\_validate()}. The single-row slice \texttt{X[:1]} is then passed to \path{trained_model.predict()}, with the elapsed time captured using \path{time.perf_counter()} for sub-millisecond precision.
 
-\section{Results Persistence and Orchestration}
+\section{Results Storage and Orchestration}
 \label{implementation_results}
 
 This section describes how experimental results are stored and how the individual model scripts are coordinated into complete experiment runs. The two concerns are closely related: the storage format determines what data is available for analysis, while the orchestration layer controls how and in what order the model scripts are executed.

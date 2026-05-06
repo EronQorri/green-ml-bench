@@ -1,28 +1,2 @@
 \chapter{Introduction}
 
-\section{Problem statement and societal relevance}
-The current trend in machine learning is moving towards increasingly large models and datasets \parencite{schwartzGreenAI2020}. 
-Although deep learning approaches often achieve the highest predictive accuracy, their energy demand and associated $CO_2$ emissions increase disproportionately \parencite{strubellEnergyPolicyConsiderations2019,lacosteQuantifyingCarbonEmissions2019}. 
-In an era marked by strict sustainability guidelines and rising energy costs, a critical question arises: At what point is a computationally "simple" model ecologically more viable than a highly complex one? 
-
-The primary objective of this thesis is to determine whether and when it is worthwhile to deploy more complex models, considering not only their predictive accuracy but also their associated energy consumption. To achieve this, a Logistic Regression, a Random Forest, an XGBoost model and a Multilayer Perceptron are compared under equal conditions across three datasets of varying sizes. This comparative analysis aims to provide a clearer understanding of the thresholds at which simpler models represent the better choice. Additionally, the study investigates how modifying a Multilayer Perceptron architecture, specifically varying the number of neurons and hidden layers, directly impacts energy consumption and $CO_2$ emissions.
-
-To address the problem statement and achieve the outlined objectives, this thesis investigates the overarching question: \textit{How does the relationship between energy consumption and predictive accuracy change for Logistic Regression, Random Forest, XGBoost, and Multilayer Perceptron when model complexity and dataset size are systematically varied?} 
-
-Specifically, the following sub-questions are examined:
-\begin{itemize}
-    \item How do energy consumption (in kWh) and $CO_2$ emissions change when scaling a deep learning architecture (variation of neuron count)? 
-    \item Under which conditions (dataset size, model complexity) does the resource consumption of complex models exceed the achievable accuracy gain compared to simpler algorithms? 
-    \item How does the energy consumption differ between CPU-based training (Random Forest) and GPU-accelerated training (XGBoost, MLP) for the same classification task? 
-\end{itemize}
-
-\section{Motivation: When does a simpler model pay off?}
-
-\section{Research questions and objectives}
-
-\section{Structure of the Thesis}
-The remainder of this thesis is structured as follows: Chapter 2 provides the theoretical background, distinguishing between Green AI and Red AI, and introducing the relevant sustainability and classification metrics. Chapter 3 details the methodology, including dataset selection and the experimental hardware setup. Chapter 4 outlines the implementation process, focusing on data preprocessing, model training, and the logging of resource consumption. The empirical results are analyzed in Chapter 5, evaluating both performance and resource utilization across scaling dataset sizes. Chapter 6 discusses the findings, highlighting the economic and environmental implications. Finally, Chapter 7 concludes the thesis and provides actionable recommendations for sustainable machine learning practices.
-
-\[
-S = \frac{F_1}{1 + \lambda_1 \cdot t_{\text{scaled}} + \lambda_2 \cdot c_{\text{scaled}}}
-\]
