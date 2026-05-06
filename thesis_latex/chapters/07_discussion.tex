@@ -6,3 +6,5 @@
 \todo[inline]{CodeCarbon vs.\ HardwareMonitor comparison: discuss the systematic underestimation of CPU power by CodeCarbon on Windows (TDP-based fallback vs.\ sensor readout). Show the difference between \texttt{co2eq\_codecarbon\_kg} and \texttt{co2eq\_kg} per model/dataset. Interpret what this means for reproducibility and comparability of emissions studies that rely solely on CodeCarbon.}
 
 \todo[inline]{Parallelisation trade-off: Logistic Regression (SAG solver, single core) draws fewer watts than Random Forest / XGBoost (multi-threaded), but the longer runtime may result in comparable total energy in Wh. Discuss whether watt-based or Wh-based comparison is the fairer metric for cross-model emissions comparability, and what this means for interpreting the results.}
+
+\todo[inline]{CodeCarbon TDP fallback underestimates CPU power by factor 2--9$\times$ vs.\ LibreHardwareMonitor. Data in \texttt{results\_HMtest.csv}, plot at \texttt{analysis/plots/codecarbon\_vs\_hw.png}.}

@@ -3,6 +3,7 @@
 This chapter outlines the experimental design used to evaluate the ecological efficiency of different machine learning classification algorithms. It describes the datasets, models, evaluation metrics, hyperparameter tuning and measurement setup that form the basis of this empirical analysis.
 
 \section{Research Questions}
+\label{sec:research_questions}
 The main research question that this study aims to answer is: \textit{How does the trade-off between energy consumption and predictive performance vary across Random Forest, XGBoost and MLP models when the complexity of the models and the size of the dataset are systematically varied?}
 The following sub-questions will also be addressed in the course of this thesis:
 \begin{itemize}
@@ -10,29 +11,12 @@ The following sub-questions will also be addressed in the course of this thesis:
     \item How does energy consumption and CO2 output scale with increasing neural network complexity (number of layers and neurons)?
     \item How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?
     \item How does reducing the number of training instances on large datasets affect model accuracy and energy consumption across different algorithms?
-    \item How accurate are software-based energy estimation tools compared to direct hardware sensor measurements, and how does this affect reported CO\textsubscript{2} emissions?
+    \item To what extent does CodeCarbon's TDP-based CPU estimation fallback underestimate energy consumption for classical machine learning algorithms on tabular data on Windows, compared to direct hardware sensor measurements?
+    \item At what point do additional hyperparameter optimization trials yield diminishing returns in F1-score relative to the energy consumed during the tuning process?
 \end{itemize}
 
-\todo[inline]{Letzte Unterfrage in der Diskussion ausführlicher behandeln: CodeCarbon unterschätzt CPU-Verbrauch empirisch um Faktor 2--9$\times$ (gemessen via LibreHardwareMonitor CPU Package Power Sensor). Begründung: TDP-basierte Schätzung skaliert linear mit CPU-Auslastung, bildet aber weder Boost-Verhalten noch Uncore-Komponenten ab. Konkrete Messwerte als Beleg vorhanden (z.B.\ LogReg Credit: 6.6\,W CodeCarbon vs.\ 57.8\,W HardwareMonitor; LogReg Higgs: Faktor $\sim$2.3$\times$).}
 
-\todo[inline]{RQ4 (Scaling): Kurz das experimentelle Design für den Subset-Run beschreiben. Die Kernidee: statt verschiedener Datasets wird \textit{derselbe} Datensatz (HIGGS) in fünf Größen aufgeteilt (100k, 500k, 1M, 5M, 11M Instanzen via \texttt{TEST\_NROWS} Umgebungsvariable). Alle Modelle außer Random Forest werden mit denselben Hyperparametern (aus dem HIGGS-Tuning) auf jeder Größe trainiert. So wird der Dataset-Größen-Effekt isoliert, ohne dass unterschiedliche Hyperparameter oder Feature-Räume den Vergleich verfälschen. Ergebnis: CO2, Trainingszeit und F1 als Funktion von nrows für alle Modelle.}
-
-\subsection{Break-Even Analysis}
-\label{design_breakeven}
-
-To determine at which dataset size GPU training becomes more energy-efficient than CPU training for XGBoost, a break-even analysis was designed as part of this study. The analysis is based on nine HIGGS subsets ranging from 1{,}000 to 11{,}000{,}000 instances, using identical hyperparameters for both devices. This controlled setup isolates the effect of dataset size without confounding factors from different feature spaces or hyperparameter configurations.
-
-The relationship between dataset size and CO\textsubscript{2} emissions is modelled as a power law, fitted separately for CPU and GPU by applying a linear regression to $\log_{10}(\text{nrows})$ versus $\log_{10}(\text{CO}_2)$. A log-log fit is used because emissions scale super-linearly with data size, and a linear model would systematically misrepresent the relationship. The break-even point $n_{BE}$ is then derived analytically as the intersection of the two fitted lines:
-
-\begin{equation}
-\log_{10}(n_{BE}) = \frac{b_{\text{GPU}} - b_{\text{CPU}}}{a_{\text{CPU}} - a_{\text{GPU}}}
-\label{eq:breakeven}
-\end{equation}
-
-where $a$ and $b$ are the slope and intercept of each fit. Below $n_{BE}$, CPU training is more energy-efficient; above it, GPU training is. The results are presented in \Cref{results}.
-
-To answer these questions multiple classification algorithms and datasets were used in the experimental phase of this empirical analysis.
-
+% =============================================================
 \section{Datasets}
 \label{experimental_dataset}
 Dataset size is a primary driver of both computational demand and energy consumption during model training \cite{rodriguezEvaluatingEnergyConsumption2024}. To evaluate how this relationship varies across different scales, three classification datasets were selected that span several orders of magnitude in size. Classification was chosen as the task type since it is well-established across all selected models and allows for direct comparison of predictive performance via standardized metrics such as accuracy and F1-score. The datasets are summarized in Table~\ref{tab:datasets}.
@@ -132,4 +116,51 @@ Optuna was therefore configured to run 40 trials per model per dataset, striking
 Weighted F1-score was used as the optimization objective, as it accounts for class imbalance more robustly than accuracy, providing a more reliable estimate of model quality across datasets with varying class distributions.
 
 Tuning was performed separately for each dataset, as the datasets differ substantially in size, feature space, and class distribution. A globally tuned model would not represent optimal performance on any individual dataset and would therefore introduce bias into the comparison.
+
+% =============================================================
+\section{Experiments}
+\label{sec:experiments}
+
+Having established the datasets, models, metrics, and tuning strategy, this section describes the individual experiments conducted in this study. Each experiment is motivated by one or more of the research questions stated in \Cref{sec:research_questions} and addresses a specific dimension of the energy-performance trade-off.
+
+\subsection{Main Cross-Dataset Benchmark}
+\label{design_main_benchmark}
+\todo[inline]{Describe main benchmark: all models trained on Wine, Credit, and HIGGS with tuned hyperparameters and 5-fold CV. Goal: compare accuracy, weighted F1, training time, CO\textsubscript{2}, and EWF1 across model families and dataset scales.}
+
+\subsection{Dataset Scaling Experiment}
+\label{design_scaling}
+
+To investigate how energy consumption and predictive performance scale with training data volume, a dedicated scaling experiment was designed for the HIGGS dataset. Rather than comparing different datasets, this experiment holds the dataset constant and systematically varies the number of training instances across five subset sizes: 100{,}000, 500{,}000, 1{,}000{,}000, 5{,}000{,}000, and 11{,}000{,}000 instances. Subsets are drawn via stratified sampling to preserve the class distribution of the full dataset.
+
+All models except Random Forest are trained on each subset using the same hyperparameters derived from the full HIGGS tuning run. Random Forest is excluded due to its prohibitive runtime on large HIGGS subsets. Keeping hyperparameters fixed across subset sizes ensures that observed differences in CO\textsubscript{2} emissions, training time, and F1-score are attributable solely to dataset size rather than to model configuration. The results are presented in \Cref{results}.
+
+\subsection{CPU vs.\ GPU Break-Even Analysis}
+\label{design_breakeven}
+
+To determine at which dataset size GPU training becomes more energy-efficient than CPU training for XGBoost, a break-even analysis was designed as part of this study. The analysis is based on nine HIGGS subsets ranging from 1{,}000 to 11{,}000{,}000 instances, using identical hyperparameters for both devices. This controlled setup isolates the effect of dataset size without confounding factors from different feature spaces or hyperparameter configurations.
+
+The relationship between dataset size and CO\textsubscript{2} emissions is modelled as a power law, fitted separately for CPU and GPU by applying a linear regression to $\log_{10}(\text{nrows})$ versus $\log_{10}(\text{CO}_2)$. A log-log fit is used because emissions scale super-linearly with data size, and a linear model would systematically misrepresent the relationship. The break-even point $n_{BE}$ is then derived analytically as the intersection of the two fitted lines:
+
+\begin{equation}
+\log_{10}(n_{BE}) = \frac{b_{\text{GPU}} - b_{\text{CPU}}}{a_{\text{CPU}} - a_{\text{GPU}}}
+\label{eq:breakeven}
+\end{equation}
+
+where $a$ and $b$ are the slope and intercept of each fit. Below $n_{BE}$, CPU training is more energy-efficient; above it, GPU training is. The results are presented in \Cref{results}.
+
+\subsection{MLP Architecture Variation}
+\label{design_mlp_variation}
+\todo[inline]{Describe MLP architecture variation experiment: systematically vary number of hidden layers and neurons per layer on one or more datasets. Goal: quantify how architectural complexity affects CO\textsubscript{2} emissions and F1-score.}
+
+\subsection{CodeCarbon Validation}
+\label{design_codecarbon_validation}
+\todo[inline]{Describe CodeCarbon validation experiment: compare TDP-based CPU estimation (CodeCarbon fallback on Windows) against direct hardware sensor readings from LibreHardwareMonitor across all models. Data in \texttt{results/archive/results\_HMtest.csv}, plot at \texttt{analysis/plots/codecarbon\_vs\_hw.png}.}
+
+\subsection{Seasonal Carbon Intensity Analysis}
+\label{design_seasonal}
+\todo[inline]{Describe seasonal carbon intensity experiment: compare CO\textsubscript{2} emissions of equivalent training runs under July vs.\ December German grid carbon intensity values. Scripts: \texttt{analysis/electricity\_mix\_germany.py}, \texttt{analysis/carbon\_intensity\_analysis.py}.}
+
+\subsection{Hyperparameter Tuning Efficiency}
+\label{design_tuning_efficiency}
+\todo[inline]{Describe tuning efficiency experiment. Current baseline: 40 Optuna trials per model per dataset, with CodeCarbon already tracking tuning emissions (\texttt{models/tune/tune\_xgb.py}, \texttt{tune\_rfc.py}, \texttt{tune\_mlp.py}; \texttt{N\_TRIALS} is configurable via environment variable). Next step: systematically reduce tuning budget by (a) lowering the number of trials (e.g.\ 5, 10, 20, 40) and (b) narrowing the hyperparameter search ranges. Because all other factors are held constant, the resulting F1-scores and tuning CO\textsubscript{2} values are directly comparable. Goal: identify the point of diminishing returns where additional tuning cost is not justified by the marginal gain in predictive performance.}
 
