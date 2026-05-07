@@ -49,7 +49,7 @@ for col in ["training_time_s", "co2eq_kg"]:
     mx = df.groupby("dataset")[col].transform("max")
     df[f"{col}_scaled"] = (df[col] - mn) / (mx - mn).clip(lower=1e-9)
 
-df["carbon_optimal_score"] = df["f1"] / (
+df["ewf1"] = df["f1"] / (
     1 + l_1 * df["training_time_s_scaled"] + l_2 * df["co2eq_kg_scaled"]
 )
 
@@ -112,10 +112,10 @@ for ds, key in zip(["wine", "credit", "higgs"], ["carb_wine", "carb_credit", "ca
         axes[key].set_visible(False)
         continue
     models_in_ds = [m for m in MODEL_ORDER if m in subset["model"].values]
-    sns.barplot(data=subset, x="model", y="carbon_optimal_score",
+    sns.barplot(data=subset, x="model", y="ewf1",
                 order=models_in_ds, hue="model", hue_order=models_in_ds,
                 palette=MODEL_PALETTE, ax=axes[key], dodge=False)
-    axes[key].set_title(f"Carbon-Score: {ds}")
+    axes[key].set_title(f"EWF1: {ds}")
     axes[key].set_xlabel("")
     axes[key].set_ylim(0, 1.25)
     axes[key].tick_params(axis="x", rotation=45)
@@ -339,3 +339,62 @@ if len(scaling_models) >= 2 and df_scaling["nrows_int"].nunique() >= 3:
 else:
     print(f"Skipping scaling plot — need ≥2 models and ≥3 nrows, got {len(scaling_models)} models / {df_scaling['nrows_int'].nunique() if not df_scaling.empty else 0} nrows.")
     print("  Run run_scaling_subsets.py first.")
+
+
+# ── Plot 6: MLP architecture variation — depth × width grid on HIGGS ──────────
+
+mlp_var = df_results_main[df_results_main["dataset"] == "higgs"].copy()
+mlp_var = mlp_var[mlp_var["model"].str.match(r"^MLP_\d+x\d+$", na=False)]
+
+if not mlp_var.empty:
+    parsed = mlp_var["model"].str.extract(r"^MLP_(\d+)x(\d+)$")
+    mlp_var["depth"] = pd.to_numeric(parsed[0])
+    mlp_var["width"] = pd.to_numeric(parsed[1])
+    mlp_var["co2eq_kg"] = pd.to_numeric(mlp_var["co2eq_kg"], errors="coerce")
+    mlp_var["f1"] = pd.to_numeric(mlp_var["f1"], errors="coerce")
+    mlp_var = mlp_var.dropna(subset=["depth", "width", "f1", "co2eq_kg"])
+
+    widths = sorted(mlp_var["width"].unique())
+    depths = sorted(mlp_var["depth"].unique())
+    width_palette = dict(zip(widths, sns.color_palette("viridis", len(widths))))
+    depth_palette = dict(zip(depths, sns.color_palette("viridis", len(depths))))
+
+    fig, axes = plt.subplots(2, 2, figsize=(13, 9))
+    fig.suptitle("MLP Architecture Variation — HIGGS", fontsize=14, fontweight="bold")
+
+    for w in widths:
+        sub = mlp_var[mlp_var["width"] == w].sort_values("depth")
+        axes[0, 0].plot(sub["depth"], sub["f1"], marker="o",
+                        color=width_palette[w], label=f"{w}")
+        axes[0, 1].plot(sub["depth"], sub["co2eq_kg"], marker="o",
+                        color=width_palette[w], label=f"{w}")
+    axes[0, 0].set(xlabel="Depth (hidden layers)", ylabel="Weighted F1",
+                   title="F1 vs depth (per width)", xticks=depths)
+    axes[0, 1].set(xlabel="Depth (hidden layers)", ylabel="CO₂ (kg, log)",
+                   title="CO₂ vs depth (per width)", xticks=depths)
+    axes[0, 1].set_yscale("log")
+    axes[0, 0].legend(title="Width", fontsize=8)
+    axes[0, 1].legend(title="Width", fontsize=8)
+
+    for d in depths:
+        sub = mlp_var[mlp_var["depth"] == d].sort_values("width")
+        label = f"{d} layer" + ("s" if d > 1 else "")
+        axes[1, 0].plot(sub["width"], sub["f1"], marker="o",
+                        color=depth_palette[d], label=label)
+        axes[1, 1].plot(sub["width"], sub["co2eq_kg"], marker="o",
+                        color=depth_palette[d], label=label)
+    axes[1, 0].set(xlabel="Width (units per layer)", ylabel="Weighted F1",
+                   title="F1 vs width (per depth)", xticks=widths)
+    axes[1, 1].set(xlabel="Width (units per layer)", ylabel="CO₂ (kg, log)",
+                   title="CO₂ vs width (per depth)", xticks=widths)
+    axes[1, 1].set_yscale("log")
+    axes[1, 0].legend(title="Depth", fontsize=8)
+    axes[1, 1].legend(title="Depth", fontsize=8)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(PLOTS_DIR / "mlp_variation.png", dpi=150, bbox_inches="tight")
+    print("Saved: analysis/plots/mlp_variation.png")
+    plt.close()
+else:
+    print("Skipping MLP variation plot — no MLP_DxW rows in results.csv.")
+    print("  Run run_mlp_variation.py first.")

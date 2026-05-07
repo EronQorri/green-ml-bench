@@ -53,7 +53,21 @@ START = END - timedelta(days=365)
 CARBON_FILE = BASE_DIR / "results" / "carbon_intensity_year.csv"
 RESULTS_FILE = BASE_DIR / "results" / "results.csv"
 COUNTERFACTUAL_FILE = BASE_DIR / "results" / "co2_counterfactual.csv"
-PLOT_FILE = BASE_DIR / "analysis" / "carbon_intensity" / "diurnal_seasonal.png"
+PLOT_DIR = BASE_DIR / "analysis" / "carbon_intensity"
+PLOT_FILE = PLOT_DIR / "diurnal_seasonal.png"
+SCENARIO_INTENSITY_PLOT = PLOT_DIR / "scenario_intensities.png"
+SCENARIO_PER_RUN_PLOT = PLOT_DIR / "scenario_per_run.png"
+
+SCENARIO_LABELS = {
+    "static_codecarbon":   "Static (CC)",
+    "year_mean":           "Year mean",
+    "year_best_hour":      "Best hour",
+    "year_worst_hour":     "Worst hour",
+    "winter_mean":         "Winter mean",
+    "summer_mean":         "Summer mean",
+    "summer_midday_mean":  "Summer midday",
+    "winter_evening_mean": "Winter evening",
+}
 
 
 # ── 1. Fetch (chunked + cached) ───────────────────────────────────────────────
@@ -163,6 +177,79 @@ def plot_diurnal_seasonal(df):
     print(f"Saved: {PLOT_FILE}")
 
 
+# ── 5. Plot: scenario carbon intensities ─────────────────────────────────────
+
+def plot_scenario_intensities(scenarios):
+    keys = list(scenarios.keys())
+    labels = [SCENARIO_LABELS[k] for k in keys]
+    values = [scenarios[k] for k in keys]
+    static = scenarios["static_codecarbon"]
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    colors = ["#888"] + ["#3b82f6"] * (len(keys) - 1)
+    bars = ax.bar(labels, values, color=colors)
+    ax.axhline(static, color="#ef4444", linestyle="--", linewidth=1,
+               label=f"Static = {static:.0f} gCO₂/kWh")
+    for bar, v in zip(bars, values):
+        ax.text(bar.get_x() + bar.get_width() / 2, v, f"{v:.0f}",
+                ha="center", va="bottom", fontsize=8)
+    ax.set_ylabel("Carbon intensity (gCO₂/kWh)")
+    ax.set_title(f"Scenario carbon intensities — Germany {START.year}/{END.year - 1}")
+    ax.tick_params(axis="x", rotation=25)
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig(SCENARIO_INTENSITY_PLOT, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"Saved: {SCENARIO_INTENSITY_PLOT}")
+
+
+# ── 6. Plot: per-run CO2 across scenarios ────────────────────────────────────
+
+def plot_scenario_per_run(cf):
+    if cf is None or cf.empty:
+        return
+
+    keys = list(SCENARIO_LABELS.keys())
+    cf = cf[cf["nrows"].astype(str) == "all"].copy()
+    cf = cf.drop_duplicates(subset=["dataset", "model"], keep="last")
+    if cf.empty:
+        return
+
+    cf["run"] = cf["model"] + " · " + cf["dataset"]
+    cf = cf.sort_values(["dataset", "model"])
+
+    long = cf.melt(
+        id_vars=["run"],
+        value_vars=[f"co2_{k}_kg" for k in keys],
+        var_name="scenario",
+        value_name="co2_kg",
+    )
+    long["scenario"] = long["scenario"].str.replace(r"^co2_|_kg$", "", regex=True)
+    long["scenario_label"] = long["scenario"].map(SCENARIO_LABELS)
+
+    runs = cf["run"].tolist()
+    n_scen = len(keys)
+    bar_w = 0.85 / n_scen
+    cmap = plt.get_cmap("viridis", n_scen)
+
+    fig, ax = plt.subplots(figsize=(max(10, 0.7 * len(runs)), 6))
+    for i, k in enumerate(keys):
+        vals = [cf.loc[cf["run"] == r, f"co2_{k}_kg"].iloc[0] for r in runs]
+        x = np.arange(len(runs)) + (i - n_scen / 2 + 0.5) * bar_w
+        ax.bar(x, vals, width=bar_w, color=cmap(i), label=SCENARIO_LABELS[k])
+
+    ax.set_xticks(np.arange(len(runs)))
+    ax.set_xticklabels(runs, rotation=35, ha="right", fontsize=9)
+    ax.set_yscale("log")
+    ax.set_ylabel("CO₂ (kg, log)")
+    ax.set_title("Counterfactual CO₂ per run under timing scenarios")
+    ax.legend(ncol=4, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.18))
+    plt.tight_layout()
+    plt.savefig(SCENARIO_PER_RUN_PLOT, dpi=150, bbox_inches="tight")
+    plt.close()
+    print(f"Saved: {SCENARIO_PER_RUN_PLOT}")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -180,3 +267,5 @@ if __name__ == "__main__":
         print(f"Counterfactual table written for {len(cf)} runs.")
 
     plot_diurnal_seasonal(df)
+    plot_scenario_intensities(scenarios)
+    plot_scenario_per_run(cf)

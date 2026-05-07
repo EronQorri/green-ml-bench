@@ -59,7 +59,7 @@ The evaluation relies on \texttt{KFold} with five splits and shuffling enabled, 
 \section{Dataset Integration}
 \label{implementation_datasets}
 
-The three datasets used in this study, \textit{Wine}, \textit{Credit}, and \textit{HIGGS}, were introduced in \Cref{experimental_dataset}. This section describes how they are integrated into the software architecture, covering the central configuration file, the data loading pipeline, and dataset-specific constraints.
+The three datasets used in this study, Wine, Credit, and HIGGS, were introduced in \Cref{experimental_dataset}. This section describes how they are integrated into the software architecture, covering the central configuration file, the data loading pipeline, and dataset-specific constraints.
 
 To ensure a consistent foundation across all model scripts, a central configuration 
 file (\texttt{config.py}) was created. It serves as a single source of truth for 
@@ -82,11 +82,11 @@ here, ensuring that all scripts use identical values for random seeding and
 cross-validation, which is essential for the comparability of results.
 
 \label{implementation_data_loading}
-To read the datasets from their respective files, a custom \texttt{load\_data} method was implemented. Depending on the dataset, the appropriate loading mechanism is selected. The \textit{Wine} and \textit{Credit} datasets are loaded using pandas' \texttt{read\_csv} function. For the \textit{Higgs} dataset, \texttt{read\_parquet} is utilized. This was a deliberate decision to save storage space by storing the large \textit{Higgs} dataset as a Parquet file rather than a standard CSV.
+To read the datasets from their respective files, a custom \texttt{load\_data} method was implemented. Depending on the dataset, the appropriate loading mechanism is selected. The Wine and Credit datasets are loaded using pandas' \texttt{read\_csv} function. For the HIGGS dataset, \texttt{read\_parquet} is utilized. This was a deliberate decision to save storage space by storing the large HIGGS dataset as a Parquet file rather than a standard CSV.
 
-Following the initial loading phase, the \textit{Higgs} data is reduced to a representative subset using a sampling approach controlled by the \texttt{nrows} parameter. Once the data size is managed, any columns specified in the configuration file are dropped from the respective dataset. The data is then split into the feature matrix $X$ and the target vector $y$. If an offset is defined in the config, which is currently only the case for the \textit{Credit} dataset, it is applied as described in the previous section. Finally, the method returns $X$ and $y$ for further use in the subsequent scripts. This process is visualized in \Cref{fig:data_loading_pipeline}.
+Following the initial loading phase, the HIGGS data is reduced to a representative subset using a sampling approach controlled by the \texttt{nrows} parameter. Once the data size is managed, any columns specified in the configuration file are dropped from the respective dataset. The data is then split into the feature matrix $X$ and the target vector $y$. If an offset is defined in the config, which is currently only the case for the Credit dataset, it is applied as described in the previous section. Finally, the method returns $X$ and $y$ for further use in the subsequent scripts. This process is visualized in \Cref{fig:data_loading_pipeline}.
 
-Due to the substantial scale of the \textit{Higgs} dataset, several constraints were implemented to ensure the stability of the execution environment. Training a Random Forest model on this specific data led to unmanageable processing times. For this reason, the Random Forest algorithm is explicitly bypassed for the \textit{Higgs} dataset and the program terminates using \texttt{sys.exit(0)} to prevent system crashes. This allows the process to stay within the boundaries of the available hardware resources.
+Due to the substantial scale of the HIGGS dataset, several constraints were implemented to ensure the stability of the execution environment. Training a Random Forest model on this specific data led to unmanageable processing times. For this reason, the Random Forest algorithm is explicitly bypassed for the HIGGS dataset and the program terminates using \texttt{sys.exit(0)} to prevent system crashes. This allows the process to stay within the boundaries of the available hardware resources.
 
 \begin{figure}[htbp]
 \centering
@@ -107,8 +107,8 @@ Due to the substantial scale of the \textit{Higgs} dataset, several constraints 
 \node (apply) [process, right=1.5cm of offset] {Apply offset};
 \node (return) [process, below=1cm of offset] {Return $X$ and $y$};
 
-\draw [arrow] (dataset) -| node[anchor=east, yshift=0.2cm] {\textit{Wine} \& \textit{Credit}} (load_csv);
-\draw [arrow] (dataset) -| node[anchor=west, yshift=0.2cm] {\textit{Higgs}} (load_parq);
+\draw [arrow] (dataset) -| node[anchor=east, yshift=0.2cm] {Wine \& Credit} (load_csv);
+\draw [arrow] (dataset) -| node[anchor=west, yshift=0.2cm] {HIGGS} (load_parq);
 \draw [arrow] (load_parq) -- (sample);
 \draw [arrow] (load_csv) |- (drop);
 \draw [arrow] (sample) |- (drop);
@@ -133,7 +133,7 @@ As outlined in \Cref{design_models}, the following classification algorithms wer
 
 The first baseline model is a standard logistic regression. To ensure the model processes all features on an equal scale, the algorithm is embedded in a pipeline starting with a \texttt{StandardScaler}. This initial scaling step is crucial for the stability and overall performance of the subsequent classification. 
 
-The regression is configured to use the Stochastic Average Gradient (SAG) algorithm by setting the \texttt{solver} parameter to \texttt{sag}. This specific solver is highly optimized for large datasets. It significantly reduces the memory footprint and required training time, which is especially important when evaluating the extensive \textit{Higgs} dataset. To ensure proper convergence, the maximum number of iterations is capped at 1000 using the \texttt{max\_iter} parameter. 
+The regression is configured to use the Stochastic Average Gradient (SAG) algorithm by setting the \texttt{solver} parameter to \texttt{sag}. This specific solver is highly optimized for large datasets. It significantly reduces the memory footprint and required training time, which is especially important when evaluating the extensive HIGGS dataset. To ensure proper convergence, the maximum number of iterations is capped at 1000 using the \texttt{max\_iter} parameter. 
 
 This model setup deliberately excludes any hyperparameter optimization. Instead, it acts as a stable baseline to evaluate the raw computational time without the extra overhead of complex search processes.
 
@@ -144,9 +144,9 @@ It is worth noting that the SAG solver is single-threaded and runs on a single C
 
 The second baseline algorithm is the Random Forest classifier. This method belongs to the family of ensemble learning techniques. Unlike logistic regression, this algorithm does not require prior feature scaling. To maximize computational efficiency, the execution is fully parallelized across all available CPU cores by setting the \texttt{n\_jobs} parameter to \texttt{-1}. This configuration allows the processor to run at maximum capacity, which directly influences the subsequent energy consumption tracking and overall runtime measurements.
 
-As established in \Cref{implementation_data_loading}, Random Forest is explicitly excluded from the \textit{Higgs} dataset due to unmanageable training times at 11M instances. Including it would produce extreme runtimes without contributing meaningful insight into the scaling behaviour studied here.
+As established in \Cref{implementation_data_loading}, Random Forest is explicitly excluded from the HIGGS dataset due to unmanageable training times at 11M instances. Including it would produce extreme runtimes without contributing meaningful insight into the scaling behaviour studied here.
 
-To ensure maximum predictive capabilities for the remaining data, the model configurations were optimized using Optuna. The optimization process specifically targeted maximizing the weighted F1 score. For strict reproducibility, the final parameter combinations for the \textit{Wine} and \textit{Credit} datasets are documented in \Cref{tab:rf_params}.
+To ensure maximum predictive capabilities for the remaining data, the model configurations were optimized using Optuna. The optimization process specifically targeted maximizing the weighted F1 score. For strict reproducibility, the final parameter combinations for the Wine and Credit datasets are documented in \Cref{tab:rf_params}.
 
 \begin{table}[htbp]
 \centering
@@ -154,7 +154,7 @@ To ensure maximum predictive capabilities for the remaining data, the model conf
 \label{tab:rf_params}
 \begin{tabular}{lcc}
 \toprule
-Parameter & \textit{Wine} & \textit{Credit} \\
+Parameter & Wine & Credit \\
 \midrule
 \path{n_estimators} & 221 & 381 \\
 \path{max_depth} & 5 & 9 \\
@@ -174,7 +174,7 @@ The next tree-based ensemble model is the XGBoost classifier. This model serves 
 
 The CPU versus GPU comparison is derived in the plotting pipeline by reading all HIGGS subset rows from \texttt{results.csv} and fitting a log-log model separately for each device using \texttt{numpy.polyfit}, with the energy crossover point computed analytically from the intersection of the two fitted lines.
 
-Additionally, XGBoost has a specific technical requirement for handling target variables. While the Random Forest algorithm natively adapts to different class structures, XGBoost requires explicit instructions for its learning objective. As mentioned in \Cref{experimental_dataset}, the \textit{Wine} dataset consists of three distinct categories. Therefore, the objective parameter is set to \texttt{multi:softmax}, paired with the \texttt{mlogloss} evaluation metric and a specified number of classes. In contrast, the \textit{Credit} and \textit{Higgs} datasets contain only two categories. Consequently, their objective is configured as \texttt{binary:logistic} and evaluated using the standard \texttt{logloss} metric.
+Additionally, XGBoost has a specific technical requirement for handling target variables. While the Random Forest algorithm natively adapts to different class structures, XGBoost requires explicit instructions for its learning objective. As mentioned in \Cref{experimental_dataset}, the Wine dataset consists of three distinct categories. Therefore, the objective parameter is set to \texttt{multi:softmax}, paired with the \texttt{mlogloss} evaluation metric and a specified number of classes. In contrast, the Credit and HIGGS datasets contain only two categories. Consequently, their objective is configured as \texttt{binary:logistic} and evaluated using the standard \texttt{logloss} metric.
 
 Similar to the previous baseline algorithm, the parameters tailored to each dataset were determined using the Optuna optimization framework. Furthermore, the algorithm processes the unscaled feature matrix $X$ directly. It also uses the globally defined random state parameter to guarantee a deterministic execution across all hardware setups. The resulting configurations used for the final training phase are detailed in Table \ref{tab:xgb_params}.
 
@@ -184,7 +184,7 @@ Similar to the previous baseline algorithm, the parameters tailored to each data
 \label{tab:xgb_params}
 \begin{tabular}{lccc}
 \toprule
-Parameter & \textit{Wine} & \textit{Credit} & \textit{Higgs} \\
+Parameter & Wine & Credit & HIGGS \\
 \midrule
 \path{objective} & \path{multi:softmax} & \path{binary:logistic} & \path{binary:logistic} \\
 \path{eval_metric} & \path{mlogloss} & \path{logloss} & \path{logloss} \\
