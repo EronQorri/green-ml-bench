@@ -1,2 +1,151 @@
 \chapter{Results and Evaluation}
 \label{results}
+
+This chapter presents the empirical results of the four experiments defined in \Cref{sec:experiments}. The structure mirrors that of the experiment definitions: the main cross-dataset benchmark is reported first, followed by the dataset scaling experiment with its embedded CPU-versus-GPU break-even analysis, the MLP architecture variation on HIGGS, and finally the temporal carbon intensity counterfactual. All emissions values reported in this chapter use the corrected CO\textsubscript{2} estimate that combines the hardware-measured CPU energy with CodeCarbon's GPU and RAM contributions, as defined in \Cref{implementation_emissions_limitations}. The systematic gap between this corrected value and CodeCarbon's original estimate is reported alongside the main benchmark and discussed in detail in \Cref{discussion}.
+
+% =============================================================
+\section{Main Cross-Dataset Benchmark}
+\label{results_main_benchmark}
+
+The main benchmark trains all five models on all three datasets, with Random Forest excluded on HIGGS for the runtime reasons given in \Cref{implementation_data_loading}. \Cref{fig:results_main} summarises the 14 model--dataset combinations along the four primary metrics (CO\textsubscript{2}, training time, inference latency, and weighted F1), with the EWF1 composite score shown per dataset in the bottom row.
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder{vergleich.png}{Cross-model comparison dashboard}
+\caption{Cross-model comparison across all three datasets. Top row: training emissions, training time, and per-sample inference latency (all log-scale). Middle row: accuracy and weighted F1. Bottom row: EWF1 composite score per dataset.}
+\label{fig:results_main}
+\end{figure}
+
+\Cref{tab:results_main} reports the underlying numbers. CO\textsubscript{2} and training time are totals over the full five-fold cross-validation, F1 is the mean across folds, and inference latency is measured on a single held-out sample.
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Main benchmark results across all 14 model--dataset combinations.}
+\label{tab:results_main}
+\begin{tabular}{llrrrrr}
+\toprule
+\textbf{Model} & \textbf{Dataset} & \textbf{F1} & \textbf{CO\textsubscript{2} (kg)} & \textbf{Time (s)} & \textbf{Inference (s)} & \textbf{EWF1} \\
+\midrule
+\multicolumn{7}{c}{\textit{14 Zeilen, sortiert nach Dataset dann nach Modell -- Werte aus \texttt{results.csv}}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\todo[inline]{Tabelle aus \texttt{results/results.csv} f\"ullen, sobald \texttt{run\_all.py} durch ist.}
+
+\todo[inline]{Hauptbefund-Absatz: pro Datensatz der EWF1-Sieger benennen, mit kurzer Begr\"undung warum (z.\,B.\ Logistic Regression auf Credit gewinnt durch geringe Emissionen trotz vergleichbarer F1; XGBoost gewinnt auf HIGGS durch beste F1 bei moderaten Emissionen). Ranking-Ver\"anderung \"uber die drei Gr\"o\ss enordnungen Wine\,$\to$\,Credit\,$\to$\,HIGGS herausarbeiten.}
+
+\todo[inline]{Inferenz-Latenz separat kommentieren: welche Modelle sind im Deployment am g\"unstigsten? Verh\"altnis zur Trainings-CO\textsubscript{2} ansprechen, falls auff\"allig.}
+
+\subsection{Sensor-Corrected vs.\ CodeCarbon Estimate}
+\label{results_codecarbon_correction}
+
+\Cref{fig:results_codecarbon_vs_hw} compares the corrected CO\textsubscript{2} value (sensor-based CPU energy combined with CodeCarbon GPU and RAM) against CodeCarbon's original estimate for every model--dataset combination. The systematic gap is reported here as a finding and interpreted in \Cref{discussion}.
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder{codecarbon_vs_hw.png}{CodeCarbon vs.\ sensor-corrected CO\textsubscript{2}}
+\caption{CO\textsubscript{2} estimate per model--dataset combination: CodeCarbon's original total versus the sensor-corrected value used in this study.}
+\label{fig:results_codecarbon_vs_hw}
+\end{figure}
+
+\todo[inline]{Korrekturfaktor pro Modell und Datensatz quantifizieren (Range, Median). Ist die Unterschätzung gleichmäßig oder modellabhängig? CPU-lastige Modelle (Logistic Regression, Random Forest) sollten den größten Faktor zeigen.}
+
+% =============================================================
+\section{Dataset Scaling on HIGGS}
+\label{results_scaling}
+
+The scaling experiment trains four models (Logistic Regression, XGBoost CPU, XGBoost GPU, MLP) on seven HIGGS subset sizes ranging from 1{,}000 to 11{,}000{,}000 instances, holding all other variables constant. \Cref{fig:results_scaling} shows how training emissions, training time, and weighted F1 scale with dataset size for each model.
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder{scaling_higgs.png}{HIGGS scaling: CO\textsubscript{2}, time, F1 vs.\ subset size}
+\caption{Scaling behaviour on HIGGS subsets. From left to right: training CO\textsubscript{2}, training time (both log--log), and weighted F1 (linear y-axis with log x-axis). Each line connects the seven subset sizes for one model.}
+\label{fig:results_scaling}
+\end{figure}
+
+\todo[inline]{Skalierungsverhalten kommentieren: Wo flacht die F1-Kurve pro Modell ab? Welcher Subset-Wert markiert den Punkt diminishing returns? Verh\"altnis zwischen F1-Anstieg und CO\textsubscript{2}-Anstieg quantifizieren (z.\,B.\ Faktor X mehr CO\textsubscript{2} f\"ur Y Prozentpunkte F1).}
+
+\subsection{XGBoost CPU vs.\ GPU Break-Even}
+\label{results_breakeven}
+
+The scaling data on XGBoost directly enables the CPU-versus-GPU comparison. \Cref{fig:results_xgb_compare} shows the per-dataset CO\textsubscript{2} and training time for both variants on the full datasets, and \Cref{fig:results_breakeven} fits a log--log model to the HIGGS subset emissions to identify the dataset size at which the GPU's higher idle power is offset by its faster training.
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder{xgb_cpu_vs_gpu.png}{XGBoost CPU vs.\ GPU per dataset}
+\caption{XGBoost CPU versus GPU on each dataset. From left to right: CO\textsubscript{2}, training time, accuracy, and inference latency.}
+\label{fig:results_xgb_compare}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder[0.8\linewidth]{xgb_breakeven_higgs.png}{XGB CPU/GPU break-even fit}
+\caption{Energy break-even between XGBoost CPU and GPU as a function of dataset size on HIGGS subsets. Both axes log-scale; markers show measured runs, lines show the fitted log--log model, and the dashed vertical line marks the analytically computed crossover point.}
+\label{fig:results_breakeven}
+\end{figure}
+
+\todo[inline]{Break-Even-Schwelle in Zeilen angeben (Wert aus dem Spline-Fit). Aussage formulieren: ab welcher Datensatzgr\"o\ss e ist GPU \"okologisch g\"unstiger? Begrenzungen aus \Cref{discussion} kurz vorwegnehmen (Hardware-spezifisch, Approximation).}
+
+% =============================================================
+\section{MLP Architecture Variation}
+\label{results_mlp_variation}
+
+The architectural variation experiment trains 12 MLP configurations (3 widths $\times$ 4 depths) on HIGGS with fixed non-architectural hyperparameters, as defined in \Cref{design_mlp_variation}. \Cref{fig:results_mlp_variation} shows the resulting F1 and CO\textsubscript{2} along both axes: the top row holds width constant and varies depth, the bottom row holds depth constant and varies width.
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder{mlp_variation.png}{MLP variation: F1 and CO\textsubscript{2} along depth and width axes}
+\caption{MLP architecture variation on HIGGS. Top row: F1 and CO\textsubscript{2} (log) versus depth, one curve per width. Bottom row: F1 and CO\textsubscript{2} (log) versus width, one curve per depth.}
+\label{fig:results_mlp_variation}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{MLP variation results: weighted F1, CO\textsubscript{2}, and training time per architecture on HIGGS.}
+\label{tab:results_mlp_variation}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Depth} & \textbf{Width} & \textbf{Params} & \textbf{F1} & \textbf{CO\textsubscript{2} (kg)} & \textbf{Time (s)} \\
+\midrule
+\multicolumn{6}{c}{\textit{12 Zeilen (Tiefe wachsend innerhalb jeder Breite) -- Werte aus \texttt{results.csv}}} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\todo[inline]{12 Zeilen aus \texttt{results.csv} (Modelle \texttt{MLP\_DxW} auf HIGGS) einf\"ugen. Parameter-Counts aus \Cref{tab:mlp_architectures}.}
+
+\todo[inline]{Trends benennen: monotoner F1-Zuwachs mit Breite? Mit Tiefe? Wo ist der Knickpunkt, ab dem zus\"atzliche Komplexit\"at keine F1-Verbesserung mehr bringt aber CO\textsubscript{2} weiter steigt? Welche Architektur w\"are aus \"okologischer Sicht zu empfehlen?}
+
+% =============================================================
+\section{Temporal Carbon Intensity Analysis}
+\label{results_carbon_intensity}
+
+The carbon intensity counterfactual analysis is purely retrospective: no models are retrained, and the recorded energy of every existing run is re-multiplied by carbon intensity values drawn from one full year of hourly ElectricityMaps data for the German bidding zone. \Cref{fig:results_intensity_scenarios} reports the eight scenarios defined in \Cref{tab:carbon_scenarios}, \Cref{fig:results_intensity_heatmap} shows the joint hour-of-day and month structure of the German grid, and \Cref{fig:results_scenario_per_run} reports the resulting counterfactual emissions per run.
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder{scenario_intensities.png}{Eight scenario carbon intensities with static reference}
+\caption{Carbon intensity values for the eight scenarios in \Cref{tab:carbon_scenarios}, computed from one year of hourly ElectricityMaps data for Germany. The dashed red line marks the static $381$\,gCO\textsubscript{2}/kWh factor used by CodeCarbon.}
+\label{fig:results_intensity_scenarios}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder{diurnal_seasonal.png}{Hour-of-day $\times$ month carbon intensity heatmap}
+\caption{Mean carbon intensity for the German grid by hour of day (UTC) and month, computed from one year of hourly ElectricityMaps data. Lower-intensity hours appear in green, higher-intensity hours in red.}
+\label{fig:results_intensity_heatmap}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\figorplaceholder{scenario_per_run.png}{Per-run counterfactual CO\textsubscript{2} across scenarios}
+\caption{Counterfactual training emissions per model--dataset combination under each of the eight timing scenarios. Y-axis log-scale.}
+\label{fig:results_scenario_per_run}
+\end{figure}
+
+\todo[inline]{Drei Befunde formulieren: (1) Verh\"altnis worst-hour zu best-hour (sollte $\sim$3--5$\times$ sein f\"ur Deutschland) -- damit absoluten Spielraum quantifizieren. (2) Dominanz-Frage: ist die diurnale (Sommer-Mittag vs.\ Winter-Abend) oder die saisonale Achse (Sommer-Mittel vs.\ Winter-Mittel) gr\"o\ss er? (3) Gap zur statischen $381$-Faktor: \"uber- oder untersch\"atzt CodeCarbon das Jahr 2024 systematisch?}
+
+\todo[inline]{Praktische Konsequenz f\"ur das Scheduling gro\ss er Trainingsruns kurz benennen -- Verweis auf \Cref{discussion} f\"ur die volle Diskussion.}
