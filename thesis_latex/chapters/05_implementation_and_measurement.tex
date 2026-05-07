@@ -86,7 +86,7 @@ To read the datasets from their respective files, a custom \texttt{load\_data} m
 
 Following the initial loading phase, the \textit{Higgs} data is reduced to a representative subset using a sampling approach controlled by the \texttt{nrows} parameter. Once the data size is managed, any columns specified in the configuration file are dropped from the respective dataset. The data is then split into the feature matrix $X$ and the target vector $y$. If an offset is defined in the config, which is currently only the case for the \textit{Credit} dataset, it is applied as described in the previous section. Finally, the method returns $X$ and $y$ for further use in the subsequent scripts. This process is visualized in \Cref{fig:data_loading_pipeline}.
 
-Due to the substantial scale of the \textit{Higgs} dataset, several constraints were implemented to ensure the stability of the execution environment. Training a \texttt{Random Forest} model on this specific data led to unmanageable processing times. For this reason, the \texttt{Random Forest} algorithm is explicitly bypassed for the \textit{Higgs} dataset and the program terminates using \texttt{sys.exit(0)} to prevent system crashes. This allows the process to stay within the boundaries of the available hardware resources.
+Due to the substantial scale of the \textit{Higgs} dataset, several constraints were implemented to ensure the stability of the execution environment. Training a Random Forest model on this specific data led to unmanageable processing times. For this reason, the Random Forest algorithm is explicitly bypassed for the \textit{Higgs} dataset and the program terminates using \texttt{sys.exit(0)} to prevent system crashes. This allows the process to stay within the boundaries of the available hardware resources.
 
 \begin{figure}[htbp]
 \centering
@@ -281,7 +281,7 @@ Measuring energy consumption and CO\textsubscript{2} emissions is the central ob
 \subsection{CodeCarbon Integration}
 \label{implementation_emissions_integration}
 
-Energy consumption and CO\textsubscript{2} emissions were tracked using \textit{CodeCarbon} as described in \Cref{sec:theoretical_codecarbon}. In each model script, an \texttt{EmissionsTracker} instance is created before the cross-validation loop begins and configured with two key parameters: \texttt{output\_dir}, which points to the shared \texttt{emissions/} directory at the project root, and \texttt{project\_name}, which uniquely identifies the run. The tracker is then started by calling \texttt{tracker.start()} immediately before the \texttt{cross\_validate()} call, and stopped via \texttt{tracker.stop()} once all folds have completed. The return value of \texttt{tracker.stop()} is a single float representing the total CO\textsubscript{2}-equivalent emissions in kilograms accumulated over the entire tracked interval. This value is what gets passed to \texttt{save\_results()} and written to \texttt{results.csv}.
+Energy consumption and CO\textsubscript{2} emissions were tracked using CodeCarbon as described in \Cref{sec:theoretical_codecarbon}. In each model script, an \texttt{EmissionsTracker} instance is created before the cross-validation loop begins and configured with two key parameters: \texttt{output\_dir}, which points to the shared \texttt{emissions/} directory at the project root, and \texttt{project\_name}, which uniquely identifies the run. The tracker is then started by calling \texttt{tracker.start()} immediately before the \texttt{cross\_validate()} call, and stopped via \texttt{tracker.stop()} once all folds have completed. The return value of \texttt{tracker.stop()} is a single float representing the total CO\textsubscript{2}-equivalent emissions in kilograms accumulated over the entire tracked interval. This value is what gets passed to \texttt{save\_results()} and written to \texttt{results.csv}.
 
 The placement of the tracker boundaries was a deliberate choice. Data loading and preprocessing happen before \texttt{tracker.start()}, so they are excluded from the measurement. Only the cross-validation itself, which includes all five training and evaluation passes, falls inside the tracked interval. This ensures that the reported emissions value reflects the cost of model training and evaluation exclusively, and that values are directly comparable across models and datasets without interference.
 
@@ -347,7 +347,7 @@ To allow fine-grained analysis, each model–dataset combination receives its ow
 
 The general measurement approach used by CodeCarbon, including direct GPU readout via NVML, RAM estimation per DIMM slot, and TDP-based CPU fallback on Windows, is described in \Cref{sec:theoretical_codecarbon}. This subsection focuses on the concrete implications for the hardware used in this study.
 
-CodeCarbon's TDP-based CPU estimation on Windows has been replaced in this study by a custom \texttt{CPUPowerMonitor} class implemented in \texttt{models/power\_monitor.py}. It runs in a background thread and polls the CPU Package Power sensor every 0.25 seconds via the \textit{LibreHardwareMonitor} library (\texttt{HardwareMonitor} Python package). This library reads the CPU Package Power sensor directly from the hardware, providing true power values rather than a TDP approximation. In practice, CodeCarbon underestimated CPU power by a factor of roughly 9$\times$ compared to the hardware sensor (e.g.\ 6.6\,W vs.\ 57.8\,W for Logistic Regression on the Credit dataset). The corrected CO\textsubscript{2} value in \texttt{results.csv} therefore replaces CodeCarbon's CPU contribution with the hardware-measured value, while GPU and RAM energy are still taken from CodeCarbon. The original CodeCarbon total is retained as \texttt{co2eq\_codecarbon\_kg} for reference.
+CodeCarbon's TDP-based CPU estimation on Windows has been replaced in this study by a custom \texttt{CPUPowerMonitor} class implemented in \texttt{models/power\_monitor.py}. It runs in a background thread and polls the CPU Package Power sensor every 0.25 seconds via the LibreHardwareMonitor library (\texttt{HardwareMonitor} Python package). This library reads the CPU Package Power sensor directly from the hardware, providing true power values rather than a TDP approximation. In practice, CodeCarbon underestimated CPU power by a factor of roughly 9$\times$ compared to the hardware sensor (e.g.\ 6.6\,W vs.\ 57.8\,W for Logistic Regression on the Credit dataset). The corrected CO\textsubscript{2} value in \texttt{results.csv} therefore replaces CodeCarbon's CPU contribution with the hardware-measured value, while GPU and RAM energy are still taken from CodeCarbon. The original CodeCarbon total is retained as \texttt{co2eq\_codecarbon\_kg} for reference.
 
 This approach does, however, come with notable limitations. Because LibreHardwareMonitor requires privileged access to hardware sensors, all measurements in this study were conducted with the process running under administrator privileges. Without elevated rights, the \texttt{CPUPowerMonitor} fails to retrieve sensor data and the corrected CO\textsubscript{2} estimate cannot be computed.
 
@@ -372,11 +372,6 @@ The model used for this measurement is taken from the first cross-validation fol
 
 \section{Results Storage and Orchestration}
 \label{implementation_results}
-
-This section describes how experimental results are stored and how the individual model scripts are coordinated into complete experiment runs. The two concerns are closely related: the storage format determines what data is available for analysis, while the orchestration layer controls how and in what order the model scripts are executed.
-
-\subsection{Results Schema}
-\label{implementation_results_schema}
 
 The results of every model run are written to \texttt{results/results.csv}, which serves as the central data source for all subsequent analysis and visualisation. Each row represents one complete model-dataset combination and is appended to the file rather than overwriting it, so that results from multiple runs accumulate without data loss. The file is managed using Python's \texttt{csv.DictWriter}, which writes a header row on first creation and appends subsequent rows without repeating the header. A consequence of the append-only design is that re-running a configuration produces duplicate rows, which must be filtered during analysis. \Cref{tab:results_schema} lists all columns.
 
@@ -426,9 +421,6 @@ Inference latency is stored separately in \texttt{results/inference\_time.csv}, 
 \bottomrule
 \end{tabular}
 \end{table}
-
-\subsection{Experimental Orchestration}
-\label{implementation_orchestration}
 
 Three orchestration scripts coordinate the full experiment. Each model script is launched as an isolated subprocess rather than being imported directly. This is important because CodeCarbon operates at the process level: running multiple trackers within the same process risks state leakage between measurements. Subprocess isolation ensures that each tracker starts and stops cleanly. A failed script does not abort the overall run: failures are collected and reported at the end.
 
@@ -498,10 +490,12 @@ Each of the 12 runs follows the same measurement pipeline as the main benchmark:
 CodeCarbon converts measured energy into CO\textsubscript{2} using a static carbon intensity factor of $381$ gCO\textsubscript{2}eq/kWh for Germany. This single number averages out two sources of variation that the literature has identified as significant for the German grid: a strong diurnal cycle driven by solar production, and a seasonal swing driven by the winter coal share versus summer renewable share \cite{dodgeMeasuringCarbonIntensity2022}. The static factor is therefore convenient but unrepresentative of the actual emissions of any training run that was not coincidentally executed at the annual mean intensity. This analysis quantifies how much the reported emissions of this study would have differed under realistic timing.
 
 The experiment is purely retrospective and requires no retraining. A full year of hourly carbon intensity data for the German bidding zone is fetched from the ElectricityMaps API \cite{electricityMapsAPI2025}, covering 8{,}760 observations across all four seasons and the full diurnal cycle. The actual energy in kWh consumed by every training run is derived from the recorded CO\textsubscript{2} value by inverting the static factor:
+
 \begin{equation}
 E_{\text{kWh}} = \frac{\text{CO}_{2,\text{recorded}}}{0.381 \, \text{kg/kWh}}
 \label{eq:energy_derivation}
 \end{equation}
+
 Each run's energy is then re-multiplied by carbon intensity values drawn from the API data to produce counterfactual emissions under the eight scenarios defined in \Cref{tab:carbon_scenarios}. These scenarios isolate three different sources of variation: the global average across the full year, the extremes of best- and worst-case timing, and the structurally informed seasonal-diurnal combinations where renewables or fossil sources dominate.
 
 \begin{table}[htbp]
