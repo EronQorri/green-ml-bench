@@ -468,7 +468,23 @@ For each combination, CO\textsubscript{2} emissions, training time, and weighted
 \subsection{MLP Architecture Variation}
 \label{design_mlp_variation}
 
-The architectural variation experiment isolates the effect of MLP complexity on training emissions and predictive performance. The main benchmark uses one tuned architecture per dataset and therefore cannot answer how those metrics scale as layers and neurons are added. This experiment fills that gap by training the MLP on HIGGS across a systematic grid of 12 architectures: three widths (128, 256, and 512 neurons per layer) crossed with four depths (one, two, three, and four hidden layers). Each layer in a given configuration uses the same width, which keeps the design space tractable and ensures the depth and width axes can be interpreted independently of one another.
+The architectural variation experiment isolates the effect of MLP complexity on training emissions and predictive performance. The main benchmark uses one tuned architecture per dataset and therefore cannot answer how those metrics scale as layers and neurons are added. This experiment fills that gap by training the MLP on HIGGS across a systematic grid of 12 architectures: three widths (128, 256, and 512 neurons per layer) crossed with four depths (one, two, three, and four hidden layers). Each layer in a given configuration uses the same width, which keeps the design space tractable and ensures the depth and width axes can be interpreted independently of one another. The full grid is shown in \Cref{tab:mlp_architectures} together with the resulting parameter counts on HIGGS (28 input features, 2 output classes), which range across more than two orders of magnitude.
+
+\begin{table}[htbp]
+\centering
+\caption{MLP architectures evaluated in the variation experiment, with trainable parameter counts for HIGGS. Counts include linear layer weights and biases.}
+\label{tab:mlp_architectures}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Depth} & \textbf{Width 128} & \textbf{Width 256} & \textbf{Width 512} \\
+\midrule
+1 layer  &   3{,}970 &   7{,}938 &  15{,}874 \\
+2 layers &  20{,}482 &  73{,}730 & 278{,}530 \\
+3 layers &  36{,}994 & 139{,}522 & 541{,}186 \\
+4 layers &  53{,}506 & 205{,}314 & 803{,}842 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 HIGGS is the only one of the three datasets where architectural variation has a meaningful effect to measure. Wine has too few instances to support a deep network at all, and Credit is structurally simple enough that even Logistic Regression achieves accuracy comparable to a tuned MLP, making any architecture a wash in performance terms. With 11 million instances and a non-trivial signal-versus-background classification task, HIGGS gives the network enough room to actually distinguish between configurations.
 
@@ -484,8 +500,29 @@ CodeCarbon converts measured energy into CO\textsubscript{2} using a static carb
 The experiment is purely retrospective and requires no retraining. A full year of hourly carbon intensity data for the German bidding zone is fetched from the ElectricityMaps API \cite{electricityMapsAPI2025}, covering 8{,}760 observations across all four seasons and the full diurnal cycle. The actual energy in kWh consumed by every training run is derived from the recorded CO\textsubscript{2} value by inverting the static factor:
 \begin{equation}
 E_{\text{kWh}} = \frac{\text{CO}_{2,\text{recorded}}}{0.381 \, \text{kg/kWh}}
+\label{eq:energy_derivation}
 \end{equation}
-Each run's energy is then re-multiplied by carbon intensity values drawn from the API data to produce counterfactual emissions under different timing scenarios: the annual mean, the best and worst single hour of the year, the winter and summer averages, the typical summer midday window when solar production is high, and the typical winter evening window when coal and gas dominate.
+Each run's energy is then re-multiplied by carbon intensity values drawn from the API data to produce counterfactual emissions under the eight scenarios defined in \Cref{tab:carbon_scenarios}. These scenarios isolate three different sources of variation: the global average across the full year, the extremes of best- and worst-case timing, and the structurally informed seasonal-diurnal combinations where renewables or fossil sources dominate.
+
+\begin{table}[htbp]
+\centering
+\caption{Carbon intensity scenarios used in the counterfactual analysis. Each scenario is computed from one year of hourly ElectricityMaps data for the German bidding zone.}
+\label{tab:carbon_scenarios}
+\begin{tabular}{ll}
+\toprule
+\textbf{Scenario} & \textbf{Definition} \\
+\midrule
+Static (CodeCarbon) & Fixed annual factor used by CodeCarbon, $381$ g/kWh \\
+Year mean           & Mean over all 8{,}760 hourly observations \\
+Year best hour      & Single lowest-intensity hour of the year \\
+Year worst hour     & Single highest-intensity hour of the year \\
+Winter mean         & Mean over December, January, February \\
+Summer mean         & Mean over June, July, August \\
+Summer midday       & Mean of summer hours 11--14 UTC (peak solar) \\
+Winter evening      & Mean of winter hours 17--20 UTC (peak coal and gas) \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 Two questions guide the analysis. First, how large is the gap between the static-factor estimate and the realistic best- and worst-case timing for the same workload. If the gap is small, CodeCarbon's static factor is defensible as a practical approximation. If the gap is large, the reported emissions of this study should be read as one point on a wide distribution rather than as a fixed value. Second, the analysis identifies whether the diurnal or the seasonal axis dominates the variation, which has direct implications for practitioners deciding when to schedule large training jobs on local infrastructure. The script outputs a heatmap of mean intensity by hour-of-day and month, plus a per-run counterfactual CSV with the recomputed emissions for every scenario.
 
