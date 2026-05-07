@@ -1,11 +1,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%| BACHELOR THESIS - GREEN AI |%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass[12pt,a4paper,twoside]{report}
+\documentclass[11pt,a4paper,twoside]{book}
 
 %%| INCLUDE PACKAGES |%%
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[sc]{mathpazo}
 \usepackage[a4paper, inner=30mm, outer=25mm, top=25mm, bottom=25mm]{geometry}
 \usepackage[english]{babel}
 \usepackage{graphicx}
@@ -34,9 +35,13 @@
 \usepackage{tabularx}
 \usepackage{multirow}
 \usepackage{cleveref}
+\usepackage[dvipsnames]{xcolor}
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
 \usepackage{float}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{tocloft}
 
 %%| SETTINGS |%%
 \hypersetup{                                                                        
@@ -53,24 +58,42 @@
 }
 \setstretch{1.2}
 
+% Chapter headings: large grey number, rule, title
+\titleformat{\chapter}[display]
+  {\normalfont\huge\bfseries}
+  {\hfill\textcolor{gray}{\fontsize{64}{64}\selectfont\thechapter}}
+  {-10pt}
+  {\huge\bfseries}
+[\vspace{2pt}\rule{\textwidth}{0.6pt}]
+\titlespacing*{\chapter}{0pt}{-30pt}{30pt}
+
+% Running headers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\thepage\quad\textit{\leftmark}}
+\fancyhead[RO]{\textit{\rightmark}\quad\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+\renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter.\ #1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+
+% Table of contents
+\setlength{\cftbeforechapskip}{6pt}
+\renewcommand{\cftchapfont}{\bfseries}
+\renewcommand{\cftchappagefont}{\bfseries}
+\renewcommand{\cftchapleader}{\bfseries\cftdotfill{\cftdotsep}}
+
 \addbibresource{Document/Bibliography/ref.bib}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 
 \includepdf[pages={1}]{deckblatt.pdf}
-\newpage
-\thispagestyle{empty}
-~  % leere Seite
-\newpage
 
-\pagenumbering{gobble}    
+\frontmatter
 \tableofcontents
-\newpage
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\pagenumbering{arabic}
-\setcounter{page}{1}
+\mainmatter
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%| CHAPTERS |%%
@@ -89,9 +112,9 @@
 \printbibliography[heading=bibintoc, title={Bibliography}]
 \newpage
 \listoffigures
-\addcontentsline{toc}{section}{List of Figures}
+\addcontentsline{toc}{chapter}{List of Figures}
 \newpage
 \listoftables
-\addcontentsline{toc}{section}{List of Tables}
+\addcontentsline{toc}{chapter}{List of Tables}
 
 \end{document}
