@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).parent
 MODELS_DIR = BASE_DIR / "models"
 NTFY_CHANNEL = "eron_thesis_higgs_run_123"
 
-NROWS_VALUES = [100_000, 500_000, 1_000_000, 5_000_000, 11_000_000]
+NROWS_VALUES = [1_000, 10_000, 100_000, 500_000, 1_000_000, 5_000_000, 11_000_000]
 
 # RandomForest skips Higgs internally — excluded here
 MODEL_SCRIPTS = [

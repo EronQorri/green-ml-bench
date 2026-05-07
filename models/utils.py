@@ -5,6 +5,7 @@ import csv
 import json
 from datetime import datetime
 from pathlib import Path
+from sklearn.model_selection import train_test_split
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import RANDOM_STATE, config, BASE_DIR
@@ -25,7 +26,7 @@ def load_data(dataset):
         test_nrows = os.environ.get("TEST_NROWS")
         nrows = int(test_nrows) if test_nrows else cfg.get("nrows")
         if nrows:
-            df = df.sample(n=nrows, random_state=RANDOM_STATE)
+            df, _ = train_test_split(df, train_size=nrows, stratify=df[cfg["target"]], random_state=RANDOM_STATE)
     else:
         df = pd.read_csv(
             cfg["path"],

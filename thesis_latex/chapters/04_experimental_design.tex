@@ -1,6 +1,6 @@
-\chapter{Experimental Design}
+\chapter{Study Design}
 \label{experimental_design}
-This chapter outlines the experimental design used to evaluate the ecological efficiency of different machine learning classification algorithms. It describes the datasets, models, evaluation metrics, hyperparameter tuning and measurement setup that form the basis of this empirical analysis.
+This chapter outlines the design decisions underlying the empirical evaluation of this study. It describes the research questions, the selected datasets and models, the evaluation metrics, the validation strategy, and the hyperparameter tuning approach that together form the methodological foundation for the experiments conducted in \Cref{implementation}.
 
 \section{Research Questions}
 \label{sec:research_questions}
@@ -113,52 +113,4 @@ Weighted F1-score was used as the optimization objective, as it accounts for cla
 
 Tuning was performed separately for each dataset, as the datasets differ substantially in size, feature space, and class distribution. A globally tuned model would not represent optimal performance on any individual dataset and would therefore introduce bias into the comparison.
 
-% =============================================================
-\section{Experiments}
-\label{sec:experiments}
-
-\todo[inline]{Der gesamte Teil muss noch gemacht werden. Bis jetzt nur Placeholder}
-
-Having established the datasets, models, metrics, and tuning strategy, this section describes the individual experiments conducted in this study. Each experiment is motivated by one or more of the research questions stated in \Cref{sec:research_questions} and addresses a specific dimension of the energy-performance trade-off.
-
-\subsection{Main Cross-Dataset Benchmark}
-\label{design_main_benchmark}
-\todo[inline]{Describe main benchmark: all models trained on Wine, Credit, and HIGGS with tuned hyperparameters and 5-fold CV. Goal: compare accuracy, weighted F1, training time, CO\textsubscript{2}, and EWF1 across model families and dataset scales.}
-
-\subsection{Dataset Scaling Experiment}
-\label{design_scaling}
-
-To investigate how energy consumption and predictive performance scale with training data volume, a dedicated scaling experiment was designed for the HIGGS dataset. Rather than comparing different datasets, this experiment holds the dataset constant and systematically varies the number of training instances across five subset sizes: 100{,}000, 500{,}000, 1{,}000{,}000, 5{,}000{,}000, and 11{,}000{,}000 instances. Subsets are drawn via stratified sampling to preserve the class distribution of the full dataset.
-
-All models except Random Forest are trained on each subset using the same hyperparameters derived from the full HIGGS tuning run. Random Forest is excluded due to its prohibitive runtime on large HIGGS subsets. Keeping hyperparameters fixed across subset sizes ensures that observed differences in CO\textsubscript{2} emissions, training time, and F1-score are attributable solely to dataset size rather than to model configuration. The results are presented in \Cref{results}.
-
-\subsection{CPU vs.\ GPU Break-Even Analysis}
-\label{design_breakeven}
-
-To determine at which dataset size GPU training becomes more energy-efficient than CPU training for XGBoost, a break-even analysis was designed as part of this study. The analysis is based on nine HIGGS subsets ranging from 1{,}000 to 11{,}000{,}000 instances, using identical hyperparameters for both devices. This controlled setup isolates the effect of dataset size without confounding factors from different feature spaces or hyperparameter configurations.
-
-The relationship between dataset size and CO\textsubscript{2} emissions is modelled as a power law, fitted separately for CPU and GPU by applying a linear regression to $\log_{10}(\text{nrows})$ versus $\log_{10}(\text{CO}_2)$. A log-log fit is used because emissions scale super-linearly with data size, and a linear model would systematically misrepresent the relationship. The break-even point $n_{BE}$ is then derived analytically as the intersection of the two fitted lines:
-
-\begin{equation}
-\log_{10}(n_{BE}) = \frac{b_{\text{GPU}} - b_{\text{CPU}}}{a_{\text{CPU}} - a_{\text{GPU}}}
-\label{eq:breakeven}
-\end{equation}
-
-where $a$ and $b$ are the slope and intercept of each fit. Below $n_{BE}$, CPU training is more energy-efficient; above it, GPU training is. The results are presented in \Cref{results}.
-
-\subsection{MLP Architecture Variation}
-\label{design_mlp_variation}
-\todo[inline]{Describe MLP architecture variation experiment: systematically vary number of hidden layers and neurons per layer on one or more datasets. Goal: quantify how architectural complexity affects CO\textsubscript{2} emissions and F1-score.}
-
-\subsection{CodeCarbon Validation}
-\label{design_codecarbon_validation}
-\todo[inline]{Describe CodeCarbon validation experiment: compare TDP-based CPU estimation (CodeCarbon fallback on Windows) against direct hardware sensor readings from LibreHardwareMonitor across all models. Data in \texttt{results/archive/results\_HMtest.csv}, plot at \texttt{analysis/plots/codecarbon\_vs\_hw.png}.}
-
-\todo[inline]{Fischer et al. already established the core finding (CodeCarbon underestimates by 20--30\%, worse for CPU-only workloads) using the same tool. The specific gap for classical ML under the Windows TDP fallback is too narrow to justify a standalone RQ. Results are included as a methodological validation and discussed as a limitation in \Cref{discussion}.}
-
-\subsection{Seasonal Carbon Intensity Analysis}
-\label{design_seasonal}
-\todo[inline]{Describe seasonal carbon intensity experiment: compare CO\textsubscript{2} emissions of equivalent training runs under July vs.\ December German grid carbon intensity values. Scripts: \texttt{analysis/electricity\_mix\_germany.py}, \texttt{analysis/carbon\_intensity\_analysis.py}.}
-
-% HPO tuning efficiency is discussed in \Cref{discussion} based on the 40-trial tuning data already collected, rather than treated as a separate experiment. The research gap is comparatively small given existing literature, and the finding is better positioned as a reflection on the tuning choices made in this study.
 
