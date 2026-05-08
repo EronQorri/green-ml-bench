@@ -38,15 +38,15 @@ It is important to note that energy consumption and CO2 emissions measured in th
 
 All experiments were implemented in Python 3.13.0. The main libraries used are described below.
 
-Scikit-learn \cite{pedregosaScikitlearnMachineLearning2011} served as the foundation of the evaluation pipeline. It provided the \texttt{LogisticRegression} and \texttt{RandomForestClassifier} implementations, as well as \texttt{KFold} and \texttt{cross\_validate} for cross-validation, \texttt{StandardScaler} for feature normalization, \texttt{make\_pipeline} for chaining preprocessing and model steps, and \texttt{f1\_score} and \texttt{make\_scorer} for evaluation metrics.
+Scikit-learn served as the foundation of the evaluation pipeline. It provided the \texttt{LogisticRegression} and \texttt{RandomForestClassifier} implementations, as well as \texttt{KFold} and \texttt{cross\_validate} for cross-validation, \texttt{StandardScaler} for feature normalization, \texttt{make\_pipeline} for chaining preprocessing and model steps, and \texttt{f1\_score} and \texttt{make\_scorer} for evaluation metrics.
 
-The XGBoost library \cite{chenXGBoostScalableTree2016} was used for the gradient boosting model, as it provides a highly optimized implementation that supports both CPU and GPU training.
+The XGBoost library was used for the gradient boosting model, as it provides a highly optimized implementation that supports both CPU and GPU training.
 
 For the MLP, PyTorch \cite{paszkePyTorchImperativeStyle2019} was used as the deep learning backend. To integrate the PyTorch model into the scikit-learn evaluation pipeline, the Skorch library \cite{ghoshSkorchBridgePyTorch2024} was used, which wraps PyTorch models in a scikit-learn-compatible interface.
 
 Hyperparameter tuning for all models except Logistic Regression was performed using Optuna, as described in \Cref{design_hyperparameter}.
 
-Carbon emissions and energy consumption were tracked using CodeCarbon \cite{courtyMlco2CodecarbonV2412024}, which is described in detail in \Cref{implementation_emissions}.
+Carbon emissions and energy consumption were tracked using CodeCarbon, which is described in detail in \Cref{implementation_emissions}.
 
 To ensure reproducibility, a fixed random seed of 42 was used for all data splits, cross-validation folds, and model initialization. A \texttt{requirements.txt} file is provided so that the exact library versions used in this study can be reproduced.
 

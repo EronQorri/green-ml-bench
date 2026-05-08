@@ -42,16 +42,13 @@ df = pd.merge(
     how="left",
 )
 
-# carbon-optimal score (F1 penalized by scaled time + scaled CO2)
-l_1, l_2 = 0.5, 1.0
-for col in ["training_time_s", "co2eq_kg"]:
-    mn = df.groupby("dataset")[col].transform("min")
-    mx = df.groupby("dataset")[col].transform("max")
-    df[f"{col}_scaled"] = (df[col] - mn) / (mx - mn).clip(lower=1e-9)
+# carbon-optimal score (F1 penalized by scaled CO2); lambda adjusts carbon penalty weight
+lam = 1.0
+mn = df.groupby("dataset")["co2eq_kg"].transform("min")
+mx = df.groupby("dataset")["co2eq_kg"].transform("max")
+df["co2eq_kg_scaled"] = (df["co2eq_kg"] - mn) / (mx - mn).clip(lower=1e-9)
 
-df["ewf1"] = df["f1"] / (
-    1 + l_1 * df["training_time_s_scaled"] + l_2 * df["co2eq_kg_scaled"]
-)
+df["ewf1"] = df["f1"] / (1 + lam * df["co2eq_kg_scaled"])
 
 
 def custom_format(val):
