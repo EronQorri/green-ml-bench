@@ -92,7 +92,12 @@ For a binary classification task ($\mathcal{Y} = \{0, 1\}$), logistic regression
 \begin{equation}
     P(y=1 \mid x) = \sigma(w^\top x + b) = \frac{1}{1 + e^{-(w^\top x + b)}}
 \end{equation}
-This functional form stems from modeling the log-odds (logit) as a linear function of the inputs: $\ln\!\left(\frac{P(y=1 \mid x)}{P(y=0 \mid x)}\right) = w^\top x + b$ \cite{hastieElementsStatisticalLearning2017}.
+This functional form stems from modeling the log-odds (logit) as a linear function of the inputs \cite{hastieElementsStatisticalLearning2017}:
+ 
+\begin{equation}
+    \ln\!\left(\frac{P(y=1 \mid x)}{P(y=0 \mid x)}\right) = w^\top x + b
+\end{equation}
+ 
 
 The optimal parameters are estimated via Maximum Likelihood Estimation (MLE), which in practice is equivalent to minimizing the binary Cross-Entropy Loss over the training set \cite{hastieElementsStatisticalLearning2017}. Since no closed-form solution exists, iterative numerical solvers are required \cite{hastieElementsStatisticalLearning2017}. Standard approaches include second-order methods such as Newton-Conjugate Gradient (Newton-CG) and Limited-memory BFGS (L-BFGS), as well as first-order methods such as Stochastic Average Gradient (SAG) descent \cite{pedregosaScikitlearnMachineLearning2011}.
 

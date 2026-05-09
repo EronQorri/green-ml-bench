@@ -272,6 +272,22 @@
   file = {/Users/eronqorri/Zotero/storage/NJYIMUH6/Chen und Guestrin - 2016 - XGBoost A Scalable Tree Boosting System.pdf}
 }
 
+@article{colemanAnalysisDAWNBenchTimetoAccuracy2019,
+  title = {Analysis of {{DAWNBench}}, a {{Time-to-Accuracy Machine Learning Performance Benchmark}}},
+  author = {Coleman, Cody and Kang, Daniel and Narayanan, Deepak and Nardi, Luigi and Zhao, Tian and Zhang, Jian and Bailis, Peter and Olukotun, Kunle and R{\'e}, Chris and Zaharia, Matei},
+  year = 2019,
+  month = jul,
+  journal = {SIGOPS Oper. Syst. Rev.},
+  volume = {53},
+  number = {1},
+  pages = {14--25},
+  issn = {0163-5980},
+  doi = {10.1145/3352020.3352024},
+  urldate = {2026-05-09},
+  abstract = {Researchers have proposed hardware, software, and algorithmic optimizations to improve the computational performance of deep learning. While some of these optimizations perform the same operations faster (e.g., increasing GPU clock speed), many others modify the semantics of the training procedure (e.g., reduced precision), and can impact the final model's accuracy on unseen data. Due to a lack of standard evaluation criteria that considers these trade-offs, it is difficult to directly compare these optimizations. To address this problem, we recently introduced DAWNBENCH, a benchmark competition focused on end-to-end training time to achieve near-state-of-the-art accuracy on an unseen dataset-a combined metric called time-to-accuracy (TTA). In this work, we analyze the entries from DAWNBENCH, which received optimized submissions from multiple industrial groups, to investigate the behavior of TTA as a metric as well as trends in the best-performing entries. We show that TTA has a low coefficient of variation and that models optimized for TTA generalize nearly as well as those trained using standard methods. Additionally, even though DAWNBENCH entries were able to train ImageNet models in under 3 minutes, we find they still underutilize hardware capabilities such as Tensor Cores. Furthermore, we find that distributed entries can spend more than half of their time on communication. We show similar findings with entries to the MLPERF v0.5 benchmark.},
+  file = {/Users/eronqorri/Zotero/storage/YN59FPG7/Coleman et al. - 2019 - Analysis of DAWNBench, a Time-to-Accuracy Machine Learning Performance Benchmark.pdf}
+}
+
 @misc{courtyMlco2CodecarbonV2412024,
   title = {Mlco2/Codecarbon: V2.4.1},
   shorttitle = {Mlco2/Codecarbon},
@@ -499,6 +515,23 @@
   file = {/Users/eronqorri/Zotero/storage/88BFKEWI/Henderson et al. - 2020 - Towards the Systematic Reporting of the Energy and Carbon Footprints of Machine Learning.pdf;/Users/eronqorri/Zotero/storage/TLEIVW6C/20-312.html}
 }
 
+@misc{hernandezMeasuringAlgorithmicEfficiency2020,
+  title = {Measuring the {{Algorithmic Efficiency}} of {{Neural Networks}}},
+  author = {Hernandez, Danny and Brown, Tom B.},
+  year = 2020,
+  month = may,
+  number = {arXiv:2005.04305},
+  eprint = {2005.04305},
+  primaryclass = {cs},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2005.04305},
+  urldate = {2026-05-09},
+  abstract = {Three factors drive the advance of AI: algorithmic innovation, data, and the amount of compute available for training. Algorithmic progress has traditionally been more difficult to quantify than compute and data. In this work, we argue that algorithmic progress has an aspect that is both straightforward to measure and interesting: reductions over time in the compute needed to reach past capabilities. We show that the number of floating-point operations required to train a classifier to AlexNet-level performance on ImageNet has decreased by a factor of 44x between 2012 and 2019. This corresponds to algorithmic efficiency doubling every 16 months over a period of 7 years. By contrast, Moore's Law would only have yielded an 11x cost improvement. We observe that hardware and algorithmic efficiency gains multiply and can be on a similar scale over meaningful horizons, which suggests that a good model of AI progress should integrate measures from both.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Computer Vision and Pattern Recognition,Computer Science - Machine Learning,Statistics - Machine Learning},
+  file = {/Users/eronqorri/Zotero/storage/I447A2A5/Hernandez und Brown - 2020 - Measuring the Algorithmic Efficiency of Neural Networks.pdf;/Users/eronqorri/Zotero/storage/Y56GQBCX/2005.html}
+}
+
 @article{hintonRectifiedLinearUnits2010,
   title = {Rectified {{Linear Units Improve Restricted Boltzmann Machines Vinod Nair}}},
   author = {Hinton, Geoffrey and Nair, Vinod and Rachmad, Yoesoep},
@@ -662,6 +695,37 @@
   file = {/Users/eronqorri/Zotero/storage/YDZEACFP/Lannelongue et al. - 2021 - Green Algorithms Quantifying the Carbon Footprint of Computation.pdf;/Users/eronqorri/Zotero/storage/SYDPH9RE/advs.html}
 }
 
+@inproceedings{luccioniPowerHungryProcessing2024,
+  title = {Power {{Hungry Processing}}: {{Watts Driving}} the {{Cost}} of {{AI Deployment}}?},
+  shorttitle = {Power {{Hungry Processing}}},
+  booktitle = {Proceedings of the 2024 {{ACM Conference}} on {{Fairness}}, {{Accountability}}, and {{Transparency}}},
+  author = {Luccioni, Sasha and Jernite, Yacine and Strubell, Emma},
+  year = 2024,
+  month = jun,
+  series = {{{FAccT}} '24},
+  pages = {85--99},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  doi = {10.1145/3630106.3658542},
+  urldate = {2026-05-09},
+  abstract = {Recent years have seen a surge in the popularity of commercial AI products based on generative, multi-purpose AI systems promising a unified approach to building machine learning (ML) models into technology. However, this ambition of ``generality'' comes at a steep cost to the environment, given the amount of energy these systems require and the amount of carbon that they emit. In this work, we propose the first systematic comparison of the ongoing inference cost of various categories of ML systems, covering both task-specific (i.e. finetuned models that carry out a single task) and `general-purpose' models, (i.e. those trained for multiple tasks). We measure deployment cost as the amount of energy and carbon required to perform 1,000 inferences on representative benchmark dataset using these models. We find that multi-purpose, generative architectures are orders of magnitude more expensive than task-specific systems for a variety of tasks, even when controlling for the number of model parameters. We conclude with a discussion around the current trend of deploying multi-purpose generative ML systems, and caution that their utility should be more intentionally weighed against increased costs in terms of energy and emissions. All the data from our study can be accessed via an interactive demo to carry out further exploration and analysis.},
+  isbn = {979-8-4007-0450-5},
+  file = {/Users/eronqorri/Zotero/storage/RJJJUPZS/Luccioni et al. - 2024 - Power Hungry Processing Watts Driving the Cost of AI Deployment.pdf}
+}
+
+@article{mattsonMLPerfTrainingBenchmark2020,
+  title = {{{MLPerf Training Benchmark}}},
+  author = {Mattson, Peter and Cheng, Christine and Diamos, Gregory and Coleman, Cody and Micikevicius, Paulius and Patterson, David and Tang, Hanlin and Wei, Gu-Yeon and Bailis, Peter and Bittorf, Victor and Brooks, David and Chen, Dehao and Dutta, Debo and Gupta, Udit and Hazelwood, Kim and Hock, Andy and Huang, Xinyuan and Kang, Daniel and Kanter, David and Kumar, Naveen and Liao, Jeffery and Narayanan, Deepak and Oguntebi, Tayo and Pekhimenko, Gennady and Pentecost, Lillian and Janapa Reddi, Vijay and Robie, Taylor and St John, Tom and Wu, Carole-Jean and Xu, Lingjie and Young, Cliff and Zaharia, Matei},
+  year = 2020,
+  month = mar,
+  journal = {Proceedings of Machine Learning and Systems},
+  volume = {2},
+  pages = {336--349},
+  urldate = {2026-05-09},
+  langid = {english},
+  file = {/Users/eronqorri/Zotero/storage/7SKIIPDA/Mattson et al. - 2020 - MLPerf Training Benchmark.pdf}
+}
+
 @article{mitchellAcceleratingXGBoostAlgorithm2017,
   title = {Accelerating the {{XGBoost}} Algorithm Using {{GPU}} Computing},
   author = {Mitchell, Rory and Frank, Eibe},
@@ -729,6 +793,23 @@
   archiveprefix = {arXiv},
   keywords = {Computer Science - Machine Learning,Computer Science - Mathematical Software,Statistics - Machine Learning},
   file = {/Users/eronqorri/Zotero/storage/SVEW5RZ4/Paszke et al. - 2019 - PyTorch An Imperative Style, High-Performance Deep Learning Library.pdf;/Users/eronqorri/Zotero/storage/D6RY8J7Q/1912.html}
+}
+
+@misc{pattersonCarbonEmissionsLarge2021,
+  title = {Carbon {{Emissions}} and {{Large Neural Network Training}}},
+  author = {Patterson, David and Gonzalez, Joseph and Le, Quoc and Liang, Chen and Munguia, Lluis-Miquel and Rothchild, Daniel and So, David and Texier, Maud and Dean, Jeff},
+  year = 2021,
+  month = apr,
+  number = {arXiv:2104.10350},
+  eprint = {2104.10350},
+  primaryclass = {cs},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2104.10350},
+  urldate = {2026-05-09},
+  abstract = {The computation demand for machine learning (ML) has grown rapidly recently, which comes with a number of costs. Estimating the energy cost helps measure its environmental impact and finding greener strategies, yet it is challenging without detailed information. We calculate the energy use and carbon footprint of several recent large models-T5, Meena, GShard, Switch Transformer, and GPT-3-and refine earlier estimates for the neural architecture search that found Evolved Transformer. We highlight the following opportunities to improve energy efficiency and CO2 equivalent emissions (CO2e): Large but sparsely activated DNNs can consume {$<$}1/10th the energy of large, dense DNNs without sacrificing accuracy despite using as many or even more parameters. Geographic location matters for ML workload scheduling since the fraction of carbon-free energy and resulting CO2e vary \textasciitilde 5X-10X, even within the same country and the same organization. We are now optimizing where and when large models are trained. Specific datacenter infrastructure matters, as Cloud datacenters can be \textasciitilde 1.4-2X more energy efficient than typical datacenters, and the ML-oriented accelerators inside them can be \textasciitilde 2-5X more effective than off-the-shelf systems. Remarkably, the choice of DNN, datacenter, and processor can reduce the carbon footprint up to \textasciitilde 100-1000X. These large factors also make retroactive estimates of energy cost difficult. To avoid miscalculations, we believe ML papers requiring large computational resources should make energy consumption and CO2e explicit when practical. We are working to be more transparent about energy use and CO2e in our future research. To help reduce the carbon footprint of ML, we believe energy usage and CO2e should be a key metric in evaluating models, and we are collaborating with MLPerf developers to include energy usage during training and inference in this industry standard benchmark.},
+  archiveprefix = {arXiv},
+  keywords = {Computer Science - Computers and Society,Computer Science - Machine Learning},
+  file = {/Users/eronqorri/Zotero/storage/E6TZU4GR/Patterson et al. - 2021 - Carbon Emissions and Large Neural Network Training.pdf;/Users/eronqorri/Zotero/storage/UZQMLB6R/2104.html}
 }
 
 @article{pedregosaScikitlearnMachineLearning2011,
@@ -952,6 +1033,20 @@
   publisher = {UCI Machine Learning Repository},
   doi = {10.24432/C5V312},
   urldate = {2026-03-19}
+}
+
+@article{wuSustainableAIEnvironmental2022,
+  title = {Sustainable {{AI}}: {{Environmental Implications}}, {{Challenges}} and {{Opportunities}}},
+  shorttitle = {Sustainable {{AI}}},
+  author = {Wu, Carole-Jean and Raghavendra, Ramya and Gupta, Udit and Acun, Bilge and Ardalani, Newsha and Maeng, Kiwan and Chang, Gloria and Aga, Fiona and Huang, Jinshi and Bai, Charles and Gschwind, Michael and Gupta, Anurag and Ott, Myle and Melnikov, Anastasia and Candido, Salvatore and Brooks, David and Chauhan, Geeta and Lee, Benjamin and Lee, Hsien-Hsin and Akyildiz, Bugra and Balandat, Maximilian and Spisak, Joe and Jain, Ravi and Rabbat, Mike and Hazelwood, Kim},
+  year = 2022,
+  month = apr,
+  journal = {Proceedings of Machine Learning and Systems},
+  volume = {4},
+  pages = {795--813},
+  urldate = {2026-05-09},
+  langid = {english},
+  file = {/Users/eronqorri/Zotero/storage/9NWN8LIL/Wu et al. - 2022 - Sustainable AI Environmental Implications, Challenges and Opportunities.pdf}
 }
 
 @article{yangHyperparameterOptimizationMachine2020,
