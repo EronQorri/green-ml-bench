@@ -1,5 +1,7 @@
 import os
 import sys
+import time
+import numpy as np
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils import load_data, save_results, save_inference_time, load_best_params, get_nrows
@@ -52,10 +54,13 @@ print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
 trained_model = cv_results["estimator"][0]
 single_row = X[:1]
-
-start_inference = time.perf_counter()
-_ = trained_model.predict(single_row)
-inference_time = time.perf_counter() - start_inference
+trained_model.predict(single_row)  # warmup
+_times = []
+for _ in range(100):
+    _t0 = time.perf_counter()
+    trained_model.predict(single_row)
+    _times.append(time.perf_counter() - _t0)
+inference_time = float(np.median(_times))
 
 save_results(
     "XGBoost_GPU",
