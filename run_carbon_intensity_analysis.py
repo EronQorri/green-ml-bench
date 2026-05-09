@@ -54,9 +54,9 @@ CARBON_FILE = BASE_DIR / "results" / "carbon_intensity_year.csv"
 RESULTS_FILE = BASE_DIR / "results" / "results.csv"
 COUNTERFACTUAL_FILE = BASE_DIR / "results" / "co2_counterfactual.csv"
 PLOT_DIR = BASE_DIR / "analysis" / "carbon_intensity"
-PLOT_FILE = PLOT_DIR / "diurnal_seasonal.png"
-SCENARIO_INTENSITY_PLOT = PLOT_DIR / "scenario_intensities.png"
-SCENARIO_PER_RUN_PLOT = PLOT_DIR / "scenario_per_run.png"
+PLOT_FILE = PLOT_DIR / "diurnal_seasonal.pdf"
+SCENARIO_INTENSITY_PLOT = PLOT_DIR / "scenario_intensities.pdf"
+SCENARIO_PER_RUN_PLOT = PLOT_DIR / "scenario_per_run.pdf"
 
 SCENARIO_LABELS = {
     "static_codecarbon":   "Static (CC)",
@@ -68,6 +68,9 @@ SCENARIO_LABELS = {
     "summer_midday_mean":  "Summer midday",
     "winter_evening_mean": "Winter evening",
 }
+
+# Reduced set for the per-run plot
+PLOT_SCENARIOS = ["static_codecarbon", "year_mean", "year_best_hour", "year_worst_hour"]
 
 
 # ── 1. Fetch (chunked + cached) ───────────────────────────────────────────────
@@ -82,9 +85,10 @@ def fetch_year():
     cursor = START
     while cursor < END:
         chunk_end = min(cursor + timedelta(days=CHUNK_DAYS), END)
+        fmt = lambda dt: dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         url = (
             "https://api.electricitymaps.com/v4/carbon-intensity/past-range"
-            f"?zone={ZONE}&start={cursor.isoformat()}&end={chunk_end.isoformat()}"
+            f"?zone={ZONE}&start={fmt(cursor)}&end={fmt(chunk_end)}"
         )
         r = requests.get(url, headers={"auth-token": API_KEY}, timeout=30)
         r.raise_for_status()
@@ -172,7 +176,7 @@ def plot_diurnal_seasonal(df):
 
     PLOT_FILE.parent.mkdir(parents=True, exist_ok=True)
     plt.tight_layout()
-    plt.savefig(PLOT_FILE, dpi=150, bbox_inches="tight")
+    plt.savefig(PLOT_FILE, bbox_inches="tight")
     plt.close()
     print(f"Saved: {PLOT_FILE}")
 
@@ -193,12 +197,13 @@ def plot_scenario_intensities(scenarios):
     for bar, v in zip(bars, values):
         ax.text(bar.get_x() + bar.get_width() / 2, v, f"{v:.0f}",
                 ha="center", va="bottom", fontsize=8)
+    ax.set_ylim(top=max(values) * 1.2)
     ax.set_ylabel("Carbon intensity (gCO₂/kWh)")
     ax.set_title(f"Scenario carbon intensities — Germany {START.year}/{END.year - 1}")
     ax.tick_params(axis="x", rotation=25)
     ax.legend()
     plt.tight_layout()
-    plt.savefig(SCENARIO_INTENSITY_PLOT, dpi=150, bbox_inches="tight")
+    plt.savefig(SCENARIO_INTENSITY_PLOT, bbox_inches="tight")
     plt.close()
     print(f"Saved: {SCENARIO_INTENSITY_PLOT}")
 
@@ -209,8 +214,8 @@ def plot_scenario_per_run(cf):
     if cf is None or cf.empty:
         return
 
-    keys = list(SCENARIO_LABELS.keys())
-    cf = cf[cf["nrows"].astype(str) == "all"].copy()
+    keys = PLOT_SCENARIOS
+    cf = cf[~cf["model"].str.startswith("tune_")].copy()
     cf = cf.drop_duplicates(subset=["dataset", "model"], keep="last")
     if cf.empty:
         return
@@ -218,21 +223,12 @@ def plot_scenario_per_run(cf):
     cf["run"] = cf["model"] + " · " + cf["dataset"]
     cf = cf.sort_values(["dataset", "model"])
 
-    long = cf.melt(
-        id_vars=["run"],
-        value_vars=[f"co2_{k}_kg" for k in keys],
-        var_name="scenario",
-        value_name="co2_kg",
-    )
-    long["scenario"] = long["scenario"].str.replace(r"^co2_|_kg$", "", regex=True)
-    long["scenario_label"] = long["scenario"].map(SCENARIO_LABELS)
-
     runs = cf["run"].tolist()
     n_scen = len(keys)
     bar_w = 0.85 / n_scen
     cmap = plt.get_cmap("viridis", n_scen)
 
-    fig, ax = plt.subplots(figsize=(max(10, 0.7 * len(runs)), 6))
+    fig, ax = plt.subplots(figsize=(max(10, 0.6 * len(runs)), 6))
     for i, k in enumerate(keys):
         vals = [cf.loc[cf["run"] == r, f"co2_{k}_kg"].iloc[0] for r in runs]
         x = np.arange(len(runs)) + (i - n_scen / 2 + 0.5) * bar_w
@@ -242,10 +238,10 @@ def plot_scenario_per_run(cf):
     ax.set_xticklabels(runs, rotation=35, ha="right", fontsize=9)
     ax.set_yscale("log")
     ax.set_ylabel("CO₂ (kg, log)")
-    ax.set_title("Counterfactual CO₂ per run under timing scenarios")
+    ax.set_title("Counterfactual CO₂ per training run under timing scenarios")
     ax.legend(ncol=4, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.18))
     plt.tight_layout()
-    plt.savefig(SCENARIO_PER_RUN_PLOT, dpi=150, bbox_inches="tight")
+    plt.savefig(SCENARIO_PER_RUN_PLOT, bbox_inches="tight")
     plt.close()
     print(f"Saved: {SCENARIO_PER_RUN_PLOT}")
 

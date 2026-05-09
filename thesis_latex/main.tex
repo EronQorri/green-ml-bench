@@ -12,15 +12,7 @@
 \usepackage{graphicx}
 \graphicspath{{../analysis/plots/}{../analysis/carbon_intensity/}}
 
-% Include a figure if the file exists, otherwise show a missingfigure placeholder.
-% Usage: \figorplaceholder[width]{filename}{placeholder description}
-\newcommand{\figorplaceholder}[3][\linewidth]{%
-  \IfFileExists{../analysis/plots/#2}{\includegraphics[width=#1]{#2}}{%
-    \IfFileExists{../analysis/carbon_intensity/#2}{\includegraphics[width=#1]{#2}}{%
-      \missingfigure[figwidth=#1]{#3}%
-    }%
-  }%
-}
+
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage[autostyle=true]{csquotes}
@@ -39,6 +31,7 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
 \usepackage{float}
+\usepackage{rotating}
 \usepackage{titlesec}
 \usepackage{fancyhdr}
 \usepackage{tocloft}

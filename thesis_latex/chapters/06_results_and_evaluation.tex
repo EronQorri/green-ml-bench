@@ -1,2 +1,50 @@
 \chapter{Results and Evaluation}
 \label{results}
+
+\section{Overall Model Comparison}
+\label{sec:results_overview}
+
+\begin{sidewaysfigure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{vergleich.pdf}
+\caption{Model comparison dashboard: CO\textsubscript{2} emissions (corrected), training time, inference time, accuracy, F1-score, and carbon-penalised F1 (EWF1) across all models and datasets.}
+\label{fig:vergleich}
+\end{sidewaysfigure}
+
+\todo{maybe split this up so i dont have to rotate the page}
+
+
+\section{Lifecycle Break-Even Analysis}
+\label{sec:results_lifecycle}
+
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{lifecycle_breakeven.pdf}
+\caption{Break-even number of predictions at which cumulative inference CO\textsubscript{2} emissions surpass the one-time training footprint (log scale).}
+\label{fig:lifecycle_breakeven}
+\end{figure}
+
+
+% ── XGBoost CPU vs GPU ─────────────────────────────────────────────────────────
+\section{XGBoost: CPU vs.\ GPU}
+\label{sec:results_xgb}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{xgb_cpu_vs_gpu.pdf}
+\caption{XGBoost CPU vs.\ GPU across datasets. CO\textsubscript{2} and training time on log scale.}
+\label{fig:xgb_cpu_vs_gpu}
+\end{figure}
+
+
+% ── CodeCarbon vs HardwareMonitor ──────────────────────────────────────────────
+\section{CO\texorpdfstring{\textsubscript{2}}{2} Measurement: CodeCarbon vs.\ HardwareMonitor}
+\label{sec:results_cc_vs_hw}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{codecarbon_vs_hw.pdf}
+\caption{CodeCarbon underestimation factor (HW-corrected\,/\,CodeCarbon) per model and dataset. All values exceed~1, confirming systematic undercounting. Higher factors for Wine and Credit reflect CodeCarbon's TDP-based CPU estimation being least accurate on short training runs; RF has no Higgs measurement.}
+\label{fig:codecarbon_vs_hw}
+\end{figure}
