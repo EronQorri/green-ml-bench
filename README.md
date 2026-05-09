@@ -1,46 +1,66 @@
 # Ecological Efficiency of Classification Algorithms
 
-## Setup
+Benchmarking the ecological efficiency of ML classification algorithms (Logistic Regression, Random Forest, XGBoost CPU/GPU, MLP) across three datasets of varying scale (Wine, Credit Card Default, HIGGS). Metrics tracked: accuracy, weighted F1, CO₂ emissions, training time, and inference latency.
 
-First, install the required dependencies:
+## Setup
 
 ```bash
 pip install -r requirements.txt
 ```
 
+> **Note:** Must be run as Administrator on Windows (right-click → "Run as administrator") for accurate CPU power measurement via LibreHardwareMonitor.
+
 ## Datasets
 
-The datasets need to be downloaded manually and placed in the following folder structures:
+Download manually and place at:
 
-* **Wine:** `wine/wine.data` → [UCI Download](https://archive.ics.uci.edu/dataset/109/wine)
-* **Credit Card Clients:** `default_of_credit_card_clients/` → [UCI Download](https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients)
-* **HIGGS:** `higgs/higgs.parquet` → [UCI Download](https://archive.ics.uci.edu/dataset/280/higgs)
+| Dataset | Path | Source |
+|---|---|---|
+| Wine | `csv_files/wine/wine.data` | [UCI](https://archive.ics.uci.edu/dataset/109/wine) |
+| Credit Card Default | `csv_files/default_of_credit_card_clients/` | [UCI](https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients) |
+| HIGGS | `csv_files/higgs/higgs.parquet` | [UCI](https://archive.ics.uci.edu/dataset/280/higgs) |
 
 ## Running the Scripts
 
-You can run each model individually for a specific dataset by passing the dataset name as an argument:
+### Full pipeline
 
 ```bash
-python models/log_regression.py wine
-python models/random_forest.py credit
-python models/xgboost_cpu.py higgs
-python models/xgboost_gpu.py wine
-python models/mlp.py credit
+python run_all.py          # tune → train all models on all datasets
+python run_all_test.py     # smoke test: 1 trial per script, verifies pipeline without full run
 ```
 
-Valid dataset options are: wine, credit, higgs. If no argument is provided, the scripts default to wine.
-
-To run the full pipeline (tuning → training) across all models and datasets:
+### Individual models
 
 ```bash
-python run_all.py
+python models/log_regression.py [wine|credit|higgs]
+python models/random_forest.py  [wine|credit|higgs]
+python models/xgboost_cpu.py    [wine|credit|higgs]
+python models/xgboost_gpu.py    [wine|credit|higgs]   # requires CUDA
+python models/mlp.py            [wine|credit|higgs]
 ```
 
-> **Note:** Must be run as Administrator (right-click → "Run as administrator") for accurate CPU power measurement via LibreHardwareMonitor.
+Default dataset is `wine` if no argument is given.
+
+### Hyperparameter tuning
+
+```bash
+python models/tune/tune_xgb.py [dataset]          # 40 Optuna trials
+python models/tune/tune_rfc.py [dataset]
+python models/tune/tune_mlp.py [dataset] --n-trials 20 --max-epochs 20 --patience 5 --tune-sample-size 1000000
+```
+
+## Experiment Scripts
+
+```bash
+python run_scaling_all_models.py     # all models on HIGGS subsets — dataset-size scaling analysis
+python run_xgb_breakeven.py          # XGBoost CPU vs GPU on increasing HIGGS subsets — CO₂ break-even point
+python run_mlp_variation.py          # 12 MLP configs (3 widths × 4 depths) on HIGGS — architecture vs emissions
+python run_carbon_intensity_analysis.py  # temporal carbon intensity (ElectricityMaps API, requires .env key)
+```
 
 ## Results
 
-Results are written to `results/results.csv` with the following columns:
+Results are appended to `results/results.csv` (never overwritten — check for duplicates when re-running).
 
 | Column | Description |
 |---|---|
@@ -50,4 +70,32 @@ Results are written to `results/results.csv` with the following columns:
 | `cpu_energy_hw_wh` | CPU energy in Wh (HardwareMonitor) |
 | `training_time_s` | Training duration in seconds |
 
-![Results](analysis/plots/vergleich.png)
+### Model comparison
+
+![Model comparison](analysis/plots/vergleich.png)
+
+### CodeCarbon vs hardware measurement
+
+![CodeCarbon vs HW](analysis/plots/codecarbon_vs_hw.png)
+
+### XGBoost CPU vs GPU
+
+![XGBoost CPU vs GPU](analysis/plots/xgb_cpu_vs_gpu.png)
+
+### XGBoost CPU/GPU CO₂ break-even (HIGGS scaling)
+
+![XGBoost breakeven](analysis/plots/xgb_breakeven_higgs.png)
+
+### HIGGS dataset-size scaling (all models)
+
+![Scaling HIGGS](analysis/plots/scaling_higgs.png)
+
+### German grid carbon intensity (seasonal)
+
+![Carbon intensity July](analysis/carbon_intensity/carbon_intensity_july.png)
+![Carbon intensity January](analysis/carbon_intensity/carbon_intensity_january.png)
+
+### German electricity mix
+
+![Electricity mix July](analysis/electricity_mix/electricity_mix_germany_july.png)
+![Electricity mix](analysis/electricity_mix/electricity_mix_germany.png)
