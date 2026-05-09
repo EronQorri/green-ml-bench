@@ -11,6 +11,7 @@ The following sub-questions will also be addressed in the course of this thesis:
     \item How does energy consumption and CO2 output scale with increasing neural network complexity (number of layers and neurons)?
     \item How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?
     \item How does reducing the number of training instances on large datasets affect model accuracy and energy consumption across different algorithms?
+    \item At what prediction volume does the cumulative inference CO\textsubscript{2} footprint of a model surpass its training footprint, and how does this break-even point differ across model families?
 \end{itemize}
 
 
@@ -38,7 +39,7 @@ The Wine dataset contains 178 instances across 13 features, where each feature d
 
 The Default of Credit Card Clients (hereafter: Credit) dataset contains 30,000 instances across 23 features and focuses on predicting payment default among credit card clients in Taiwan.
 
-The HIGGS dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \parencite{whitesonHIGGS2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
+The HIGGS dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \cite{whitesonHIGGS2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
 
 These three datasets vary significantly in size, enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity.
 
@@ -78,7 +79,7 @@ Together, the selected models cover a broad spectrum of algorithmic complexity, 
 
 To answer the research questions of this study, two categories of metrics were employed: classification performance and resource consumption. 
 Accuracy and weighted F1-Score were selected to measure predictive performance, as they provide a standardized basis for comparing models across datasets of varying class distributions. 
-Energy consumption in kWh and $CO_2$ emissions in kg were chosen as the primary resource metrics, directly reflecting the ecological cost of model training. 
+Energy consumption in kWh and CO\textsubscript{2} emissions in kg were chosen as the primary resource metrics, directly reflecting the ecological cost of model training. 
 It should be noted that all experiments were conducted on a single hardware setup, which is described in detail in \Cref{sec:implementation_hardware}.
 
 Training time in seconds was included as a secondary resource metric, as it captures computational demand independently of hardware-specific power draw. 
@@ -89,9 +90,9 @@ Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020},
 \begin{equation}
 \text{EWF1} = \frac{F_1}{1 + \lambda \cdot \hat{c}}
 \end{equation}
-where $\hat{c}$ denotes the min-max normalized CO2 emissions per dataset and $\lambda$ controls the relative importance assigned to ecological cost. A higher $\lambda$ shifts the metric towards prioritizing carbon efficiency over predictive performance, while a lower $\lambda$ reduces the carbon penalty. This allows practitioners to adapt the metric to their specific deployment priorities. All results in this study use the default value of $\lambda = 1$. Higher scores indicate a more favorable trade-off between predictive performance and ecological cost.
+where $\hat{c}$ denotes the min-max normalized CO\textsubscript{2} emissions per dataset and $\lambda$ controls the relative importance assigned to ecological cost. A higher $\lambda$ shifts the metric towards prioritizing carbon efficiency over predictive performance, while a lower $\lambda$ reduces the carbon penalty. This allows practitioners to adapt the metric to their specific deployment priorities. All results in this study use the default value of $\lambda = 1$. Higher scores indicate a more favorable trade-off between predictive performance and ecological cost.
 
-It should be noted that $\hat{c}$ is inherently location-dependent, as CO2 emissions are tied to the carbon intensity of the local electricity grid. Consequently, EWF1 scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures.
+It should be noted that $\hat{c}$ is inherently location-dependent, as CO\textsubscript{2} emissions are tied to the carbon intensity of the local electricity grid. Consequently, EWF1 scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures.
 
 \section{Validation Strategy}
 \label{design_validation}
@@ -106,7 +107,7 @@ To ensure reproducibility, a fixed random state was used for all cross-validatio
 \label{design_hyperparameter}
 To ensure a fair comparison across all models, hyperparameter tuning was applied to each model prior to evaluation. Without tuning, default parameters tend to favor certain model families over others, potentially skewing the comparison in terms of both predictive performance and resource consumption \cite{bagnallUseDefaultParameter2017}.
 
-Hyperparameter optimization was performed using Optuna, an optimization framework based on Bayesian search. Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, evaluated across three datasets and four models, a full grid search would require approximately 150,000 evaluations. 
+Hyperparameter optimization was performed using Optuna, an optimization framework based on Bayesian search. Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, a full grid search would require 10\textsuperscript{5} = 100,000 evaluations per model per dataset alone, amounting to over 1,200,000 evaluations across four models and three datasets. 
 Optuna was therefore configured to run 40 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, as tuning runs contribute to the overall energy budget of this study.
 
 Weighted F1-score was used as the optimization objective, as it accounts for class imbalance more robustly than accuracy, providing a more reliable estimate of model quality across datasets with varying class distributions.
