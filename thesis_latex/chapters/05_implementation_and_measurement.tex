@@ -510,3 +510,19 @@ Winter evening      & Mean of winter hours 17--20 UTC (peak coal and gas) \\
 Two questions guide the analysis. First, how large is the gap between the static-factor estimate and the realistic best- and worst-case timing for the same workload. If the gap is small, CodeCarbon's static factor is defensible as a practical approximation. If the gap is large, the reported emissions of this study should be read as one point on a wide distribution rather than as a fixed value. Second, the analysis identifies whether the diurnal or the seasonal axis dominates the variation, which has direct implications for practitioners deciding when to schedule large training jobs on local infrastructure. The script outputs a heatmap of mean intensity by hour-of-day and month, plus a per-run counterfactual CSV with the recomputed emissions for every scenario.
 
 % HPO tuning efficiency is discussed in \Cref{discussion} based on the 40-trial tuning data already collected, rather than treated as a separate experiment. The research gap is comparatively small given existing literature, and the finding is better positioned as a reflection on the tuning choices made in this study.
+
+\subsection{Lifecycle Break-even Analysis}
+\label{design_lifecycle}
+
+The main benchmark measures the one-time training footprint of each model, but training CO\textsubscript{2} is only part of a model's total ecological cost. In production, a deployed model is queried repeatedly, and the cumulative inference footprint grows linearly with the number of predictions made. The lifecycle analysis quantifies at what prediction volume this cumulative inference CO\textsubscript{2} surpasses the initial training footprint, and how this break-even point differs across model families.
+
+The analysis is purely post-hoc and requires no additional training runs. It combines two data sources already collected during the main benchmark: the corrected training CO\textsubscript{2} from \texttt{results.csv} and the median single-row inference latency from \texttt{inference\_time.csv}. The CO\textsubscript{2} emitted per single prediction is estimated as:
+
+\begin{equation}
+\text{CO}_{2,\text{inference}} = \frac{t_{\text{inference}} \times P_{\text{CPU}}}{3{,}600{,}000} \times I_{\text{carbon}}
+\label{eq:co2_per_inference}
+\end{equation}
+
+where $t_{\text{inference}}$ is the median inference latency in seconds, $P_{\text{CPU}}$ is the average CPU package power in watts recorded during training, and $I_{\text{carbon}}$ is the carbon intensity in kg\,CO\textsubscript{2}/kWh derived from the training measurements as $I_{\text{carbon}} = \text{CO}_{2,\text{train}} / E_{\text{train}}$. The break-even prediction count follows directly as $N_{\text{break-even}} = \text{CO}_{2,\text{train}} / \text{CO}_{2,\text{inference}}$.
+
+This approach has one deliberate simplification: $P_{\text{CPU}}$ is the power draw recorded during training rather than during inference. Inference on CPU-bound models typically draws less power than training because there is no gradient computation or backward pass. Using training-phase power therefore produces a conservative break-even estimate — the true break-even will occur at a higher prediction count if inference power is lower. This limitation is acknowledged in \Cref{discussion}.
