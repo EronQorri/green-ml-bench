@@ -351,13 +351,7 @@ A secondary limitation is that CodeCarbon measures at the process level, meaning
 \section{Inference Latency Measurement}
 \label{implementation_inference}
 
-Inference time was measured separately after training, outside the emissions
-tracker. For each model, a single sample from the test set was passed through
-the trained model and the elapsed time was recorded using
-\texttt{time.perf\_counter()}. This provides a hardware-level estimate of
-per-sample prediction latency, which is relevant in deployment scenarios where
-repeated inference can accumulate significant energy costs
-\cite{desislavovTrendsAIInference2023}.
+Inference latency was measured separately after training, outside the emissions tracker. For each model, a single row from the dataset was passed through the trained model repeatedly, and the elapsed time was captured using \texttt{time.perf\_counter()}. This provides a hardware-level estimate of per-sample prediction latency, which is relevant in deployment scenarios where repeated inference can accumulate significant energy costs \cite{desislavovTrendsAIInference2023}.
 
 Only a single row was passed to the model rather than a full batch. This was intentional: batching would measure throughput rather than the actual time it takes to process one request, which is the more relevant figure in deployment. A single-prediction latency can be extrapolated to real-world usage, where a model may handle millions of requests and the per-sample cost accumulates into a meaningful energy expenditure.
 
