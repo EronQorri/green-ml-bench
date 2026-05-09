@@ -1,0 +1,104 @@
+{
+    "rfc": {
+        "wine": {
+            "best_f1": 0.9888000274857418,
+            "best_params": {
+                "n_estimators": 158,
+                "max_depth": 19,
+                "min_samples_split": 11,
+                "min_samples_leaf": 2,
+                "max_features": "log2"
+            },
+            "tuning_duration_min": 1.3476725101470948,
+            "emissions_kg": 0.0005339691345143279,
+            "n_trials": 50
+        },
+        "credit": {
+            "best_f1": 0.8000648463446538,
+            "best_params": {
+                "n_estimators": 495,
+                "max_depth": 20,
+                "min_samples_split": 17,
+                "min_samples_leaf": 3,
+                "max_features": null
+            },
+            "tuning_duration_min": 17.357769719759624,
+            "emissions_kg": 0.012349025973627721,
+            "n_trials": 50
+        }
+    },
+    "xgb": {
+        "wine": {
+            "best_f1": 0.9888000274857418,
+            "best_params": {
+                "n_estimators": 273,
+                "max_depth": 4,
+                "learning_rate": 0.08012737503998542,
+                "subsample": 0.6557975442608167,
+                "colsample_bytree": 0.7168578594140873,
+                "min_child_weight": 4
+            },
+            "tuning_duration_min": 2.293080965677897,
+            "emissions_kg": 0.0010459843173014891,
+            "n_trials": 50
+        },
+        "credit": {
+            "best_f1": 0.8011983553508996,
+            "best_params": {
+                "n_estimators": 307,
+                "max_depth": 3,
+                "learning_rate": 0.07205645135419224,
+                "subsample": 0.7607314074606438,
+                "colsample_bytree": 0.6702949285912185,
+                "min_child_weight": 9
+            },
+            "tuning_duration_min": 2.5162765622138976,
+            "emissions_kg": 0.0011960043807673778,
+            "n_trials": 50
+        },
+        "higgs": {
+            "best_f1": 0.7604781409897945,
+            "best_params": {
+                "n_estimators": 473,
+                "max_depth": 8,
+                "learning_rate": 0.25188681934120044,
+                "subsample": 0.9571422975894862,
+                "colsample_bytree": 0.7159415018585693,
+                "min_child_weight": 2
+            },
+            "tuning_duration_min": 63.69133528073629,
+            "emissions_kg": 0.0647595616416604,
+            "n_trials": 50
+        }
+    },
+    "mlp": {
+        "wine": {
+            "best_f1": 0.9943074829931973,
+            "best_params": {
+                "n_layers": 1,
+                "layer_0": 128,
+                "dropout_rate": 0.4344110400351553,
+                "lr": 0.003582886208321931,
+                "batch_size": 1024
+            },
+            "tuning_duration_min": 0.8717272798220317,
+            "emissions_kg": 0.00034988951773625847,
+            "n_trials": 50
+        },
+        "credit": {
+            "best_f1": 0.8028211914963521,
+            "best_params": {
+                "n_layers": 3,
+                "layer_0": 128,
+                "layer_1": 128,
+                "layer_2": 128,
+                "dropout_rate": 0.45925024844537277,
+                "lr": 0.0001556586683139727,
+                "batch_size": 1024
+            },
+            "tuning_duration_min": 19.685992419719696,
+            "emissions_kg": 0.00828275820133079,
+            "n_trials": 50
+        }
+    }
+}
