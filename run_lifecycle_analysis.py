@@ -81,48 +81,76 @@ def compute_breakeven(df):
     return df
 
 
-def plot_cumulative(df):
+def plot_breakeven_bars(df):
+    from matplotlib.transforms import blended_transform_factory
+
     datasets = [d for d in DATASET_ORDER if d in df["dataset"].unique()]
-    palette  = dict(zip(MODEL_ORDER, sns.color_palette("tab10", len(MODEL_ORDER))))
+    palette = {
+        "LogisticRegression": (123/255, 167/255, 188/255),
+        "RandomForest":       (212/255, 149/255, 106/255),
+        "XGBoost":            (130/255, 185/255, 154/255),
+        "XGBoost_GPU":        (192/255, 112/255, 112/255),
+        "MLP_PyTorch":        (155/255, 135/255, 181/255),
+    }
+    fs  = 9
+    GAP = 1  # blank-position gap between dataset groups
 
-    fig, axes = plt.subplots(1, len(datasets), figsize=(5 * len(datasets), 5), sharey=False)
-    if len(datasets) == 1:
-        axes = [axes]
-
-    for ax, dataset in zip(axes, datasets):
-        sub = df[df["dataset"] == dataset]
-        max_be = sub["break_even"].max()
-        x = np.logspace(0, np.log10(max_be * 10), 500)
-
+    # Build rows bottom-to-top: reversed DATASET_ORDER puts Wine at the top
+    rows         = []  # (y_pos, dataset, model, break_even)
+    group_bounds = {}  # dataset -> (y_min, y_max)
+    pos = 0
+    for i, dataset in enumerate(reversed(datasets)):
+        if i > 0:
+            pos += GAP
+        sub = df[df["dataset"] == dataset].copy()
+        sub["model_order"] = sub["model"].map({m: idx for idx, m in enumerate(MODEL_ORDER)})
+        sub = sub.sort_values("model_order", ascending=False)
+        y_start = pos
         for _, row in sub.iterrows():
-            model = row["model"]
-            label = MODEL_LABELS.get(model, model)
-            color = palette.get(model, "gray")
+            rows.append((pos, dataset, row["model"], row["break_even"]))
+            pos += 1
+        group_bounds[dataset] = (y_start, pos - 1)
 
-            cumulative_co2 = x * row["co2_per_inference"]
-            ax.plot(x, cumulative_co2, color=color, label=label, linewidth=1.8)
+    positions  = np.array([r[0] for r in rows], dtype=float)
+    values     = np.array([r[3] for r in rows], dtype=float)
+    model_list = [r[2] for r in rows]
+    labels     = [MODEL_LABELS[m] for m in model_list]
+    colors     = [palette[m] for m in model_list]
 
-            ax.axhline(row["co2eq_kg"], color=color, linestyle="--", linewidth=0.9, alpha=0.6)
-            ax.axvline(row["break_even"], color=color, linestyle=":", linewidth=0.9, alpha=0.5)
+    fig, ax = plt.subplots(figsize=(8, 7))
 
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_title(dataset.capitalize(), fontsize=12)
-        ax.set_xlabel("Number of predictions")
-        ax.set_ylabel("Cumulative CO₂ (kg)")
-        ax.grid(True, which="both", alpha=0.3)
+    bars = ax.barh(positions, values, color=colors, height=0.7,
+                   edgecolor="white", linewidth=0.6, zorder=2)
 
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=len(MODEL_ORDER),
-               bbox_to_anchor=(0.5, -0.08), frameon=False, fontsize=9)
-    fig.suptitle(
-        "Lifecycle CO₂: cumulative inference vs. training footprint\n"
-        "(dashed = training CO₂, dotted = break-even point)",
-        fontsize=11, y=1.02,
-    )
+    for bar, val in zip(bars, values):
+        ax.text(val * 1.05, bar.get_y() + bar.get_height() / 2,
+                f"{val:,.0f}", ha="left", va="center", fontsize=fs - 2, zorder=3)
+
+    ax.set_yticks(positions)
+    ax.set_yticklabels(labels, fontsize=fs - 1)
+    ax.set_xscale("log")
+    ax.set_xlabel("Break-even (# predictions)", fontsize=fs - 1)
+    ax.grid(True, axis="x", which="major", alpha=0.25, linestyle="--", zorder=1)
+    ax.set_axisbelow(True)
+    ax.set_xlim(right=values.max() * 4)
+
+    # Dataset section labels on the right (axes-x / data-y coordinates)
+    trans = blended_transform_factory(ax.transAxes, ax.transData)
+    for dataset in datasets:
+        y_min, y_max = group_bounds[dataset]
+        ax.text(1.02, (y_min + y_max) / 2, dataset.capitalize(),
+                transform=trans, ha="left", va="center",
+                fontsize=fs, fontweight="bold")
+
+    # Dashed separator lines between groups
+    ds_bottom_to_top = list(reversed(datasets))
+    for i in range(len(ds_bottom_to_top) - 1):
+        y_sep = (group_bounds[ds_bottom_to_top[i]][1] + group_bounds[ds_bottom_to_top[i + 1]][0]) / 2
+        ax.axhline(y_sep, color="gray", linewidth=0.6, linestyle="--", alpha=0.4)
+
     fig.tight_layout()
-    out = PLOTS_DIR / "lifecycle_breakeven.png"
-    fig.savefig(out, dpi=150, bbox_inches="tight")
+    out = PLOTS_DIR / "lifecycle_breakeven.pdf"
+    fig.savefig(out, bbox_inches="tight")
     plt.close(fig)
     print(f"Saved: {out}")
 
@@ -137,9 +165,22 @@ def print_summary(df):
         print(f"{label:<22} {row['dataset']:<10} {row['co2eq_kg']:>15.6f} "
               f"{row['co2_per_inference']:>16.2e} {row['break_even']:>12,.0f}")
 
+    print("\n--- LaTeX table rows (paste into tabular) ---")
+    for dataset in DATASET_ORDER:
+        sub = df[df["dataset"] == dataset].copy()
+        sub["model_order"] = sub["model"].map({m: i for i, m in enumerate(MODEL_ORDER)})
+        sub = sub.sort_values("model_order")
+        print(f"% {dataset}")
+        for _, row in sub.iterrows():
+            label = MODEL_LABELS.get(row["model"], row["model"])
+            train  = f"{row['co2eq_kg']*1e6:.2f}"
+            infer  = f"{row['co2_per_inference']*1e9:.4f}"
+            be     = f"{row['break_even']:,.0f}"
+            print(f"  {label} & {dataset.capitalize()} & {train} & {infer} & {be} \\\\")
+
 
 if __name__ == "__main__":
     df = load_data()
     df = compute_breakeven(df)
     print_summary(df)
-    plot_cumulative(df)
+    plot_breakeven_bars(df)

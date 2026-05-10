@@ -3,7 +3,18 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import seaborn as sns
+
+mpl.rcParams.update({
+    "font.family":       "serif",
+    "font.serif":        ["Palatino Linotype", "Palatino", "Book Antiqua", "DejaVu Serif"],
+    "axes.titlesize":    11,
+    "axes.labelsize":    10,
+    "xtick.labelsize":    9,
+    "ytick.labelsize":    9,
+    "legend.fontsize":    9,
+})
 from pathlib import Path
 from scipy.interpolate import make_interp_spline
 from scipy.optimize import brentq
@@ -13,7 +24,17 @@ RESULTS_DIR = BASE_DIR / "results"
 PLOTS_DIR = Path(__file__).parent
 
 MODEL_ORDER = ["LogisticRegression", "RandomForest", "XGBoost", "XGBoost_GPU", "MLP_PyTorch"]
-MODEL_PALETTE = dict(zip(MODEL_ORDER, sns.color_palette("tab10", len(MODEL_ORDER))))
+MODEL_PALETTE = {
+    "LogisticRegression": (123/255, 167/255, 188/255),  # clrLR
+    "RandomForest":       (212/255, 149/255, 106/255),  # clrRF
+    "XGBoost":            (130/255, 185/255, 154/255),  # clrXC
+    "XGBoost_GPU":        (192/255, 112/255, 112/255),  # clrXG
+    "MLP_PyTorch":        (155/255, 135/255, 181/255),  # clrML
+}
+METHOD_PALETTE = {
+    "HardwareMonitor (corrected)": ( 90/255, 140/255, 170/255),
+    "CodeCarbon":                  (210/255, 175/255, 130/255),
+}
 
 df_results = pd.read_csv(RESULTS_DIR / "results.csv")
 df_inf = pd.read_csv(RESULTS_DIR / "inference_time.csv")
@@ -114,7 +135,7 @@ for ds, key in zip(["wine", "credit", "higgs"], ["carb_wine", "carb_credit", "ca
                 palette=MODEL_PALETTE, ax=axes[key], dodge=False)
     axes[key].set_title(f"EWF1: {ds}")
     axes[key].set_xlabel("")
-    axes[key].set_ylim(0, 1.25)
+    axes[key].set_ylim(0, 1.1)
     axes[key].tick_params(axis="x", rotation=45)
 
 for name, ax in axes.items():
@@ -123,55 +144,71 @@ for name, ax in axes.items():
         ax.bar_label(container, labels=labels, padding=6, fontsize=8)
     if ax.get_legend():
         ax.get_legend().remove()
+    ylo, yhi = ax.get_ylim()
+    if ax.get_yscale() == "log":
+        ax.set_ylim(bottom=ylo, top=yhi * 2)
+    
 
 handles, labels = axes["emissions"].get_legend_handles_labels()
 fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.94),
            ncol=5, fontsize=11)
 plt.tight_layout(rect=[0, 0, 1, 0.92])
-plt.savefig(PLOTS_DIR / "vergleich.png", dpi=150, bbox_inches="tight")
-print("Saved: results/vergleich.png")
+plt.savefig(PLOTS_DIR / "vergleich.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/vergleich.pdf")
 plt.close()
 
 
-# ── Plot 2: CodeCarbon vs. HardwareMonitor (neue RQ) ─────────────────────────
+# ── Plot 2: CodeCarbon vs. HardwareMonitor — Underestimation Factor ──────────
 
 cc_cols = ["co2eq_codecarbon_kg", "cpu_power_hw_w"]
 if all(c in df.columns for c in cc_cols):
-    df_melt = df[["model", "dataset", "co2eq_kg", "co2eq_codecarbon_kg"]].copy()
-    df_melt = df_melt.rename(columns={
-        "co2eq_kg": "HardwareMonitor (corrected)",
-        "co2eq_codecarbon_kg": "CodeCarbon",
-    })
-    df_melt = df_melt.melt(
-        id_vars=["model", "dataset"],
-        var_name="method",
-        value_name="co2_kg",
-    )
+    DATASET_PALETTE = {
+        "wine":   (123/255, 167/255, 188/255),  # clrLR
+        "credit": (212/255, 149/255, 106/255),  # clrRF
+        "higgs":  (130/255, 185/255, 154/255),  # clrXC
+    }
+    MODEL_LABELS = {
+        "LogisticRegression": "LR",
+        "RandomForest":       "RF",
+        "XGBoost":            "XGB",
+        "XGBoost_GPU":        "XGB-GPU",
+        "MLP_PyTorch":        "MLP",
+    }
 
-    datasets = ["wine", "credit", "higgs"]
-    fig, axes = plt.subplots(1, len(datasets), figsize=(16, 5), sharey=False)
-    fig.suptitle("CO₂ Estimate: CodeCarbon vs. HardwareMonitor-corrected", fontsize=13, fontweight="bold")
+    df_ratio = df[["model", "dataset", "co2eq_kg", "co2eq_codecarbon_kg"]].copy()
+    df_ratio = df_ratio[df_ratio["co2eq_codecarbon_kg"] > 0].copy()
+    df_ratio["factor"] = df_ratio["co2eq_kg"] / df_ratio["co2eq_codecarbon_kg"]
 
-    for ax, ds in zip(axes, datasets):
-        subset = df_melt[df_melt["dataset"] == ds]
-        if subset.empty:
-            ax.set_visible(False)
-            continue
-        models_in_ds = [m for m in MODEL_ORDER if m in subset["model"].values]
-        sns.barplot(data=subset, x="model", y="co2_kg", hue="method",
-                    order=models_in_ds, errorbar=None, ax=ax)
-        ax.set_title(ds.capitalize())
-        ax.set_xlabel("")
-        ax.set_ylabel("CO₂ (kg)" if ds == "wine" else "")
-        ax.tick_params(axis="x", rotation=30)
-        if ax.get_legend():
-            ax.get_legend().remove()
+    datasets_order = [d for d in ["wine", "credit", "higgs"] if d in df_ratio["dataset"].values]
+    models_in_data = [m for m in MODEL_ORDER if m in df_ratio["model"].values]
 
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper right", fontsize=10)
+    x = np.arange(len(datasets_order))
+    n = len(models_in_data)
+    width = 0.15
+    offsets = np.linspace(-(n - 1) / 2, (n - 1) / 2, n) * width
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    fig.suptitle("CodeCarbon Underestimation Factor (HW-corrected / CodeCarbon)",
+                 fontsize=13, fontweight="bold")
+
+    for offset, model in zip(offsets, models_in_data):
+        subset = df_ratio[df_ratio["model"] == model].set_index("dataset")
+        vals = [subset.loc[ds, "factor"] if ds in subset.index else np.nan
+                for ds in datasets_order]
+        ax.bar(x + offset, vals, width=width, label=MODEL_LABELS[model],
+               color=MODEL_PALETTE[model])
+
+    ax.set_xticks(x)
+    ax.set_xticklabels([d.capitalize() for d in datasets_order], fontsize=11)
+    ax.set_ylabel("Underestimation Factor (HW / CC)", fontsize=10)
+    ax.set_ylim(1.0, 2.85)
+    ax.axhline(1.0, color="red", linewidth=0.8, linestyle="--", alpha=0.6)
+    ax.yaxis.grid(True, linestyle="--", alpha=0.4)
+    ax.set_axisbelow(True)
+    ax.legend(fontsize=9, ncol=2)
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "codecarbon_vs_hw.png", dpi=150, bbox_inches="tight")
-    print("Saved: results/codecarbon_vs_hw.png")
+    plt.savefig(PLOTS_DIR / "codecarbon_vs_hw.pdf", bbox_inches="tight")
+    print("Saved: analysis/plots/codecarbon_vs_hw.pdf")
     plt.close()
 else:
     print("Skipping CodeCarbon vs. HardwareMonitor plot — columns not found.")
@@ -186,15 +223,16 @@ if not df_xgb.empty:
     xgb_kwargs = dict(hue="model", hue_order=["XGBoost", "XGBoost_GPU"],
                       palette=XGB_PALETTE, errorbar=None)
 
-    fig, axes = plt.subplots(1, 4, figsize=(16, 5))
-    axes = dict(zip(["co2", "time", "acc", "inf"], axes))
-    fig.suptitle("XGBoost: CPU vs. GPU", fontsize=13, fontweight="bold")
+    fig, axes_arr = plt.subplots(2, 2, figsize=(10, 8))
+    axes = {"co2": axes_arr[0, 0], "time": axes_arr[0, 1],
+            "acc": axes_arr[1, 0], "inf":  axes_arr[1, 1]}
+    fig.suptitle("XGBoost: CPU vs. GPU", fontweight="bold")
 
     metrics = [
-        ("co2eq_kg",        "co2", "CO₂ (kg, log)",          True),
-        ("training_time_s", "time","Training Time (s, log)",  True),
-        ("accuracy",        "acc", "Accuracy",                False),
-        ("inference_time",  "inf", "Inference Time (s, log)", True),
+        ("co2eq_kg",        "co2", r"CO$_2$ (kg)",          True),
+        ("training_time_s", "time", "Training Time (s)",     True),
+        ("accuracy",        "acc",  "Accuracy",              False),
+        ("inference_time",  "inf",  "Inference Time (s)",    False),
     ]
 
     for col, key, ylabel, log in metrics:
@@ -210,13 +248,20 @@ if not df_xgb.empty:
             ax.bar_label(container, labels=labels, padding=4, fontsize=8)
         if ax.get_legend():
             ax.get_legend().remove()
+        ylo, yhi = ax.get_ylim()
+        if ax.get_yscale() == "log":
+            ax.set_ylim(bottom=ylo, top=yhi * 2)
+        elif key == "acc":
+            ax.set_ylim(top=1.15)
+        elif key == "inf":
+            ax.set_ylim(top=yhi * 1.1)
 
     handles, labels = axes["co2"].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.98),
-               ncol=2, fontsize=10)
-    plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "xgb_cpu_vs_gpu.png", dpi=150, bbox_inches="tight")
-    print("Saved: results/xgb_cpu_vs_gpu.png")
+    fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.93),
+               ncol=2, frameon=True)
+    plt.tight_layout(rect=[0, 0, 1, 0.93])
+    plt.savefig(PLOTS_DIR / "xgb_cpu_vs_gpu.pdf", bbox_inches="tight")
+    print("Saved: analysis/plots/xgb_cpu_vs_gpu.pdf")
     plt.close()
 else:
     print("Skipping XGBoost CPU vs GPU plot — no data found.")
@@ -284,11 +329,11 @@ if len(common_sub) >= 3:
     ax.set_ylabel("CO₂ (kg)")
     ax.legend(fontsize=9)
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "xgb_breakeven_higgs.png", dpi=150, bbox_inches="tight")
-    print("Saved: analysis/plots/xgb_breakeven_higgs.png")
+    plt.savefig(PLOTS_DIR / "xgb_breakeven_higgs.pdf", bbox_inches="tight")
+    print("Saved: analysis/plots/xgb_breakeven_higgs.pdf")
     plt.close()
 else:
-    print(f"Skipping Higgs break-even plot — need ≥3 common nrows, got {len(common_sub)}.")
+    print(f"Skipping Higgs break-even plot -- need >=3 common nrows, got {len(common_sub)}.")
     print("  Run run_higgs_subsets.py first to collect subset data.")
 
 
@@ -330,11 +375,11 @@ if len(scaling_models) >= 2 and df_scaling["nrows_int"].nunique() >= 3:
     fig.legend(handles=handles, loc="lower center", ncol=len(scaling_models),
                bbox_to_anchor=(0.5, -0.05), fontsize=9)
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "scaling_higgs.png", dpi=150, bbox_inches="tight")
-    print("Saved: analysis/plots/scaling_higgs.png")
+    plt.savefig(PLOTS_DIR / "scaling_higgs.pdf", bbox_inches="tight")
+    print("Saved: analysis/plots/scaling_higgs.pdf")
     plt.close()
 else:
-    print(f"Skipping scaling plot — need ≥2 models and ≥3 nrows, got {len(scaling_models)} models / {df_scaling['nrows_int'].nunique() if not df_scaling.empty else 0} nrows.")
+    print(f"Skipping scaling plot -- need >=2 models and >=3 nrows, got {len(scaling_models)} models / {df_scaling['nrows_int'].nunique() if not df_scaling.empty else 0} nrows.")
     print("  Run run_scaling_subsets.py first.")
 
 
@@ -389,9 +434,9 @@ if not mlp_var.empty:
     axes[1, 1].legend(title="Depth", fontsize=8)
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
-    plt.savefig(PLOTS_DIR / "mlp_variation.png", dpi=150, bbox_inches="tight")
-    print("Saved: analysis/plots/mlp_variation.png")
+    plt.savefig(PLOTS_DIR / "mlp_variation.pdf", bbox_inches="tight")
+    print("Saved: analysis/plots/mlp_variation.pdf")
     plt.close()
 else:
-    print("Skipping MLP variation plot — no MLP_DxW rows in results.csv.")
+    print("Skipping MLP variation plot -- no MLP_DxW rows in results.csv.")
     print("  Run run_mlp_variation.py first.")

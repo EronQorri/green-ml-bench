@@ -72,15 +72,15 @@ Results are appended to `results/results.csv` (never overwritten — check for d
 
 ### Model comparison
 
-![Model comparison](analysis/plots/vergleich.png)
+[Model comparison (PDF)](analysis/plots/vergleich.pdf)
 
 ### CodeCarbon vs hardware measurement
 
-![CodeCarbon vs HW](analysis/plots/codecarbon_vs_hw.png)
+[CodeCarbon vs HW (PDF)](analysis/plots/codecarbon_vs_hw.pdf)
 
 ### XGBoost CPU vs GPU
 
-![XGBoost CPU vs GPU](analysis/plots/xgb_cpu_vs_gpu.png)
+[XGBoost CPU vs GPU (PDF)](analysis/plots/xgb_cpu_vs_gpu.pdf)
 
 ### XGBoost CPU/GPU CO₂ break-even (HIGGS scaling)
 
