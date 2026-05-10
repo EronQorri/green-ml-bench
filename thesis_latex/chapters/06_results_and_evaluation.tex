@@ -1,17 +1,9 @@
-<<<<<<< HEAD
 \chapter{Results}
-=======
-\chapter{Results and Discussion}
->>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \label{results}
 
 This chapter reports the empirical results of all experiments conducted in this study. It covers the main cross-dataset benchmark across all model and dataset combinations, the XGBoost CPU versus GPU comparison, the HIGGS scaling analysis, the MLP architecture variation, the carbon intensity analysis, and the lifecycle break-even analysis. A brief section on measurement validation precedes the benchmark results to establish the reliability of the corrected CO\textsubscript{2} values used throughout.
 
 % ── Measurement Validation ─────────────────────────────────────────────────────
-<<<<<<< HEAD
-=======
-\clearpage
->>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{Emissions Measurement Validation}
 \label{sec:results_measurement}
 
@@ -19,11 +11,7 @@ Before presenting the benchmark results it is worth establishing the reliability
 
 \begin{figure}[htbp]
 \centering
-<<<<<<< HEAD
 \includegraphics[width=\linewidth]{codecarbon_vs_hw.pdf}
-=======
-\includegraphics[width=0.85\linewidth]{codecarbon_vs_hw.pdf}
->>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \caption{CodeCarbon underestimation factor (hardware-corrected\,/\,CodeCarbon) per model and dataset. All values exceed~1, confirming systematic undercounting. Higher factors for Wine and Credit reflect CodeCarbon's TDP-based CPU estimation being least accurate on short training runs; RF has no HIGGS measurement.}
 \label{fig:codecarbon_vs_hw}
 \end{figure}
@@ -32,10 +20,6 @@ Before presenting the benchmark results it is worth establishing the reliability
 
 
 % ── Tuning Overhead ────────────────────────────────────────────────────────────
-<<<<<<< HEAD
-=======
-\clearpage
->>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{Hyperparameter Tuning Overhead}
 \label{sec:results_tuning}
 
@@ -73,10 +57,6 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── Main Benchmark ─────────────────────────────────────────────────────────────
-<<<<<<< HEAD
-=======
-\clearpage
->>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{Main Cross-Dataset Benchmark}
 \label{sec:results_main}
 
@@ -112,10 +92,6 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── HIGGS Scaling ──────────────────────────────────────────────────────────────
-<<<<<<< HEAD
-=======
-\clearpage
->>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{HIGGS Dataset Scaling}
 \label{sec:results_scaling}
 
@@ -125,10 +101,6 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── MLP Architecture Variation ─────────────────────────────────────────────────
-<<<<<<< HEAD
-=======
-\clearpage
->>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{MLP Architecture Variation}
 \label{sec:results_mlp_arch}
 
@@ -138,29 +110,6 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── Carbon Intensity Analysis ──────────────────────────────────────────────────
-<<<<<<< HEAD
-\section{Carbon Intensity Analysis}
-\label{sec:results_carbon}
-
-\todo[inline]{Abbildung: Heatmap Stunde x Monat + Counterfactual-Balken je Szenario}
-
-\todo[inline]{Zahlen: Bandbreite der counterfactuellen Emissions je Modell und Extremszenarien (Summer midday vs. Winter evening)}
-
-
-% ── Lifecycle Break-Even ───────────────────────────────────────────────────────
-\section{Lifecycle Break-Even Analysis}
-\label{sec:results_lifecycle}
-
-\Cref{fig:lifecycle_breakeven} shows for each model-dataset combination the number of predictions at which cumulative inference CO\textsubscript{2} surpasses the one-time training footprint.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\linewidth]{lifecycle_breakeven.pdf}
-\caption{Break-even number of predictions at which cumulative inference CO\textsubscript{2} emissions surpass the one-time training footprint (log scale).}
-\label{fig:lifecycle_breakeven}
-\end{figure}
-
-=======
 \clearpage
 \section{Carbon Intensity Analysis}
 \label{sec:results_carbon}
@@ -267,5 +216,4 @@ At that scale, scheduling is no longer a marginal consideration but a first-orde
 \label{fig:lifecycle_breakeven}
 \end{figure}
 
->>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \todo[inline]{Zahlen nennen: Break-even Punkte je Modell und Dataset. LR vs. MLP Kontrast besonders relevant.}
