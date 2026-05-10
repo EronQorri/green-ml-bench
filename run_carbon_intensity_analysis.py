@@ -70,7 +70,7 @@ SCENARIO_LABELS = {
 }
 
 # Reduced set for the per-run plot
-PLOT_SCENARIOS = ["static_codecarbon", "year_mean", "year_best_hour", "year_worst_hour"]
+PLOT_SCENARIOS = ["static_codecarbon", "summer_mean", "winter_mean", "year_best_hour", "year_worst_hour"]
 
 
 # ── 1. Fetch (chunked + cached) ───────────────────────────────────────────────
@@ -189,28 +189,40 @@ def plot_scenario_intensities(scenarios):
     values = [scenarios[k] for k in keys]
     static = scenarios["static_codecarbon"]
 
+    # Muted palette — shared keys match scenario_per_run exactly
+    palette = {
+        "static_codecarbon":   "#888888",
+        "year_mean":           "#A09880",
+        "year_best_hour":      "#82B99A",
+        "year_worst_hour":     "#C07070",
+        "winter_mean":         "#7BA7BC",
+        "summer_mean":         "#C9B49A",
+        "summer_midday_mean":  "#D4C088",
+        "winter_evening_mean": "#4A7090",
+    }
+    colors = [palette[k] for k in keys]
+
     fig, ax = plt.subplots(figsize=(10, 5))
-    colors = ["#888"] + ["#3b82f6"] * (len(keys) - 1)
-    bars = ax.bar(labels, values, color=colors)
-    ax.axhline(static, color="#ef4444", linestyle="--", linewidth=1,
-               label=f"Static = {static:.0f} gCO₂/kWh")
+    bars = ax.bar(labels, values, color=colors, width=0.6)
+    ax.axhline(static, color="#888888", linestyle="--", linewidth=1)
     for bar, v in zip(bars, values):
-        ax.text(bar.get_x() + bar.get_width() / 2, v, f"{v:.0f}",
-                ha="center", va="bottom", fontsize=8)
-    ax.set_ylim(top=max(values) * 1.2)
-    ax.set_ylabel("Carbon intensity (gCO₂/kWh)")
-    ax.set_title(f"Scenario carbon intensities — Germany {START.year}/{END.year - 1}")
-    ax.tick_params(axis="x", rotation=25)
-    ax.legend()
+        ax.text(bar.get_x() + bar.get_width() / 2, v + 5, f"{v:.0f}",
+                ha="center", va="bottom", fontsize=9)
+    ax.set_ylim(top=max(values) * 1.18)
+    ax.set_ylabel("Carbon intensity (gCO₂/kWh)", fontsize=11)
+    ax.set_title(f"Grid carbon intensity per timing scenario — Germany {START.year}/{END.year - 1}",
+                 fontsize=11)
+    ax.tick_params(axis="x", labelsize=10, rotation=20)
+    ax.tick_params(axis="y", labelsize=9)
     plt.tight_layout()
     plt.savefig(SCENARIO_INTENSITY_PLOT, bbox_inches="tight")
     plt.close()
     print(f"Saved: {SCENARIO_INTENSITY_PLOT}")
 
 
-# ── 6. Plot: per-run CO2 across scenarios ────────────────────────────────────
+# ── 6. Plot: CO2 per dataset, averaged over models, across scenarios ──────────
 
-def plot_scenario_per_run(cf):
+def plot_scenario_per_run(cf, scenarios):
     if cf is None or cf.empty:
         return
 
@@ -220,26 +232,39 @@ def plot_scenario_per_run(cf):
     if cf.empty:
         return
 
-    cf["run"] = cf["model"] + " · " + cf["dataset"]
-    cf = cf.sort_values(["dataset", "model"])
+    dataset_order  = ["wine", "credit", "higgs"]
+    dataset_labels = {"wine": "Wine", "credit": "Credit Card", "higgs": "HIGGS"}
+    groups = [d for d in dataset_order if d in cf["dataset"].unique()]
 
-    runs = cf["run"].tolist()
-    n_scen = len(keys)
-    bar_w = 0.85 / n_scen
-    cmap = plt.get_cmap("viridis", n_scen)
+    # The % deviation from static is identical for every run/dataset — it is
+    # purely the ratio of intensity factors. One bar per scenario is enough.
+    # static, summer mean, winter mean, best hour, worst hour
+    colors = ["#888888", "#C9B49A", "#7BA7BC", "#82B99A", "#C07070"]
 
-    fig, ax = plt.subplots(figsize=(max(10, 0.6 * len(runs)), 6))
-    for i, k in enumerate(keys):
-        vals = [cf.loc[cf["run"] == r, f"co2_{k}_kg"].iloc[0] for r in runs]
-        x = np.arange(len(runs)) + (i - n_scen / 2 + 0.5) * bar_w
-        ax.bar(x, vals, width=bar_w, color=cmap(i), label=SCENARIO_LABELS[k])
+    static_intensity = scenarios["static_codecarbon"]
+    labels, values, bar_colors = [], [], []
+    for k, c in zip(keys, colors):
+        labels.append(SCENARIO_LABELS[k])
+        values.append(scenarios[k] / static_intensity * 100)
+        bar_colors.append(c)
 
-    ax.set_xticks(np.arange(len(runs)))
-    ax.set_xticklabels(runs, rotation=35, ha="right", fontsize=9)
-    ax.set_yscale("log")
-    ax.set_ylabel("CO₂ (kg, log)")
-    ax.set_title("Counterfactual CO₂ per training run under timing scenarios")
-    ax.legend(ncol=4, fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.18))
+    fig, ax = plt.subplots(figsize=(9, 5))
+    bars = ax.bar(labels, values, color=bar_colors, width=0.55)
+    ax.axhline(100, color="#888888", linestyle="--", linewidth=1)
+
+    for bar, val in zip(bars, values):
+        sign = "+" if val - 100 > 0 else ""
+        pct_diff = val - 100
+        annotation = "baseline" if pct_diff == 0 else f"{sign}{pct_diff:.0f}%"
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 1.5, annotation,
+                ha="center", va="bottom", fontsize=10, fontweight="bold")
+
+    ax.set_ylabel("CO₂ relative to static CodeCarbon factor (%)", fontsize=11)
+    ax.set_ylim(0, max(values) * 1.2)
+    ax.tick_params(axis="x", labelsize=11)
+    ax.tick_params(axis="y", labelsize=10)
+    ax.set_title("Counterfactual CO₂ under timing scenarios\n"
+                 "(relative to static CodeCarbon assumption = 100%)", fontsize=11)
     plt.tight_layout()
     plt.savefig(SCENARIO_PER_RUN_PLOT, bbox_inches="tight")
     plt.close()
@@ -264,4 +289,4 @@ if __name__ == "__main__":
 
     plot_diurnal_seasonal(df)
     plot_scenario_intensities(scenarios)
-    plot_scenario_per_run(cf)
+    plot_scenario_per_run(cf, scenarios)
