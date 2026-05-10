@@ -15,8 +15,8 @@ from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
 
 
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
-if DATASET == "higgs":
-    print("Skipping Random Forest for Higgs dataset.")
+if DATASET == "higgs" and not os.environ.get("TEST_NROWS"):
+    print("Skipping Random Forest for Higgs dataset (full size — use TEST_NROWS for scaling runs).")
     sys.exit(0)
 
 cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)

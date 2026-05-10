@@ -117,9 +117,14 @@ def run_arch(layer_sizes, X, y, input_dim, num_classes, nrows, device, cv):
     print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
     trained_model = cv_results["estimator"][0]
-    t_inf = time.perf_counter()
-    _ = trained_model.predict(X[:1])
-    inference_time = time.perf_counter() - t_inf
+    single_row = X[:1]
+    trained_model.predict(single_row)  # warmup
+    _times = []
+    for _ in range(100):
+        _t0 = time.perf_counter()
+        trained_model.predict(single_row)
+        _times.append(time.perf_counter() - _t0)
+    inference_time = float(np.median(_times))
 
     save_results(
         model_name, DATASET,

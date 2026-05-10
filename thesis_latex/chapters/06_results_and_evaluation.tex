@@ -1,9 +1,17 @@
+<<<<<<< HEAD
 \chapter{Results}
+=======
+\chapter{Results and Discussion}
+>>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \label{results}
 
 This chapter reports the empirical results of all experiments conducted in this study. It covers the main cross-dataset benchmark across all model and dataset combinations, the XGBoost CPU versus GPU comparison, the HIGGS scaling analysis, the MLP architecture variation, the carbon intensity analysis, and the lifecycle break-even analysis. A brief section on measurement validation precedes the benchmark results to establish the reliability of the corrected CO\textsubscript{2} values used throughout.
 
 % ── Measurement Validation ─────────────────────────────────────────────────────
+<<<<<<< HEAD
+=======
+\clearpage
+>>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{Emissions Measurement Validation}
 \label{sec:results_measurement}
 
@@ -11,7 +19,11 @@ Before presenting the benchmark results it is worth establishing the reliability
 
 \begin{figure}[htbp]
 \centering
+<<<<<<< HEAD
 \includegraphics[width=\linewidth]{codecarbon_vs_hw.pdf}
+=======
+\includegraphics[width=0.85\linewidth]{codecarbon_vs_hw.pdf}
+>>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \caption{CodeCarbon underestimation factor (hardware-corrected\,/\,CodeCarbon) per model and dataset. All values exceed~1, confirming systematic undercounting. Higher factors for Wine and Credit reflect CodeCarbon's TDP-based CPU estimation being least accurate on short training runs; RF has no HIGGS measurement.}
 \label{fig:codecarbon_vs_hw}
 \end{figure}
@@ -20,6 +32,10 @@ Before presenting the benchmark results it is worth establishing the reliability
 
 
 % ── Tuning Overhead ────────────────────────────────────────────────────────────
+<<<<<<< HEAD
+=======
+\clearpage
+>>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{Hyperparameter Tuning Overhead}
 \label{sec:results_tuning}
 
@@ -57,6 +73,10 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── Main Benchmark ─────────────────────────────────────────────────────────────
+<<<<<<< HEAD
+=======
+\clearpage
+>>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{Main Cross-Dataset Benchmark}
 \label{sec:results_main}
 
@@ -75,6 +95,7 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── XGBoost CPU vs GPU ─────────────────────────────────────────────────────────
+\clearpage
 \section{XGBoost: CPU vs.\ GPU}
 \label{sec:results_xgb}
 
@@ -82,7 +103,7 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{xgb_cpu_vs_gpu.pdf}
+\includegraphics[width=0.85\linewidth]{xgb_cpu_vs_gpu.pdf}
 \caption{XGBoost CPU vs.\ GPU across datasets. CO\textsubscript{2} and training time on log scale.}
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
@@ -91,6 +112,10 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── HIGGS Scaling ──────────────────────────────────────────────────────────────
+<<<<<<< HEAD
+=======
+\clearpage
+>>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{HIGGS Dataset Scaling}
 \label{sec:results_scaling}
 
@@ -100,6 +125,10 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── MLP Architecture Variation ─────────────────────────────────────────────────
+<<<<<<< HEAD
+=======
+\clearpage
+>>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \section{MLP Architecture Variation}
 \label{sec:results_mlp_arch}
 
@@ -109,6 +138,7 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 
 % ── Carbon Intensity Analysis ──────────────────────────────────────────────────
+<<<<<<< HEAD
 \section{Carbon Intensity Analysis}
 \label{sec:results_carbon}
 
@@ -130,4 +160,112 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 \label{fig:lifecycle_breakeven}
 \end{figure}
 
+=======
+\clearpage
+\section{Carbon Intensity Analysis}
+\label{sec:results_carbon}
+
+The analyses conducted in the preceding sections treat CO\textsubscript{2} emissions as a fixed function of the training run: given the same model, dataset, and hardware, the reported figure does not change.
+This is a consequence of how CodeCarbon works: it converts measured energy into CO\textsubscript{2} using a static intensity factor of 381\,gCO\textsubscript{2}eq/kWh for Germany, a calculated average that cannot reflect when a run actually takes place.
+The German grid, however, draws on a fundamentally different fuel mix in January than in July, and during peak evening demand than during solar-rich midday hours, a structure visible directly in the hourly ElectricityMaps data used in this analysis.
+If this temporal variation is large enough, then the timing of a training run is itself a meaningful ecological decision, one that requires no changes to code, hardware, or model architecture.
+This section evaluates that hypothesis directly by counterfactually re-assigning the energy of every training run in this study to different timing scenarios derived from one year of hourly ElectricityMaps data, as described in \Cref{design_carbon_intensity}.
+
+The first result is somewhat reassuring for the existing measurements: as shown in \Cref{fig:scenario_intensities}, the static CodeCarbon factor of 381\,gCO\textsubscript{2}/kWh is a defensible approximation of the annual mean, which the empirical data places at 341\,gCO\textsubscript{2}/kWh.
+A workload executed at a uniformly random point during the year would therefore be assigned only a modest systematic error by CodeCarbon.
+The more important finding is the spread around that average.
+The best recorded hour of 2024 reaches 115\,gCO\textsubscript{2}/kWh, and the worst reaches 658\,gCO\textsubscript{2}/kWh, a factor of 5.7$\times$ between two hours.
+The absolute extremes are not practically exploitable, since no practitioner can guarantee their run coincides with the single cleanest or dirtiest hour of the year.
+The structurally informed seasonal-diurnal combinations are the actionable range: summer midday hours average 193\,gCO\textsubscript{2}/kWh while winter evening hours average 389\,gCO\textsubscript{2}/kWh, a factor of two achievable through deliberate scheduling alone.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{scenario_intensities.pdf}
+\caption{Carbon intensity (gCO\textsubscript{2}/kWh) for eight timing scenarios}
+\label{fig:scenario_intensities}
+\end{figure}
+
+Because training energy is a fixed physical quantity for any given run, every percentage difference in grid intensity translates directly into the same percentage difference in CO\textsubscript{2}.
+\Cref{fig:scenario_per_run} expresses this proportionality relative to the static CodeCarbon baseline, making the stakes concrete.
+Scheduling during summer mean conditions would reduce the reported emissions of this study by approximately 20\,\% compared to the static estimate, requiring no modification to the experimental setup whatsoever.
+The best-hour scenario pushes this reduction to 70\,\%, while the worst-hour scenario reverses it into a 73\,\% increase.
+These percentages are identical for every model and dataset, because the intensity factor scales uniformly; what differs is the absolute magnitude of the effect.
+For lightweight runs such as Logistic Regression on Wine, the difference between any two scenarios is negligible in absolute terms.
+For the MLP trained on HIGGS, the gap between best-hour and worst-hour timing amounts to approximately 208\,g\,CO\textsubscript{2}, a quantity that exceeds the total training footprint of every Wine and Credit run in this study combined.
+This asymmetry reveals an important practical principle: grid-aware scheduling is most valuable precisely where algorithmic and hardware efficiency decisions also matter most, namely on large, compute-intensive workloads where the absolute energy expenditure is high enough for timing to make a meaningful difference.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{scenario_per_run.pdf}
+\caption{Counterfactual CO\textsubscript{2} relative to the static CodeCarbon baseline (= 100\,\%)}
+\label{fig:scenario_per_run}
+\end{figure}
+
+To understand why the diurnal dimension matters as much as the seasonal one, consider the solar duck curve visible in \Cref{fig:carbon_intensity_july_day} for 24 July 2024.
+Carbon intensity declines from roughly 300\,gCO\textsubscript{2}/kWh in the morning as solar generation ramps up, reaches a minimum of 163\,gCO\textsubscript{2}/kWh near midday, then recovers sharply to a peak of 461\,gCO\textsubscript{2}/kWh once solar output falls in the evening.
+The static CodeCarbon factor of 381\,gCO\textsubscript{2}/kWh intersects this curve only during the early morning and late evening hours, the two dirtiest windows of the day on a summer date with strong solar generation.
+During the core daylight hours, the static factor overestimates the actual intensity by up to a factor of two.
+This is not an anomaly specific to this particular date: it is the structural consequence of Germany's growing solar capacity, which consistently depresses midday intensity throughout the summer months.
+A practitioner who runs training jobs during office hours on summer days is inadvertently benefiting from this effect, while their CodeCarbon reports attribute a higher carbon cost than actually occurred.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{carbon_intensity_july_day.pdf}
+\caption{Hourly carbon intensity on 24 July 2024 in Germany}
+\label{fig:carbon_intensity_july_day}
+\end{figure}
+
+The seasonal dimension adds a second layer of variation on top of the diurnal one.
+The ten-day windows shown in \Cref{fig:carbon_intensity_seasonal} reveal that winter and autumn both sit above the static CodeCarbon factor on average, meaning CodeCarbon systematically \textit{underestimates} winter emissions rather than overestimating them.
+The winter window averages 474\,gCO\textsubscript{2}/kWh, nearly 25\,\% above the static factor, while spring (347\,gCO\textsubscript{2}/kWh) and summer (361\,gCO\textsubscript{2}/kWh) fall meaningfully below it.
+This directional asymmetry matters for transparency: the runs in this study were conducted during periods of varying grid intensity, and the static factor provides no indication of whether a given run's reported footprint is an over- or underestimate.
+An equally important finding is that within-season variance is large enough to undermine coarse seasonal scheduling as a reliable strategy.
+The winter window alone spans from 311 to 614\,gCO\textsubscript{2}/kWh across ten consecutive days, a range wider than the gap between winter and summer means.
+A practitioner who decides to schedule training in July rather than January improves their expected footprint, but cannot assume low intensity on any given July day without consulting real-time grid data.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{carbon_intensity_seasonal.pdf}
+\caption{Hourly carbon intensity for representative ten-day windows per season, Germany 2025}
+\label{fig:carbon_intensity_seasonal}
+\end{figure}
+
+The year-long heatmap in \Cref{fig:diurnal_seasonal} brings both dimensions together and makes their joint structure immediately legible.
+The lowest-intensity region of the entire year is summer midday: a consistent band of green running from May through August between approximately 10:00 and 15:00, reflecting the hours when solar generation is both abundant and at its seasonal peak.
+The highest-intensity region is winter evenings: the band of red and orange concentrated between 17:00 and 21:00 from November through February, when solar output has already dropped to near zero and space heating drives gas and coal generation.
+What the heatmap makes clear is that these two extremes are not separated by chance; they are structurally determined by the interaction of Germany's solar build-out with the seasonal daylight cycle and heating demand patterns.
+A practitioner optimizing scheduling on local infrastructure is therefore not searching for a random low-intensity moment; they are navigating a predictable structure where the best and worst times are largely known in advance.
+The summer-midday to winter-evening gradient spans the full two-to-one ratio identified earlier, and represents the maximum emissions reduction achievable through scheduling on the German grid without any hardware or algorithmic changes.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{diurnal_seasonal.pdf}
+\caption{Mean carbon intensity (gCO\textsubscript{2}/kWh) by hour of day and calendar month for the German grid (2024), derived from 8{,}760 hourly observations.}
+\label{fig:diurnal_seasonal}
+\end{figure}
+
+Taken together, these findings introduce a dimension of ecological efficiency that the main benchmark cannot capture: timing.
+The static CodeCarbon factor is not grossly wrong as an annual average, but it flattens a distribution that is wide enough to change the practical interpretation of the results.
+The emissions reported in this study should therefore be understood as contingent on when the runs were executed, not as intrinsic properties of the algorithms.
+For small datasets such as Wine and Credit, this contingency is inconsequential in absolute terms, as the runs are too cheap for timing to shift the total by a meaningful amount.
+For large-scale workloads such as the MLP on HIGGS, grid-aware scheduling would have reduced the training footprint by the equivalent of the entire Credit dataset's combined model training budget.
+At that scale, scheduling is no longer a marginal consideration but a first-order efficiency lever, comparable in impact to moderate algorithmic improvements, and achievable without touching a single line of model code.
+
+
+
+% ── Lifecycle Break-Even ───────────────────────────────────────────────────────
+\clearpage
+\section{Lifecycle Break-Even Analysis}
+\label{sec:results_lifecycle}
+
+\Cref{fig:lifecycle_breakeven} shows for each model-dataset combination the number of predictions at which cumulative inference CO\textsubscript{2} surpasses the one-time training footprint.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\linewidth]{lifecycle_breakeven.pdf}
+\caption{Break-even number of predictions at which cumulative inference CO\textsubscript{2} emissions surpass the one-time training footprint (log scale).}
+\label{fig:lifecycle_breakeven}
+\end{figure}
+
+>>>>>>> eb7ec2eff47948d67d646b2559c580b631dc2dfe
 \todo[inline]{Zahlen nennen: Break-even Punkte je Modell und Dataset. LR vs. MLP Kontrast besonders relevant.}
