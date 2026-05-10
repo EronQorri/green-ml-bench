@@ -4,7 +4,7 @@ run_scaling_all_models.py — All models on Higgs subsets for dataset-size scali
 Addresses RQ: "How does reducing the number of training instances on large datasets
 affect model accuracy and energy consumption across different algorithms?"
 
-Runs all models (except RandomForest which skips Higgs) on 5 Higgs subset sizes.
+Runs all models on Higgs subset sizes. RandomForest is capped at 500k rows.
 Uses the same hyperparameters as the main run (from best_params.json).
 
 Usage:
@@ -26,13 +26,16 @@ NTFY_CHANNEL = "eron_thesis_higgs_run_123"
 
 NROWS_VALUES = [1_000, 10_000, 100_000, 500_000, 1_000_000, 5_000_000, 11_000_000]
 
-# RandomForest skips Higgs internally — excluded here
 MODEL_SCRIPTS = [
     "log_regression.py",
+    "random_forest.py",
     "xgboost_cpu.py",
     "xgboost_gpu.py",
     "mlp.py",
 ]
+
+# RF is too slow beyond 500k rows — skip it for larger subsets
+RF_MAX_NROWS = 500_000
 
 
 def _notify(title, body, priority="default"):
@@ -80,7 +83,8 @@ for nrows in NROWS_VALUES:
     print(f"\n{'─'*60}")
     print(f"nrows = {nrows:,}")
     print(f"{'─'*60}")
-    for script_name in MODEL_SCRIPTS:
+    scripts_this_round = [s for s in MODEL_SCRIPTS if not (s == "random_forest.py" and nrows > RF_MAX_NROWS)]
+    for script_name in scripts_this_round:
         script_path = MODELS_DIR / script_name
         ok, elapsed = _run(script_path, nrows)
         if not ok:
