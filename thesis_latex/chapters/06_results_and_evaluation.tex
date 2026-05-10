@@ -1,8 +1,66 @@
-\chapter{Results and Evaluation}
+\chapter{Results}
 \label{results}
 
-\section{Overall Model Comparison}
-\label{sec:results_overview}
+This chapter reports the empirical results of all experiments conducted in this study. It covers the main cross-dataset benchmark across all model and dataset combinations, the XGBoost CPU versus GPU comparison, the HIGGS scaling analysis, the MLP architecture variation, the carbon intensity analysis, and the lifecycle break-even analysis. A brief section on measurement validation precedes the benchmark results to establish the reliability of the corrected CO\textsubscript{2} values used throughout.
+
+% ── Measurement Validation ─────────────────────────────────────────────────────
+\section{Emissions Measurement Validation}
+\label{sec:results_measurement}
+
+Before presenting the benchmark results it is worth establishing the reliability of the emission values. As described in \Cref{implementation_emissions}, CodeCarbon's TDP-based CPU estimate was replaced by direct hardware-sensor readings. \Cref{fig:codecarbon_vs_hw} shows the ratio between the two for every model-dataset combination.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{codecarbon_vs_hw.pdf}
+\caption{CodeCarbon underestimation factor (hardware-corrected\,/\,CodeCarbon) per model and dataset. All values exceed~1, confirming systematic undercounting. Higher factors for Wine and Credit reflect CodeCarbon's TDP-based CPU estimation being least accurate on short training runs; RF has no HIGGS measurement.}
+\label{fig:codecarbon_vs_hw}
+\end{figure}
+
+\todo[inline]{Zahlen aus Figure kurz benennen: z.B. Median-Faktor, Min/Max}
+
+
+% ── Tuning Overhead ────────────────────────────────────────────────────────────
+\section{Hyperparameter Tuning Overhead}
+\label{sec:results_tuning}
+
+Tuning itself consumes energy that forms part of the total experimental budget. \Cref{tab:tuning_overhead} shows the CO\textsubscript{2} cost and duration of every Optuna study (40 trials each), together with the best weighted F1 achieved.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Hyperparameter tuning overhead per model and dataset. Each run comprised 40 Optuna
+           trials optimising weighted F$_1$. CO$_2$ was measured with the hardware-corrected
+           tracker; duration covers the full \texttt{study.optimize} call. Random Forest was
+           not tuned on HIGGS; literature defaults were used instead.}
+  \label{tab:tuning_overhead}
+  \begin{tabular}{llrrr}
+    \toprule
+    Dataset & Model         & CO$_2$ (g) & Duration   & Best F$_1$ \\
+    \midrule
+    \multirow{3}{*}{Wine}
+      & Random Forest &  0.48 &      77\,s & 0.9831 \\
+      & XGBoost       &  1.04 &  2.1\,min  & 0.9888 \\
+      & MLP           &  0.39 &      46\,s & 0.9943 \\
+    \midrule
+    \multirow{3}{*}{Credit}
+      & Random Forest & 10.51 & 13.6\,min  & 0.8001 \\
+      & XGBoost       &  1.08 &  2.2\,min  & 0.8008 \\
+      & MLP           &  6.34 & 15.7\,min  & 0.8044 \\
+    \midrule
+    \multirow{2}{*}{HIGGS}
+      & XGBoost       &  21.9 &   50\,min  & 0.7597 \\
+      & \textbf{MLP}  & \textbf{2\,149} & \textbf{95.4\,h} & \textbf{0.7873} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\todo[inline]{Werte nach finalem Run aktualisieren}
+
+
+% ── Main Benchmark ─────────────────────────────────────────────────────────────
+\section{Main Cross-Dataset Benchmark}
+\label{sec:results_main}
+
+\Cref{fig:vergleich} shows the complete benchmark results across all 14 model-dataset combinations. The six panels report CO\textsubscript{2} emissions (corrected), training time, inference latency, accuracy, weighted F1-score, and EWF1.
 
 \begin{sidewaysfigure}[htbp]
 \centering
@@ -11,24 +69,16 @@
 \label{fig:vergleich}
 \end{sidewaysfigure}
 
-\todo{maybe split this up so i dont have to rotate the page}
+\todo[inline]{Kernergebnisse in Prosa: konkrete Zahlen für Accuracy, F1, Emissions je Dataset nennen. Keine Interpretation, nur Fakten: "LR erreicht X auf Wine, RF Y auf Credit, MLP Z auf HIGGS."}
 
-
-\section{Lifecycle Break-Even Analysis}
-\label{sec:results_lifecycle}
-
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\linewidth]{lifecycle_breakeven.pdf}
-\caption{Break-even number of predictions at which cumulative inference CO\textsubscript{2} emissions surpass the one-time training footprint (log scale).}
-\label{fig:lifecycle_breakeven}
-\end{figure}
+\todo{maybe split dashboard figure so page rotation is not needed}
 
 
 % ── XGBoost CPU vs GPU ─────────────────────────────────────────────────────────
 \section{XGBoost: CPU vs.\ GPU}
 \label{sec:results_xgb}
+
+\Cref{fig:xgb_cpu_vs_gpu} compares XGBoost CPU and GPU across all three datasets on CO\textsubscript{2} emissions and training time.
 
 \begin{figure}[htbp]
 \centering
@@ -37,14 +87,47 @@
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
 
+\todo[inline]{Konkrete Zahlen: CPU vs. GPU Emissions und Zeit je Dataset. Wo ist CPU günstiger, wo GPU?}
 
-% ── CodeCarbon vs HardwareMonitor ──────────────────────────────────────────────
-\section{CO\texorpdfstring{\textsubscript{2}}{2} Measurement: CodeCarbon vs.\ HardwareMonitor}
-\label{sec:results_cc_vs_hw}
+
+% ── HIGGS Scaling ──────────────────────────────────────────────────────────────
+\section{HIGGS Dataset Scaling}
+\label{sec:results_scaling}
+
+\todo[inline]{Abbildung: Scaling-Plot (CO2 und F1 über Subset-Größen für LR, XGB-CPU, XGB-GPU, MLP)}
+
+\todo[inline]{Zahlen: Wie skalieren Emissions und F1 mit wachsender Datenmenge? Wo flacht der Accuracy-Gewinn ab?}
+
+
+% ── MLP Architecture Variation ─────────────────────────────────────────────────
+\section{MLP Architecture Variation}
+\label{sec:results_mlp_arch}
+
+\todo[inline]{Abbildung: Heatmap oder Grouped-Bar (Depth x Width vs. CO2 / F1 auf HIGGS)}
+
+\todo[inline]{Zahlen: Wie ändern sich Emissions und F1 mit Tiefe/Breite? Wann hört der Gain auf?}
+
+
+% ── Carbon Intensity Analysis ──────────────────────────────────────────────────
+\section{Carbon Intensity Analysis}
+\label{sec:results_carbon}
+
+\todo[inline]{Abbildung: Heatmap Stunde x Monat + Counterfactual-Balken je Szenario}
+
+\todo[inline]{Zahlen: Bandbreite der counterfactuellen Emissions je Modell und Extremszenarien (Summer midday vs. Winter evening)}
+
+
+% ── Lifecycle Break-Even ───────────────────────────────────────────────────────
+\section{Lifecycle Break-Even Analysis}
+\label{sec:results_lifecycle}
+
+\Cref{fig:lifecycle_breakeven} shows for each model-dataset combination the number of predictions at which cumulative inference CO\textsubscript{2} surpasses the one-time training footprint.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\linewidth]{codecarbon_vs_hw.pdf}
-\caption{CodeCarbon underestimation factor (HW-corrected\,/\,CodeCarbon) per model and dataset. All values exceed~1, confirming systematic undercounting. Higher factors for Wine and Credit reflect CodeCarbon's TDP-based CPU estimation being least accurate on short training runs; RF has no Higgs measurement.}
-\label{fig:codecarbon_vs_hw}
+\includegraphics[width=\linewidth]{lifecycle_breakeven.pdf}
+\caption{Break-even number of predictions at which cumulative inference CO\textsubscript{2} emissions surpass the one-time training footprint (log scale).}
+\label{fig:lifecycle_breakeven}
 \end{figure}
+
+\todo[inline]{Zahlen nennen: Break-even Punkte je Modell und Dataset. LR vs. MLP Kontrast besonders relevant.}

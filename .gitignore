@@ -13,8 +13,6 @@ __pycache__/
 .vscode/
 .idea/
 
-CLAUDE.md
-
 thesis_latex/literature_pdfs/
 
 *.aux
@@ -28,6 +26,7 @@ thesis_latex/literature_pdfs/
 *.blg
 *.run.xml
 *.fdb_latexmk
+*.fls
 *.synctex
 *.synctex.gz
 *.pdfsync
