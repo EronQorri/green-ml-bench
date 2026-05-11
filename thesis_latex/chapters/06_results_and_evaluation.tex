@@ -1,4 +1,4 @@
-\chapter{Results}
+\chapter{Results and Discussion}
 \label{results}
 
 This chapter reports the empirical results of all experiments conducted in this study. It covers the main cross-dataset benchmark across all model and dataset combinations, the XGBoost CPU versus GPU comparison, the HIGGS scaling analysis, the MLP architecture variation, the carbon intensity analysis, and the lifecycle break-even analysis. A brief section on measurement validation precedes the benchmark results to establish the reliability of the corrected CO\textsubscript{2} values used throughout.
@@ -86,6 +86,13 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 \includegraphics[width=0.85\linewidth]{xgb_cpu_vs_gpu.pdf}
 \caption{XGBoost CPU vs.\ GPU across datasets. CO\textsubscript{2} and training time on log scale.}
 \label{fig:xgb_cpu_vs_gpu}
+\end{figure}
+
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\linewidth]{xgb_breakeven_higgs.pdf}
+    \caption{XGBoost break-even point comparison between different subset sizes of the HIGGS dataset.}
 \end{figure}
 
 \todo[inline]{Konkrete Zahlen: CPU vs. GPU Emissions und Zeit je Dataset. Wo ist CPU günstiger, wo GPU?}
