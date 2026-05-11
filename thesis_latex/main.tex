@@ -35,6 +35,8 @@
 \usepackage{titlesec}
 \usepackage{fancyhdr}
 \usepackage{tocloft}
+\usepackage[acronym, toc, nonumberlist]{glossaries}
+\makeglossaries
 
 %%| SETTINGS |%%
 \hypersetup{                                                                        
@@ -78,6 +80,7 @@
 \renewcommand{\cftchapleader}{\bfseries\cftdotfill{\cftdotsep}}
 
 \addbibresource{Document/Bibliography/ref.bib}
+\input{chapters/abbreviations}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -86,6 +89,8 @@
 
 \frontmatter
 \tableofcontents
+\newpage
+\printglossary[type=\acronymtype, title={List of Abbreviations}, toctitle={List of Abbreviations}]
 
 \mainmatter
 

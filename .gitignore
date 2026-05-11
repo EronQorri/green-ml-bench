@@ -37,5 +37,12 @@ _minted*
 *.pyg
 latex.out/
 .pdf
-*.bbl-SAVE-ERROR 
+*.bbl-SAVE-ERROR
 *.bcf-SAVE-ERROR
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.ist
