@@ -156,16 +156,15 @@ To ensure maximum predictive capabilities for the remaining data, the model conf
 \toprule
 Parameter & Wine & Credit \\
 \midrule
-\path{n_estimators} & 221 & 381 \\
-\path{max_depth} & 5 & 9 \\
-\path{min_samples_split} & 8 & 10 \\
-\path{min_samples_leaf} & 3 & 2 \\
+\path{n_estimators} & 250 & 495 \\
+\path{max_depth} & 20 & 20 \\
+\path{min_samples_split} & 15 & 17 \\
+\path{min_samples_leaf} & 6 & 3 \\
 \path{max_features} & \path{sqrt} & \path{None} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\todo[inline]{hier noch die korrekten werte nach dem finalen run eintragen}
 
 \subsection{XGBoost}
 \label{implementation_xgb}
@@ -189,24 +188,40 @@ Parameter & Wine & Credit & HIGGS \\
 \path{objective} & \path{multi:softmax} & \path{binary:logistic} & \path{binary:logistic} \\
 \path{eval_metric} & \path{mlogloss} & \path{logloss} & \path{logloss} \\
 \path{num_class} & 3 & N/A & N/A \\
-\path{n_estimators} & 464 & 108 & 475 \\
-\path{max_depth} & 7 & 3 & 8 \\
-\path{learning_rate} & 0.0139 & 0.2878 & 0.2428 \\
-\path{subsample} & 0.7790 & 0.9640 & 0.7100 \\
-\path{colsample_bytree} & 0.7500 & 0.8430 & 0.9368 \\
-\path{min_child_weight} & 5 & 7 & 2 \\
+\path{n_estimators} & 273 & 452 & 406 \\
+\path{max_depth} & 4 & 3 & 8 \\
+\path{learning_rate} & 0.0801 & 0.0411 & 0.2263 \\
+\path{subsample} & 0.6558 & 0.7319 & 0.8910 \\
+\path{colsample_bytree} & 0.7169 & 0.6901 & 0.8222 \\
+\path{min_child_weight} & 4 & 7 & 3 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\todo[inline]{hier ebenfalls noch korrekte werte aus dem noch laufenden run eintragen}
 
 \subsection{Multilayer Perceptron}
 \label{implementation_mlp}
 
 As discussed in \Cref{design_models}, a Multilayer Perceptron was selected to represent the neural network family. The implementation uses PyTorch as the primary deep-learning framework, combined with the Skorch library. Skorch wraps the PyTorch model in an interface that is fully compatible with the scikit-learn ecosystem. This is necessary because the entire evaluation logic, including cross-validation and pipeline construction, relies heavily on scikit-learn.
 
-A dynamic architecture was chosen to ensure the network structure directly reflects the optimal parameters found during the Optuna tuning process. At runtime, the script reads the best parameter set from a JSON file generated during the tuning phase. It extracts the number of hidden layers via \texttt{n\_layers} and the neuron count for each individual layer via \texttt{layer\_i}. These values are then assembled into a list called \texttt{layer\_sizes}. This list is subsequently passed to the \texttt{MLPModule} class. This class constructs the full network dynamically upon instantiation, making the architecture entirely data-driven.
+A dynamic architecture was chosen to ensure the network structure directly reflects the optimal parameters found during the Optuna tuning process. At runtime, the script reads the best parameter set from a JSON file generated during the tuning phase. It extracts the number of hidden layers via \texttt{n\_layers} and the neuron count for each individual layer via \texttt{layer\_i}. These values are then assembled into a list called \texttt{layer\_sizes}. This list is subsequently passed to the \texttt{MLPModule} class. This class constructs the full network dynamically upon instantiation, making the architecture entirely data-driven. The specific configurations resulting from this process for each dataset are detailed in \Cref{tab:mlp_params}.
+
+\begin{table}[htbp]
+\centering
+\caption{Optimized hyperparameters and dynamic architecture for the Multilayer Perceptron (MLP).}
+\label{tab:mlp_params}
+\begin{tabular}{lccc}
+\toprule
+Parameter & Wine & Credit & HIGGS \\
+\midrule
+\path{n_layers} & 1 & 4 & 3 \\
+\path{Layer Sizes} & [128] & [512, 64, 128, 256] & [512, 256, 512] \\
+\path{dropout_rate} & 0.2936 & 0.3690 & 0.0334 \\
+\path{lr} & 0.0030 & 0.0002 & 0.0077 \\
+\path{batch_size} & 1024 & 1024 & 8192 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 The \texttt{MLPModule} inherits from \texttt{nn.Module} and builds the hidden layers by iterating over the layer size list. Each hidden block consists of \texttt{nn.Linear} followed by \texttt{nn.BatchNorm1d}, a ReLU activation, and a dropout layer (see \Cref{sec:theoretical_mlp} for the theoretical background on these components). After all hidden blocks, a single linear output layer maps to the number of target classes with no activation, since \texttt{CrossEntropyLoss} expects raw logits.
 
