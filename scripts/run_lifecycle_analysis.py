@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 
-BASE_DIR   = Path(__file__).parent
+BASE_DIR   = Path(__file__).parent.parent
 RESULTS    = BASE_DIR / "results" / "results.csv"
 INFERENCE  = BASE_DIR / "results" / "inference_time.csv"
 PLOTS_DIR  = BASE_DIR / "analysis" / "plots"

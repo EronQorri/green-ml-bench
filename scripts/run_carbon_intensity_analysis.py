@@ -36,7 +36,7 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 load_dotenv()
 API_KEY = os.getenv("ELECTRICITYMAPS_API_KEY")
 if not API_KEY:

@@ -19,10 +19,10 @@ import csv
 from datetime import datetime
 from pathlib import Path
 import requests
-sys.path.insert(0, str(Path(__file__).parent / "models"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "models"))
 from power_monitor import CPUPowerMonitor, CARBON_KG_PER_KWH
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 RESULTS_DIR = BASE_DIR / "results"
 TUNE_DIR = BASE_DIR / "models" / "tune"
 MODELS_DIR = BASE_DIR / "models"

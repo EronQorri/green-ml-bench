@@ -83,7 +83,7 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{xgb_cpu_vs_gpu.pdf}
+\includegraphics[width=\linewidth]{xgb_cpu_vs_gpu.pdf}
 \caption{XGBoost CPU vs.\ GPU across datasets. CO\textsubscript{2} and training time on log scale.}
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
@@ -91,7 +91,7 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\linewidth]{xgb_breakeven_higgs.pdf}
+    \includegraphics[width=\linewidth]{xgb_breakeven_higgs.pdf}
     \caption{XGBoost break-even point comparison between different subset sizes of the HIGGS dataset.}
 \end{figure}
 
@@ -101,6 +101,14 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 % ── HIGGS Scaling ──────────────────────────────────────────────────────────────
 \section{HIGGS Dataset Scaling}
 \label{sec:results_scaling}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{scaling_higgs.pdf}
+\caption{All models evaluated on different scales of the HIGGS subsets.}
+\label{fig:scaling_higgs}
+\end{figure}
+
 
 \todo[inline]{Abbildung: Scaling-Plot (CO2 und F1 über Subset-Größen für LR, XGB-CPU, XGB-GPU, MLP)}
 
@@ -136,7 +144,7 @@ The structurally informed seasonal-diurnal combinations are the actionable range
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{scenario_intensities.pdf}
+\includegraphics[width=\linewidth]{scenario_intensities.pdf}
 \caption{Carbon intensity (gCO\textsubscript{2}/kWh) for eight timing scenarios}
 \label{fig:scenario_intensities}
 \end{figure}
@@ -152,7 +160,7 @@ This asymmetry reveals an important practical principle: grid-aware scheduling i
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{scenario_per_run.pdf}
+\includegraphics[width=\linewidth]{scenario_per_run.pdf}
 \caption{Counterfactual CO\textsubscript{2} relative to the static CodeCarbon baseline (= 100\,\%)}
 \label{fig:scenario_per_run}
 \end{figure}
@@ -166,7 +174,7 @@ A practitioner who runs training jobs during office hours on summer days is inad
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{carbon_intensity_july_day.pdf}
+\includegraphics[width=\linewidth]{carbon_intensity_july_day.pdf}
 \caption{Hourly carbon intensity on 24 July 2024 in Germany}
 \label{fig:carbon_intensity_july_day}
 \end{figure}
@@ -181,7 +189,7 @@ A practitioner who decides to schedule training in July rather than January impr
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{carbon_intensity_seasonal.pdf}
+\includegraphics[width=\linewidth]{carbon_intensity_seasonal.pdf}
 \caption{Hourly carbon intensity for representative ten-day windows per season, Germany 2025}
 \label{fig:carbon_intensity_seasonal}
 \end{figure}
@@ -195,7 +203,7 @@ The summer-midday to winter-evening gradient spans the full two-to-one ratio ide
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{diurnal_seasonal.pdf}
+\includegraphics[width=\linewidth]{diurnal_seasonal.pdf}
 \caption{Mean carbon intensity (gCO\textsubscript{2}/kWh) by hour of day and calendar month for the German grid (2024), derived from 8{,}760 hourly observations.}
 \label{fig:diurnal_seasonal}
 \end{figure}
@@ -218,7 +226,7 @@ At that scale, scheduling is no longer a marginal consideration but a first-orde
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\linewidth]{lifecycle_breakeven.pdf}
+\includegraphics[width=\linewidth]{lifecycle_breakeven.pdf}
 \caption{Break-even number of predictions at which cumulative inference CO\textsubscript{2} emissions surpass the one-time training footprint (log scale).}
 \label{fig:lifecycle_breakeven}
 \end{figure}

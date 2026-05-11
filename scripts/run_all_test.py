@@ -17,7 +17,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 RESULTS_DIR = BASE_DIR / "results"
 TUNE_DIR = BASE_DIR / "models" / "tune"
 MODELS_DIR = BASE_DIR / "models"

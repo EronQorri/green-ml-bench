@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import numpy as np
+import joblib
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from utils import load_data, save_results, save_inference_time, load_best_params, get_nrows
@@ -54,7 +55,12 @@ cpu_result = cpu_monitor.stop()
 co2_corrected = compute_corrected_co2(tracker, cpu_result)
 print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
-trained_model = cv_results["estimator"][0]
+saved_models_dir = BASE_DIR / "saved_models"
+saved_models_dir.mkdir(exist_ok=True)
+model.fit(X, y)
+joblib.dump(model, saved_models_dir / f"xgb_cpu_{DATASET}.joblib")
+
+trained_model = joblib.load(saved_models_dir / f"xgb_cpu_{DATASET}.joblib")
 single_row = X[:1]
 trained_model.predict(single_row)  # warmup
 _times = []

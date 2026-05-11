@@ -20,7 +20,7 @@ import time
 import requests
 from pathlib import Path
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(__file__).parent.parent
 MODELS_DIR = BASE_DIR / "models"
 NTFY_CHANNEL = "eron_thesis_higgs_run_123"
 

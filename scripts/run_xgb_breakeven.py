@@ -17,7 +17,9 @@ import time
 import requests
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).parent / "models"))
+_ROOT = Path(__file__).parent.parent
+sys.path.append(str(_ROOT))
+sys.path.append(str(_ROOT / "models"))
 
 from utils import load_data, save_results, save_inference_time, load_best_params
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary

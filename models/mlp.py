@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import numpy as np
+import joblib
 from skorch.callbacks import EarlyStopping
 import torch
 import torch.nn as nn
@@ -108,8 +109,12 @@ cpu_result = cpu_monitor.stop()
 co2_corrected = compute_corrected_co2(tracker, cpu_result)
 print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
+saved_models_dir = BASE_DIR / "saved_models"
+saved_models_dir.mkdir(exist_ok=True)
+pipeline.fit(X_array, y_array)
+joblib.dump(pipeline, saved_models_dir / f"mlp_{DATASET}.joblib")
 
-trained_model = cv_results["estimator"][0]
+trained_model = joblib.load(saved_models_dir / f"mlp_{DATASET}.joblib")
 single_row = X_array[:1]
 trained_model.predict(single_row)  # warmup
 _times = []

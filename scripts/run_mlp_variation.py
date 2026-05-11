@@ -31,7 +31,9 @@ from sklearn.preprocessing import StandardScaler
 from skorch import NeuralNetClassifier
 from skorch.callbacks import EarlyStopping
 
-sys.path.append(str(Path(__file__).parent / "models"))
+_ROOT = Path(__file__).parent.parent
+sys.path.append(str(_ROOT))
+sys.path.append(str(_ROOT / "models"))
 
 from config import BASE_DIR, CV_FOLDS, RANDOM_STATE
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
