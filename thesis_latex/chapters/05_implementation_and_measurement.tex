@@ -11,7 +11,7 @@ This chapter describes how the experimental pipeline was built, how measurements
 
 A critical decision in the experimental design was the selection of the computing platform on which all experiments would be conducted. Two options were considered: the university's shared computing infrastructure or a local machine. The latter was ultimately chosen, as it provides several key advantages for this study. First, it ensures complete reproducibility, since all experiments are executed on identical hardware configuration, eliminating interfering variables that could arise from shared resource conflicts or system variability. Second, it provides consistent availability and direct control over system configuration, which is particularly important given the extended runtime of the large-scale experiments (particularly on the 11M-instance HIGGS dataset). Third, local execution facilitates fine-grained performance monitoring and measurement of energy consumption, a primary objective of this study.
 
-The hardware platform selected for all experiments is a consumer-grade desktop system with the following specifications: an NVIDIA RTX 4070 graphics processing unit (12 GB GDDR6 memory, 5,888 CUDA cores), an AMD Ryzen 7 5700X processor (8 cores / 16 threads, base clock 3.6 GHz) and 32 GB of DDR4 RAM. The system runs Windows 11 with all code implemented in Python 3.13.0.
+The hardware platform selected for all experiments is a consumer-grade desktop system with the following specifications: an NVIDIA RTX 4070 graphics processing unit (12 GB GDDR6 memory, 5,888 CUDA cores), an AMD Ryzen 7 5700X processor (8 cores / 16 threads, base clock 3.6 GHz) and 32 GB of DDR4 \gls{ram}. The system runs Windows 11 with all code implemented in Python 3.13.0.
 
 \begin{table}[htbp]
 \centering
@@ -23,7 +23,7 @@ The hardware platform selected for all experiments is a consumer-grade desktop s
 \midrule
 \gls{cpu} & AMD Ryzen 7 5700X (8 cores / 16 threads, 3.6 GHz base) \\
 \gls{gpu} & NVIDIA RTX 4070 (12 GB GDDR6, 5{,}888 CUDA cores) \\
-RAM & 32 GB DDR4 \\
+\gls{ram} & 32 GB DDR4 \\
 Operating System & Windows 11 \\
 \bottomrule
 \end{tabular}
@@ -415,9 +415,9 @@ Dashed gray boxes indicate CodeCarbon \texttt{EmissionsTracker} calls, and dashe
 
 To allow fine-grained analysis, each model–dataset combination is tracked by a dedicated \texttt{EmissionsTracker} instance, identified by a unique \texttt{project\_name} following the pattern \texttt{model\_dataset}, for example \texttt{lr\_wine}, \texttt{rf\_credit}, or \texttt{xgb\_gpu\_higgs}. This scheme makes individual runs immediately identifiable in the \texttt{emissions/} directory, where CodeCarbon writes one CSV file per tracked run in addition to returning the scalar value in code. Tuning scripts follow the same pattern preceded by \texttt{tune\_}, for example \texttt{tune\_mlp\_higgs} or \texttt{tune\_xgb\_cpu\_wine}. In total, the experiment produces tracked emissions records for 14 training runs and up to eight tuning runs. The separate CSV files serve as a raw audit trail, while the values extracted via \texttt{tracker.stop()} are the primary source for the analysis presented in \Cref{results}.
 
-The general measurement approach used by CodeCarbon, including direct \gls{gpu} readout via NVML, RAM estimation per DIMM slot, and TDP-based \gls{cpu} fallback on Windows, is described in \Cref{sec:theoretical_codecarbon}. The following paragraphs focus on the concrete implications for the hardware used in this study.
+The general measurement approach used by CodeCarbon, including direct \gls{gpu} readout via NVML, \gls{ram} estimation per DIMM slot, and TDP-based \gls{cpu} fallback on Windows, is described in \Cref{sec:theoretical_codecarbon}. The following paragraphs focus on the concrete implications for the hardware used in this study.
 
-CodeCarbon's TDP-based \gls{cpu} estimation on Windows has been replaced in this study by a custom \texttt{CPUPowerMonitor} class implemented in \texttt{models/power\_monitor.py}. It runs in a background thread and polls the \gls{cpu} Package Power sensor every 0.25 seconds via the LibreHardwareMonitor library (\texttt{HardwareMonitor} Python package~\cite{feixSnip3rnickPyHardwareMonitor2026}). This library reads the \gls{cpu} Package Power sensor directly from the hardware, providing true power values rather than a TDP approximation. In practice, CodeCarbon underestimated \gls{cpu} power by a factor of roughly 9$\times$ compared to the hardware sensor (e.g.\ 6.6\,W vs.\ 57.8\,W for Logistic Regression on the Credit dataset). The corrected CO\textsubscript{2} value in \texttt{results.csv} therefore replaces CodeCarbon's \gls{cpu} contribution with the hardware-measured value, while \gls{gpu} and RAM energy are still taken from CodeCarbon. The original CodeCarbon total is retained as \texttt{co2eq\_codecarbon\_kg} for reference.
+CodeCarbon's TDP-based \gls{cpu} estimation on Windows has been replaced in this study by a custom \texttt{CPUPowerMonitor} class implemented in \texttt{models/power\_monitor.py}. It runs in a background thread and polls the \gls{cpu} Package Power sensor every 0.25 seconds via the LibreHardwareMonitor library (\texttt{HardwareMonitor} Python package~\cite{feixSnip3rnickPyHardwareMonitor2026}). This library reads the \gls{cpu} Package Power sensor directly from the hardware, providing true power values rather than a TDP approximation. In practice, CodeCarbon underestimated \gls{cpu} power by a factor of roughly 9$\times$ compared to the hardware sensor (e.g.\ 6.6\,W vs.\ 57.8\,W for Logistic Regression on the Credit dataset). The corrected CO\textsubscript{2} value in \texttt{results.csv} therefore replaces CodeCarbon's \gls{cpu} contribution with the hardware-measured value, while \gls{gpu} and \gls{ram} energy are still taken from CodeCarbon. The original CodeCarbon total is retained as \texttt{co2eq\_codecarbon\_kg} for reference.
 
 This approach does, however, come with notable limitations. Because LibreHardwareMonitor requires privileged access to hardware sensors, all measurements in this study were conducted with the process running under administrator privileges. Without elevated rights, the \texttt{CPUPowerMonitor} fails to retrieve sensor data and the corrected CO\textsubscript{2} estimate cannot be computed. Beyond the access requirement, the approach is inherently platform-specific. LibreHardwareMonitor is a Windows-only solution, adopted here precisely because Intel RAPL, the interface CodeCarbon uses for direct CPU energy readings on Linux, is not accessible on Windows. The hardware-corrected emissions values reported in this study are therefore tied to this Windows-specific stack and cannot be reproduced directly on other operating systems.
 
@@ -466,6 +466,8 @@ The results of every model run are written to \texttt{results/results.csv}, whic
 \bottomrule
 \end{tabular}
 \end{table}
+
+\todo[inline]{hier weiter ersetzen heute}
 
 The primary emissions value is \texttt{co2eq\_kg}, which combines the hardware-sensor \gls{cpu} reading with CodeCarbon's \gls{gpu} and RAM estimates as described in \Cref{implementation_emissions_limitations}. The column \texttt{co2eq\_codecarbon\_kg} retains the original CodeCarbon total for reference. The difference between the two columns is examined in \Cref{results}.
 
