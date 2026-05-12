@@ -80,5 +80,6 @@ save_results(
     cpu_result,
     training_time,
     nrows,
+    tracker,
 )
 save_inference_time("RandomForest", DATASET, co2_corrected, nrows, inference_time)

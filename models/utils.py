@@ -69,12 +69,15 @@ def load_best_params(model_key, dataset):
     return params[model_key][dataset]
 
 
-def save_results(model, dataset, accuracy, f1, co2_corrected, co2_codecarbon, cpu_result, training_time, nrows):
+def save_results(model, dataset, accuracy, f1, co2_corrected, co2_codecarbon, cpu_result, training_time, nrows, tracker=None):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     results_dir = os.path.join(base_dir, "results")
     os.makedirs(results_dir, exist_ok=True)
     file_path = os.path.join(results_dir, "results.csv")
     file_exists = os.path.isfile(file_path)
+    edata = tracker.final_emissions_data if tracker is not None else None
+    gpu_energy_wh = round(edata.gpu_energy * 1000, 6) if edata else None
+    ram_energy_wh = round(edata.ram_energy * 1000, 6) if edata else None
     with open(file_path, "a", newline="") as f:
         writer = csv.DictWriter(
             f,
@@ -89,6 +92,8 @@ def save_results(model, dataset, accuracy, f1, co2_corrected, co2_codecarbon, cp
                 "co2eq_codecarbon_kg",
                 "cpu_power_hw_w",
                 "cpu_energy_hw_wh",
+                "gpu_energy_wh",
+                "ram_energy_wh",
                 "training_time_s",
             ],
         )
@@ -106,6 +111,8 @@ def save_results(model, dataset, accuracy, f1, co2_corrected, co2_codecarbon, cp
                 "co2eq_codecarbon_kg": co2_codecarbon,
                 "cpu_power_hw_w": round(cpu_result["avg_watt"], 4),
                 "cpu_energy_hw_wh": round(cpu_result["energy_wh"], 6),
+                "gpu_energy_wh": gpu_energy_wh,
+                "ram_energy_wh": ram_energy_wh,
                 "training_time_s": round(training_time, 2),
             }
         )

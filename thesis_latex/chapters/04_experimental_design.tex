@@ -4,7 +4,7 @@ This chapter outlines the design decisions underlying the empirical evaluation o
 
 \section{Research Questions}
 \label{sec:research_questions}
-The main research question that this study aims to answer is: \textit{How does the trade-off between energy consumption and predictive performance vary across Logistic Regression, Random Forest, XGBoost and MLP models when the complexity of the models and the size of the dataset are systematically varied?}
+The main research question that this study aims to answer is: \textit{How does the trade-off between energy consumption and predictive performance vary across Logistic Regression, Random Forest, XGBoost and \gls{mlp} models when the complexity of the models and the size of the dataset are systematically varied?}
 The following sub-questions will also be addressed in the course of this thesis:
 \begin{itemize}
     \item Under what conditions do the resource consumption of more complex models exceed the achievable accuracy gain over simpler baselines?
@@ -18,7 +18,7 @@ The following sub-questions will also be addressed in the course of this thesis:
 % =============================================================
 \section{Datasets}
 \label{experimental_dataset}
-Dataset size is a primary driver of both computational demand and energy consumption during model training \cite{rodriguezEvaluatingEnergyConsumption2024}. To evaluate how this relationship varies across different scales, three classification datasets were selected that span several orders of magnitude in size. Classification was chosen as the task type since it is well-established across all selected models and allows for direct comparison of predictive performance via standardized metrics such as accuracy and F1-score. The datasets are summarized in Table~\ref{tab:datasets}.
+Dataset size is a primary driver of both computational demand and energy consumption during model training \cite{rodriguezEvaluatingEnergyConsumption2024}. To evaluate how this relationship varies across different scales, three classification datasets were selected that span several orders of magnitude in size. Classification was chosen as the task type since it is well-established across all selected models and allows for direct comparison of predictive performance via standardized metrics such as \gls{acc} and \gls{wf1}. The datasets are summarized in Table~\ref{tab:datasets}.
 
 \begin{table}[htbp]
 \centering
@@ -45,7 +45,15 @@ These three datasets vary significantly in size, enabling a systematic evaluatio
 
 \section{Models}
 \label{design_models}
-Selecting models of varying complexity is central to answering the research questions of this study. A model that achieves competitive accuracy with significantly lower energy consumption represents a more ecologically efficient choice, but this trade-off can only be quantified if the comparison spans a meaningful range of complexity. For this reason, five classification models were selected, ranging from a linear baseline to tree-based ensemble methods and a neural network, covering low, medium, and high computational demand respectively.
+Selecting models of varying complexity is central to answering the research questions of this study. A model that achieves competitive accuracy with significantly lower energy consumption represents a more ecologically efficient choice, but this trade-off can only be quantified if the comparison spans a meaningful range of complexity. For this reason, four classification models were selected, ranging from a linear baseline to tree-based ensemble methods and a neural network, covering low, medium, and high computational demand respectively.
+
+\gls{lr} serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive \gls{acc}, making it well suited to quantifying whether the additional resource consumption of more complex models yields a meaningful gain in predictive performance.
+
+\gls{rf} was selected as a mid-complexity representative of tree-based ensemble methods. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
+
+Building on the tree-based approach, \gls{xgb} was chosen as a second mid-complexity model, with the key distinction that it also supports GPU-accelerated training. This makes it possible to directly compare the energy consumption and training time of CPU- and GPU-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study. The suitability of GPU-accelerated XGBoost for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based GPU implementation can process a dataset of 10 million instances with 28 features entirely within GPU memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
+
+The MLP was selected as the most complex model, representing the \gls{nn} category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption.
 
 \begin{table}[htbp]
 \centering
@@ -55,44 +63,36 @@ Selecting models of varying complexity is central to answering the research ques
 \toprule
 \textbf{Model} & \textbf{Type} & \textbf{Device} & \textbf{Role} \\
 \midrule
-Logistic Regression & Linear & CPU & Baseline \\
-Random Forest  & Ensemble & CPU & Mid-complexity \\
-XGBoost & Gradient Boosting & CPU \& GPU & Mid-complexity \\
-Multilayer Perceptron & Neural Network & GPU & High-complexity \\
+\gls{lr} & Linear & \gls{cpu} & Baseline \\
+\gls{rf}  & Ensemble & \gls{cpu} & Mid-complexity \\
+\gls{xgb} & Gradient Boosting & \gls{cpu} \& GPU & Mid-complexity \\
+\gls{mlp} & \gls{nn} & \gls{gpu} & High-complexity \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-
-Logistic Regression serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive accuracy, making it well suited to quantifying whether the additional resource consumption of more complex models yields a meaningful gain in predictive performance.
-
-Random Forest was selected as a mid-complexity representative of tree-based ensemble methods. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
-
-Building on the tree-based approach, XGBoost was chosen as a second mid-complexity model, with the key distinction that it also supports GPU-accelerated training. This makes it possible to directly compare the energy consumption and training time of CPU- and GPU-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study. The suitability of GPU-accelerated XGBoost for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based GPU implementation can process a dataset of 10 million instances with 28 features entirely within GPU memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
-
-The MLP was selected as the most complex model, representing the deep learning category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption.
 
 Together, the selected models cover a broad spectrum of algorithmic complexity, from a linear baseline to gradient boosting and deep learning, enabling a meaningful comparison of both predictive performance and energy efficiency across fundamentally different model types. The following section defines the metrics used to evaluate these dimensions.
 
 \section{Evaluation Metrics}
 \label{design_metrics}
 
-To answer the research questions of this study, two categories of metrics were employed: classification performance and resource consumption. 
-Accuracy and weighted F1-Score were selected to measure predictive performance, as they provide a standardized basis for comparing models across datasets of varying class distributions. 
-Energy consumption in kWh and CO\textsubscript{2} emissions in kg were chosen as the primary resource metrics, directly reflecting the ecological cost of model training. 
-It should be noted that all experiments were conducted on a single hardware setup, which is described in detail in \Cref{sec:implementation_hardware}.
+To answer the research questions of this study, two categories of metrics were employed: classification performance and resource consumption.
+\acrlong{acc} and \acrlong{wf1} were selected to measure predictive performance, as they provide a standardized basis for comparing models across datasets of varying class distributions. 
+Energy consumption in kWh and CO\textsubscript{2} emissions in \gls{kgco2eq} were chosen as the primary resource metrics, directly reflecting the ecological cost of model training.
 
 Training time in seconds was included as a secondary resource metric, as it captures computational demand independently of hardware-specific power draw. 
 Furthermore, inference time was measured across all experimental setups to account for the operational footprint. In large-scale deployment scenarios, the cumulative energy demand of repeated predictions can often rival or even exceed the initial training costs \cite{desislavovTrendsAIInference2023}.
 Together, these metrics enable a direct assessment of whether gains in predictive performance justify the associated increase in resource consumption.
 
-Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020}, a custom composite metric was developed for this study, named the \textit{Efficiency-Weighted F1} (EWF1), defined as:
+Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020}, a custom composite metric was developed for this study, named the \gls{ewf1}. \Cref{eq:ewf1} defines this metric, where the numerator is \acrlong{wf1}:
 \begin{equation}
-\text{EWF1} = \frac{F_1}{1 + \lambda \cdot \hat{c}}
+\text{\gls{ewf1}} = \frac{\gls{wf1}}{1 + \lambda \cdot \hat{c}}
+\label{eq:ewf1}
 \end{equation}
 where $\hat{c}$ denotes the min-max normalized CO\textsubscript{2} emissions per dataset and $\lambda$ controls the relative importance assigned to ecological cost. A higher $\lambda$ shifts the metric towards prioritizing carbon efficiency over predictive performance, while a lower $\lambda$ reduces the carbon penalty. This allows practitioners to adapt the metric to their specific deployment priorities. All results in this study use the default value of $\lambda = 1$. Higher scores indicate a more favorable trade-off between predictive performance and ecological cost.
 
-It should be noted that $\hat{c}$ is inherently location-dependent, as CO\textsubscript{2} emissions are tied to the carbon intensity of the local electricity grid. Consequently, EWF1 scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures.
+It should be noted that $\hat{c}$ is inherently location-dependent, as CO\textsubscript{2} emissions are tied to the carbon intensity of the local electricity grid. Consequently, \gls{ewf1} scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures.
 
 \section{Validation Strategy}
 \label{design_validation}
@@ -107,10 +107,7 @@ To ensure reproducibility, a fixed random state was used for all cross-validatio
 \label{design_hyperparameter}
 To ensure a fair comparison across all models, hyperparameter tuning was applied to each model prior to evaluation. Without tuning, default parameters tend to favor certain model families over others, potentially skewing the comparison in terms of both predictive performance and resource consumption \cite{bagnallUseDefaultParameter2017}.
 
-Hyperparameter optimization was performed using Optuna, an optimization framework based on Bayesian search. Grid search was considered but deemed infeasible given the scale of experiments: assuming five hyperparameters per model with ten candidate values each, a full grid search would require 10\textsuperscript{5} = 100,000 evaluations per model per dataset alone, amounting to over 1,200,000 evaluations across four models and three datasets. 
-Optuna was therefore configured to run 40 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, as tuning runs contribute to the overall energy budget of this study.
-
-Weighted F1-score was used as the optimization objective, as it accounts for class imbalance more robustly than accuracy, providing a more reliable estimate of model quality across datasets with varying class distributions.
+Hyperparameter optimization was performed using Optuna, an optimization framework based on Bayesian optimization. It was configured to run 40 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, as tuning runs contribute to the overall energy budget of this study.
 
 Tuning was performed separately for each dataset, as the datasets differ substantially in size, feature space, and class distribution. A globally tuned model would not represent optimal performance on any individual dataset and would therefore introduce bias into the comparison.
 
