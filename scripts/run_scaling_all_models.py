@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).parent.parent
 MODELS_DIR = BASE_DIR / "models"
 NTFY_CHANNEL = "eron_thesis_higgs_run_123"
 
-NROWS_VALUES = [1_000_000, 5_000_000]
+NROWS_VALUES = [5_000, 50_000]
 
 MODEL_SCRIPTS = [
     "log_regression.py",
