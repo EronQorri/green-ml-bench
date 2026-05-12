@@ -202,7 +202,7 @@ Parameter & Wine & Credit & HIGGS \\
 
 As discussed in \Cref{design_models}, a Multilayer Perceptron was selected to represent the neural network family. The implementation uses PyTorch as the primary deep-learning framework, combined with the Skorch library. Skorch wraps the PyTorch model in an interface that is fully compatible with the scikit-learn ecosystem. This is necessary because the entire evaluation logic, including cross-validation and pipeline construction, relies heavily on scikit-learn.
 
-A dynamic architecture was chosen to ensure the network structure directly reflects the optimal parameters found during the Optuna tuning process. At runtime, the script reads the best parameter set from a JSON file generated during the tuning phase. It extracts the number of hidden layers via \texttt{n\_layers} and the neuron count for each individual layer via \texttt{layer\_i}. These values are then assembled into a list called \texttt{layer\_sizes}. This list is subsequently passed to the \texttt{MLPModule} class. This class constructs the full network dynamically upon instantiation, making the architecture entirely data-driven. The specific configurations resulting from this process for each dataset are detailed in \Cref{tab:mlp_params}.
+A dynamic architecture was chosen to ensure the network structure directly reflects the optimal parameters found during the Optuna tuning process. At runtime, the script reads the best parameter set from a JSON file generated during the tuning phase. It extracts the number of hidden layers via \texttt{n\_layers} and the neuron count for each individual layer via \texttt{layer\_i}. These values are then assembled into a list called \texttt{layer\_sizes}. This list is subsequently passed to the \texttt{MLPModule} class. This class constructs the full network dynamically upon instantiation, making the architecture entirely data-driven. The resulting layer-wise architecture, including parameter counts, is shown in \Cref{tab:mlp_architecture}. The specific configurations resulting from this process for each dataset are detailed in \Cref{tab:mlp_params}.
 
 \newcolumntype{R}{>{\raggedleft\arraybackslash}p{1.5em}}
 \newcolumntype{L}{>{\raggedright\arraybackslash}p{1.5em}}
@@ -269,6 +269,23 @@ Out  & 512 & 2   &   1{,}026 \\
 To minimize the overall training time, the implementation checks for CUDA availability using \texttt{torch.cuda.is\_available()}. The algorithm runs on the \gls{gpu} if one is present and automatically falls back to the \gls{cpu} otherwise. PyTorch requires highly specific numeric types, and neural networks react sensitively to implicit type mismatches. Therefore, the feature matrix $X$ is explicitly cast to \texttt{float32} and the target vector $y$ to \texttt{int64} before the training begins. Implementation-level optimizations such as \gls{amp} were intentionally omitted to maintain comparability across all tested algorithms and avoid hardware-specific implementation artifacts.
 
 Input features are standardized using a \texttt{StandardScaler}, embedded together with the neural network in a scikit-learn \texttt{Pipeline}. Since Multilayer Perceptrons lack built-in scale invariance, standardizing the inputs to a mean of zero and unit variance is necessary to keep the gradient flow stable. The \texttt{NeuralNetClassifier} provided by Skorch receives all architecture parameters through a specific naming convention. It uses the \texttt{module\_\_*} prefix to forward keyword arguments directly to the constructor of the \texttt{MLPModule}. The Adam optimizer and the \texttt{CrossEntropyLoss} criterion are used consistently across all datasets. The learning rate and the batch size are taken directly from the tuning results and are therefore tailored to each dataset. A fixed random seed is applied using \texttt{torch.manual\_seed} to guarantee exact reproducibility across all iterations.
+
+\begin{table}[htbp]
+\centering
+\caption{Optimized hyperparameters for the Multilayer Perceptron across all datasets.}
+\label{tab:mlp_params}
+\begin{tabular}{lccc}
+\toprule
+Parameter & Wine & Credit & HIGGS \\
+\midrule
+\path{n_layers} & 1 & 4 & 3 \\
+\path{layer_sizes} & [128] & [512, 64, 128, 256] & [512, 256, 512] \\
+\path{dropout_rate} & 0.2936 & 0.3690 & 0.0334 \\
+\path{lr} & 0.0030 & 0.0002 & 0.0077 \\
+\path{batch_size} & 1024 & 1024 & 8192 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 The maximum number of training epochs is set to 200. This value acts as an upper boundary rather than a strict target. An early stopping callback (\path{skorch.callbacks.EarlyStopping}) monitors the validation loss after each individual epoch. It halts the training process immediately if no improvement is observed for 10 consecutive epochs. This mechanism prevents unnecessarily long training runs and provides an additional layer of protection against overfitting. Consequently, the upper limit of 200 epochs is rarely reached in practice.
 
