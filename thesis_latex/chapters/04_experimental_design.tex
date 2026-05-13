@@ -8,8 +8,8 @@ The main research question that this study aims to answer is: \textit{How does t
 The following sub-questions will also be addressed in the course of this thesis:
 \begin{itemize}
     \item Under what conditions do the resource consumption of more complex models exceed the achievable accuracy gain over simpler baselines?
-    \item How does energy consumption and CO2 output scale with increasing neural network complexity (number of layers and neurons)?
-    \item How does energy consumption differ between CPU-based and GPU-based training for equivalent tasks?
+    \item How does energy consumption and CO\textsubscript{2} output scale with increasing neural network complexity (number of layers and neurons)?
+    \item How does energy consumption differ between \gls{cpu}-based and \gls{gpu}-based training for equivalent tasks?
     \item How does reducing the number of training instances on large datasets affect model accuracy and energy consumption across different algorithms?
     \item At what prediction volume does the cumulative inference CO\textsubscript{2} footprint of a model surpass its training footprint, and how does this break-even point differ across model families?
 \end{itemize}
@@ -18,7 +18,7 @@ The following sub-questions will also be addressed in the course of this thesis:
 % =============================================================
 \section{Datasets}
 \label{experimental_dataset}
-Dataset size is a primary driver of both computational demand and energy consumption during model training \cite{rodriguezEvaluatingEnergyConsumption2024}. To evaluate how this relationship varies across different scales, three classification datasets were selected that span several orders of magnitude in size. Classification was chosen as the task type since it is well-established across all selected models and allows for direct comparison of predictive performance via standardized metrics such as \gls{acc} and \gls{wf1}. The datasets are summarized in Table~\ref{tab:datasets}.
+Dataset size is a primary driver of both computational demand and energy consumption during model training \cite{rodriguezEvaluatingEnergyConsumption2024}. To evaluate how this relationship varies across different scales, three classification datasets were selected that span several orders of magnitude in size. Classification was chosen as the task type since it is well-established across all selected models and allows for direct comparison of predictive performance via standardized metrics such as accuracy and weighted F1 score. The datasets are summarized in Table~\ref{tab:datasets}.
 
 \begin{table}[htbp]
 \centering
@@ -49,11 +49,11 @@ Selecting models of varying complexity is central to answering the research ques
 
 \gls{lr} serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive \gls{acc}, making it well suited to quantifying whether the additional resource consumption of more complex models yields a meaningful gain in predictive performance.
 
-\gls{rf} was selected as a mid-complexity representative of tree-based ensemble methods. Relevant to this study, Random Forest does not support GPU-accelerated training and is therefore run exclusively on the CPU.
+\gls{rf} was selected as a mid-complexity representative of tree-based ensemble methods. Relevant to this study, Random Forest does not support \gls{gpu}-accelerated training and is therefore run exclusively on the \gls{cpu}.
 
-Building on the tree-based approach, \gls{xgb} was chosen as a second mid-complexity model, with the key distinction that it also supports GPU-accelerated training. This makes it possible to directly compare the energy consumption and training time of CPU- and GPU-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study. The suitability of GPU-accelerated XGBoost for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based GPU implementation can process a dataset of 10 million instances with 28 features entirely within GPU memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
+Building on the tree-based approach, \gls{xgb} was chosen as a second mid-complexity model, with the key distinction that it also supports \gls{gpu}-accelerated training. This makes it possible to directly compare the energy consumption and training time of \gls{cpu}- and \gls{gpu}-based tree ensemble methods under identical conditions, which is central to one of the research questions of this study. The suitability of \gls{gpu}-accelerated XGBoost for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based \gls{gpu} implementation can process a dataset of 10 million instances with 28 features entirely within \gls{gpu} memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
 
-The MLP was selected as the most complex model, representing the \gls{nn} category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption.
+The \gls{mlp} was selected as the most complex model, representing the neural network category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption.
 
 \begin{table}[htbp]
 \centering
@@ -65,7 +65,7 @@ The MLP was selected as the most complex model, representing the \gls{nn} catego
 \midrule
 \gls{lr} & Linear & \gls{cpu} & Baseline \\
 \gls{rf}  & Ensemble & \gls{cpu} & Mid-complexity \\
-\gls{xgb} & Gradient Boosting & \gls{cpu} \& GPU & Mid-complexity \\
+\gls{xgb} & Gradient Boosting & \gls{cpu} \& \gls{gpu} & Mid-complexity \\
 \gls{mlp} & \gls{nn} & \gls{gpu} & High-complexity \\
 \bottomrule
 \end{tabular}
@@ -79,7 +79,7 @@ Together, the selected models cover a broad spectrum of algorithmic complexity, 
 
 To answer the research questions of this study, two categories of metrics were employed: classification performance and resource consumption.
 \acrlong{acc} and \acrlong{wf1} were selected to measure predictive performance, as they provide a standardized basis for comparing models across datasets of varying class distributions. 
-Energy consumption in kWh and CO\textsubscript{2} emissions in \gls{kgco2eq} were chosen as the primary resource metrics, directly reflecting the ecological cost of model training.
+Energy consumption in \glspl{kwh} and CO\textsubscript{2} emissions in \gls{kgco2eq} were chosen as the primary resource metrics, directly reflecting the ecological cost of model training.
 
 Training time in seconds was included as a secondary resource metric, as it captures computational demand independently of hardware-specific power draw. 
 Furthermore, inference time was measured across all experimental setups to account for the operational footprint. In large-scale deployment scenarios, the cumulative energy demand of repeated predictions can often rival or even exceed the initial training costs \cite{desislavovTrendsAIInference2023}.
@@ -97,17 +97,17 @@ It should be noted that $\hat{c}$ is inherently location-dependent, as CO\textsu
 \section{Validation Strategy}
 \label{design_validation}
 
-To obtain reliable and generalizable performance estimates, a cross-validation strategy was employed rather than a single train-test split.
+To obtain reliable and generalizable performance estimates, a \gls{cv} strategy was employed rather than a single train-test split.
 
-Specifically, K-Fold cross-validation was applied with $k=5$ folds, a value widely recommended in the literature as a practical balance between computational cost and estimation stability \cite{hastieElementsStatisticalLearning2017}. Each model is trained and evaluated five times on non-overlapping subsets of the data, and the final performance score is averaged across all folds. This approach is consistent across all models and datasets, ensuring comparability of results.
+Specifically, K-Fold \gls{cv} was applied with $k=5$ folds, a value widely recommended in the literature as a practical balance between computational cost and estimation stability \cite{hastieElementsStatisticalLearning2017}. Each model is trained and evaluated five times on non-overlapping subsets of the data, and the final performance score is averaged across all folds. This approach is consistent across all models and datasets, ensuring comparability of results.
 
-To ensure reproducibility, a fixed random state was used for all cross-validation splits, model initialization, and data shuffling. The specific value and its technical implementation are described in \Cref{implementation_sw_env}.
+To ensure reproducibility, a fixed random state was used for all \gls{cv} splits, model initialization, and data shuffling. The specific value and its technical implementation are described in \Cref{implementation_sw_env}.
 
 \section{Hyperparameter Tuning}
 \label{design_hyperparameter}
 To ensure a fair comparison across all models, hyperparameter tuning was applied to each model prior to evaluation. Without tuning, default parameters tend to favor certain model families over others, potentially skewing the comparison in terms of both predictive performance and resource consumption \cite{bagnallUseDefaultParameter2017}.
 
-Hyperparameter optimization was performed using Optuna, an optimization framework based on Bayesian optimization. It was configured to run 40 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, as tuning runs contribute to the overall energy budget of this study.
+Hyperparameter optimization was performed using Optuna, an optimization framework based on \gls{bo}. It was configured to run 40 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, as tuning runs contribute to the overall energy budget of this study.
 
 Tuning was performed separately for each dataset, as the datasets differ substantially in size, feature space, and class distribution. A globally tuned model would not represent optimal performance on any individual dataset and would therefore introduce bias into the comparison.
 
