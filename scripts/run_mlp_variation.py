@@ -134,6 +134,7 @@ def run_arch(layer_sizes, X, y, input_dim, num_classes, nrows, device, cv):
         cv_results["test_f1"].mean(),
         co2, emissions_cc, cpu_result,
         training_time, nrows,
+        tracker,
     )
     save_inference_time(model_name, DATASET, co2, nrows, inference_time)
 
