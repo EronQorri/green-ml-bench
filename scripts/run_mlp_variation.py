@@ -196,3 +196,6 @@ _notify(
     "Thesis: MLP Variation fertig!",
     f"Dauer: {total_min:.1f} min. Failures: {failures or 'keine'}",
 )
+
+import subprocess
+subprocess.run(["shutdown", "/s", "/t", "60"], check=True)
