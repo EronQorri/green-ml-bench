@@ -8,10 +8,15 @@ __pycache__/
 *.pyo
 .env
 
+
+
 .DS_Store
 
 .vscode/
 .idea/
+.claude
+
+saved_models/
 
 thesis_latex/literature_pdfs/
 
