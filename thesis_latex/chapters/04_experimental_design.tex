@@ -72,6 +72,8 @@ The \gls{mlp} was selected as the most complex model, representing the neural ne
 \end{table}
 
 
+Random Forest is the only model excluded from one dataset combination: due to prohibitive training runtimes at 11 million instances, it is not evaluated on HIGGS. All other model--dataset combinations are included in the main benchmark.
+
 Together, the selected models cover a broad spectrum of algorithmic complexity, from a linear baseline to gradient boosting and deep learning, enabling a meaningful comparison of both predictive performance and energy efficiency across fundamentally different model types. The following section defines the metrics used to evaluate these dimensions.
 
 \section{Evaluation Metrics}
@@ -87,12 +89,18 @@ Together, these metrics enable a direct assessment of whether gains in predictiv
 
 Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020}, a custom composite metric was developed for this study, named the \gls{ewf1}. \Cref{eq:ewf1} defines this metric, where the numerator is \acrlong{wf1}:
 \begin{equation}
-\text{\gls{ewf1}} = \frac{\gls{wf1}}{1 + \lambda \cdot \hat{c}}
+\text{\gls{ewf1}} = \frac{\gls{wf1}}{1 + \lambda \cdot \ln\!\left(1 + \dfrac{c}{C_0}\right)}
 \label{eq:ewf1}
 \end{equation}
-where $\hat{c}$ denotes the min-max normalized CO\textsubscript{2} emissions per dataset and $\lambda$ controls the relative importance assigned to ecological cost. A higher $\lambda$ shifts the metric towards prioritizing carbon efficiency over predictive performance, while a lower $\lambda$ reduces the carbon penalty. This allows practitioners to adapt the metric to their specific deployment priorities. All results in this study use the default value of $\lambda = 1$. Higher scores indicate a more favorable trade-off between predictive performance and ecological cost.
+where $c$ is the measured CO\textsubscript{2} emissions in \gls{kgco2eq}, $C_0 = 10^{-3}$\,kg is a fixed reference emission value, and $\lambda$ controls the relative weight of ecological cost. The logarithmic penalty term $\ln(1 + c/C_0)$ grows monotonically with emissions but compresses extreme values, which is appropriate given that emissions span several orders of magnitude across model-dataset combinations.
 
-It should be noted that $\hat{c}$ is inherently location-dependent, as CO\textsubscript{2} emissions are tied to the carbon intensity of the local electricity grid. Consequently, \gls{ewf1} scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures.
+The value $C_0 = 10^{-3}$\,kg was chosen because it lies close to the geometric mean of the observed emission range in this study, which extends from approximately $1.4 \times 10^{-5}$\,kg (Logistic Regression on Wine) to $1.5 \times 10^{-1}$\,kg (\gls{mlp} on \gls{higgs}). Anchoring $C_0$ near this midpoint keeps the penalty term in an interpretable range of roughly $[0, 5]$ across all experiments. If $C_0$ were set much lower, virtually all emissions would produce a near-saturated penalty and the denominator would cease to discriminate; if it were set much higher, the penalty would approach zero for all but the most expensive runs and \gls{ewf1} would collapse towards \gls{wf1}. The reference is a fixed constant rather than a dataset-dependent quantity, making the metric portable: a model achieving a given \gls{wf1} at a given emission level receives the same \gls{ewf1} score regardless of which other models appear in the comparison pool.
+
+The default weight $\lambda = 1$ assigns unit importance to the logarithmic ecological penalty relative to the \gls{wf1} numerator. This is the neutral starting point: ecological cost enters the denominator with the same order of magnitude as the performance term, without artificially amplifying or suppressing it. To verify that the conclusions of this study do not depend on this choice, \gls{ewf1} rankings were computed for $\lambda \in \{0.5,\, 1,\, 2\}$ across all three datasets. The resulting model orderings were identical in every case, confirming that the qualitative ranking is robust to the specific value of $\lambda$ and is not an artefact of the chosen weight. Higher scores indicate a more favorable trade-off between predictive performance and ecological cost.
+
+It should be noted that $c$ is inherently location-dependent, as CO\textsubscript{2} emissions are tied to the carbon intensity of the local electricity grid. Consequently, \gls{ewf1} scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures.
+
+Emissions are tracked exclusively over the \gls{cv} loop. Data loading and preprocessing are deliberately excluded from the measurement interval, as their cost scales with dataset size rather than model architecture and would therefore introduce noise into cross-model comparisons. This ensures that all reported emissions reflect model training and evaluation cost alone.
 
 \section{Validation Strategy}
 \label{design_validation}
@@ -103,12 +111,33 @@ Specifically, K-Fold \gls{cv} was applied with $k=5$ folds, a value widely recom
 
 To ensure reproducibility, a fixed random state was used for all \gls{cv} splits, model initialization, and data shuffling. The specific value and its technical implementation are described in \Cref{implementation_sw_env}.
 
+Because two of the three datasets exhibit class imbalance, stratified \gls{cv} is applied to ensure each fold preserves the original class distribution. This is directly coherent with the choice of \gls{wf1} as the primary metric, as described in \Cref{design_metrics}.
+
+No separate held-out validation set is used. Hyperparameter tuning and final evaluation share the same \gls{cv} folds, which introduces a slight optimistic bias through indirect data leakage. This is an accepted trade-off in comparative benchmarking for three reasons. First, every model and dataset combination is subjected to the identical procedure, so any optimistic inflation applies symmetrically across all configurations and cancels when models are ranked against each other. The primary claims of this study are comparative rather than absolute, and relative rankings are invariant to a uniform bias. Second, as discussed in \Cref{sec:theoretical_kfold}, the magnitude of this bias is governed by validation set size and the number of hyperparameters. For Credit and HIGGS, where held-out folds contain thousands to millions of instances, the variance of the model selection criterion is drastically reduced and the resulting bias is expected to be negligible in practice. Third, nested \gls{cv} with an outer loop of five folds would multiply \gls{hpo} evaluations fivefold per model-dataset combination, translating to weeks of additional compute on HIGGS at substantial energy cost, directly contradicting the ecological framing of this study.
+
 \section{Hyperparameter Tuning}
 \label{design_hyperparameter}
-To ensure a fair comparison across all models, hyperparameter tuning was applied to each model prior to evaluation. Without tuning, default parameters tend to favor certain model families over others, potentially skewing the comparison in terms of both predictive performance and resource consumption \cite{bagnallUseDefaultParameter2017}.
+Hyperparameter tuning was applied to all models except Logistic Regression. Without tuning, default parameters tend to favor certain model families over others, potentially skewing both performance and resource consumption comparisons \cite{bagnallUseDefaultParameter2017}. Logistic Regression is deliberately excluded: its role as a lightweight linear baseline depends on its simplicity, and tuning it would undermine that function.
 
-Hyperparameter optimization was performed using Optuna, an optimization framework based on \gls{bo}. It was configured to run 40 trials per model per dataset, striking a balance between tuning thoroughness and resource consumption, as tuning runs contribute to the overall energy budget of this study.
+Optuna was selected as the optimization framework, using \gls{tpe} as its search strategy. As discussed in \Cref{sec:theoretical_hpo}, \gls{bo}-based methods require substantially fewer evaluations than grid or random search to reach competitive configurations, which directly reduces the energy cost of the tuning process itself. Each run was configured to execute 40 trials per model--dataset combination, a budget chosen to balance search thoroughness against ecological overhead.
 
-Tuning was performed separately for each dataset, as the datasets differ substantially in size, feature space, and class distribution. A globally tuned model would not represent optimal performance on any individual dataset and would therefore introduce bias into the comparison.
+Tuning was performed separately for each dataset, as the datasets differ substantially in size, feature space, and class distribution. The optimization objective is \gls{wf1} in all cases, consistent with the primary evaluation metric defined in \Cref{design_metrics}. The concrete search spaces and implementation details are described in \Cref{implementation_tuning}.
+
+A limitation of the fixed 40-trial budget is that it does not account for differences in search space dimensionality across models. Random Forest exposes five hyperparameters and XGBoost six, both in well-defined, low-dimensional spaces that \gls{tpe} can navigate reliably within 40 evaluations. The \gls{mlp} search space is larger and structurally more complex: it includes a discrete depth parameter (\texttt{n\_layers}, ranging from 1 to 4) that conditionally activates up to four additional layer-width dimensions, plus continuous parameters for dropout rate, learning rate, and batch size, yielding an effective dimensionality of five to eight depending on the sampled depth. Conditional search spaces of this kind require more evaluations for \gls{tpe} to build an accurate surrogate model. In addition, each \gls{mlp} trial on \gls{higgs} involves training a neural network and is substantially more expensive than a comparable tree-based trial, so the 40-trial budget represents a greater practical constraint for the \gls{mlp} than for Random Forest or XGBoost. As a result, the \gls{mlp} may not have reached the same degree of optimization as the tree-based models, and the reported \gls{mlp} performance figures should be interpreted as a lower bound on what a more exhaustive search might achieve. Increasing the trial budget selectively for the \gls{mlp} would, however, break the comparability constraint: allocating more search effort to one model than to others would confound any observed performance difference with tuning thoroughness rather than isolating it as a property of the algorithm itself. The uniform budget is therefore a deliberate design choice to keep the search effort symmetric across all models.
+
+\section{Experimental Protocol}
+\label{sec:experimental_protocol}
+
+The research questions are operationalized through five experiments. Each isolates a specific dimension of the energy-performance trade-off while holding the remaining factors constant. Implementation details for all five are described in \Cref{sec:experiments}.
+
+The \textbf{main cross-dataset benchmark} trains all five models on all three datasets, yielding 14 model--dataset combinations (Random Forest on HIGGS is excluded, as described in \Cref{design_models}). It forms the empirical backbone of the study and addresses the overall energy-performance trade-off across model complexity and dataset scale.
+
+The \textbf{dataset scaling experiment} holds everything constant except the number of training instances. Four models are trained on nine HIGGS subset sizes ranging from 1{,}000 to 11{,}000{,}000 instances. Because all other variables are fixed, observed differences in performance and emissions can be attributed exclusively to dataset size. The experiment directly addresses RQ4 and, through the XGBoost \gls{cpu}/\gls{gpu} pairing, also feeds into RQ3.
+
+The \textbf{\gls{mlp} architecture variation} isolates the effect of network depth and width by training a grid of 12 architectures on HIGGS: three widths (128, 256, 512 neurons) crossed with four depths (1--4 hidden layers). Non-architectural hyperparameters are fixed to neutral defaults to prevent any single configuration from being inadvertently favoured by the tuning results. This directly addresses RQ2.
+
+The \textbf{temporal carbon intensity analysis} is purely retrospective: it re-weights the energy already recorded in the main benchmark against eight carbon intensity scenarios derived from one year of hourly \gls{api} data for the German grid. This quantifies the sensitivity of reported emissions to training time and location, and bounds the uncertainty introduced by CodeCarbon's static intensity factor.
+
+The \textbf{lifecycle break-even analysis} combines the one-time training footprint from the main benchmark with per-prediction inference latency to estimate at what prediction volume cumulative inference emissions surpass training emissions. It addresses RQ5 without requiring any additional training runs.
 
 

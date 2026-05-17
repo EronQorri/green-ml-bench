@@ -118,7 +118,7 @@ def save_results(model, dataset, accuracy, f1, co2_corrected, co2_codecarbon, cp
         )
 
 
-def save_inference_time(model, dataset, emissions, nrows, inference_time):
+def save_inference_time(model, dataset, emissions, nrows, inference_time, cpu_power_inference_w=None):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     results_dir = os.path.join(base_dir, "results")
     os.makedirs(results_dir, exist_ok=True)
@@ -134,6 +134,7 @@ def save_inference_time(model, dataset, emissions, nrows, inference_time):
                 "nrows",
                 "inference_time",
                 "co2eq_kg",
+                "cpu_power_inference_w",
             ],
         )
         if not file_exists:
@@ -146,5 +147,6 @@ def save_inference_time(model, dataset, emissions, nrows, inference_time):
                 "nrows": nrows if nrows else "all",
                 "inference_time": inference_time,
                 "co2eq_kg": emissions,
+                "cpu_power_inference_w": round(cpu_power_inference_w, 4) if cpu_power_inference_w is not None else "",
             }
         )

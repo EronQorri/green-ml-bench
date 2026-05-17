@@ -116,6 +116,8 @@ joblib.dump(pipeline, saved_models_dir / f"mlp_{DATASET}.joblib")
 
 trained_model = joblib.load(saved_models_dir / f"mlp_{DATASET}.joblib")
 single_row = X_array[:1]
+inference_monitor = CPUPowerMonitor()
+inference_monitor.start()
 trained_model.predict(single_row)  # warmup
 _times = []
 for _ in range(100):
@@ -123,6 +125,7 @@ for _ in range(100):
     trained_model.predict(single_row)
     _times.append(time.perf_counter() - _t0)
 inference_time = float(np.median(_times))
+inference_cpu_result = inference_monitor.stop()
 
 save_results(
     "MLP_PyTorch",
@@ -136,4 +139,4 @@ save_results(
     nrows,
     tracker,
 )
-save_inference_time("MLP_PyTorch", DATASET, co2_corrected, nrows, inference_time)
+save_inference_time("MLP_PyTorch", DATASET, co2_corrected, nrows, inference_time, inference_cpu_result.get("avg_watt"))

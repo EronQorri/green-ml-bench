@@ -61,13 +61,11 @@ df = pd.merge(
     how="left",
 )
 
-# carbon-optimal score (F1 penalized by scaled CO2); lambda adjusts carbon penalty weight
+# EWF1: portable log-ratio penalty. C0 = 1e-3 kg is a fixed reference unit
+# (1 gram CO2), making scores comparable across studies and model pools.
 lam = 1.0
-mn = df.groupby("dataset")["co2eq_kg"].transform("min")
-mx = df.groupby("dataset")["co2eq_kg"].transform("max")
-df["co2eq_kg_scaled"] = (df["co2eq_kg"] - mn) / (mx - mn).clip(lower=1e-9)
-
-df["ewf1"] = df["f1"] / (1 + lam * df["co2eq_kg_scaled"])
+C0 = 1e-3  # kg CO2 reference unit
+df["ewf1"] = df["f1"] / (1 + lam * np.log1p(df["co2eq_kg"] / C0))
 
 
 def custom_format(val):
@@ -133,7 +131,7 @@ for ds, key in zip(["wine", "credit", "higgs"], ["carb_wine", "carb_credit", "ca
                 palette=MODEL_PALETTE, ax=axes[key], dodge=False)
     axes[key].set_title(f"EWF1: {ds}")
     axes[key].set_xlabel("")
-    axes[key].set_ylim(0, 1.1)
+    axes[key].set_ylim(0, None)  # auto-scale; EWF1 is no longer bounded by 1
     axes[key].tick_params(axis="x", rotation=45)
 
 for name, ax in axes.items():
