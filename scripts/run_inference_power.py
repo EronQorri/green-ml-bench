@@ -1,13 +1,12 @@
 """
-run_inference_power.py — Backfill cpu_power_inference_w in inference_time.csv.
+run_inference_power.py — Re-measure inference_time and cpu_power_inference_w
+for all nrows=all rows in inference_time.csv.
 
-Inference power depends only on model architecture, not training set size.
-This script reconstructs each model with its tuned hyperparameters, fits it on
-a 10,000-row stratified subset of the relevant dataset (fast, a few minutes
-total), and measures average CPU power during 100 single-row predictions via
-CPUPowerMonitor. The result is written into inference_time.csv as a new column.
+Fits each model on a 10,000-row stratified subset (fast), then runs 100
+single-row predictions with a warmup. Records median latency (inference_time)
+and average CPU package power (cpu_power_inference_w). Overwrites existing
+values in the nrows=all rows so stale single-shot timings are replaced.
 
-Run this once after the main benchmark — no full retraining required.
 Usage:
     python scripts/run_inference_power.py
 """
@@ -122,14 +121,18 @@ CONFIGS = [
 ]
 
 
-def measure_inference_power(model, single_row):
+def measure_inference(model, single_row):
+    """Returns (median_latency_s, avg_cpu_watt). Runs 100 predictions after one warmup."""
     monitor = CPUPowerMonitor()
     monitor.start()
     model.predict(single_row)  # warmup
+    times = []
     for _ in range(100):
+        t0 = time.perf_counter()
         model.predict(single_row)
+        times.append(time.perf_counter() - t0)
     result = monitor.stop()
-    return result.get("avg_watt")
+    return float(np.median(times)), result.get("avg_watt")
 
 
 def load_subset(dataset, nrows):
@@ -165,11 +168,6 @@ def main():
             print(f"  [skip] {model_name}/{dataset} — no row in inference_time.csv")
             continue
 
-        already = df.loc[mask, "cpu_power_inference_w"]
-        if already.notna().all() and (already != "").all():
-            print(f"  [skip] {model_name}/{dataset} — already measured")
-            continue
-
         print(f"  [{model_name}/{dataset}] loading data and fitting...", flush=True)
 
         if dataset not in cached_data:
@@ -185,11 +183,13 @@ def main():
         model = build_model(model_key, dataset, X_fit.shape[1])
         model.fit(X_fit, y_fit)
 
-        print(f"  [{model_name}/{dataset}] measuring inference power...", flush=True)
-        avg_watt = measure_inference_power(model, single_row)
+        print(f"  [{model_name}/{dataset}] measuring...", flush=True)
+        median_latency, avg_watt = measure_inference(model, single_row)
 
+        df.loc[mask, "inference_time"] = median_latency
         df.loc[mask, "cpu_power_inference_w"] = round(avg_watt, 4) if avg_watt is not None else pd.NA
-        print(f"  [{model_name}/{dataset}] {avg_watt:.2f} W" if avg_watt else f"  [{model_name}/{dataset}] sensor unavailable")
+        watt_str = f"{avg_watt:.2f} W" if avg_watt is not None else "sensor unavailable"
+        print(f"  [{model_name}/{dataset}] {median_latency*1e6:.1f} µs  |  {watt_str}")
 
     df.to_csv(INFERENCE_CSV, index=False)
     print(f"\nUpdated: {INFERENCE_CSV}")

@@ -46,6 +46,7 @@ def load_data():
         df.columns = df.columns.str.strip()
         df["model"]   = df["model"].astype(str).str.strip()
         df["dataset"] = df["dataset"].astype(str).str.strip()
+        df["nrows"]   = df["nrows"].astype(str).str.strip()
 
     df_r = df_r[df_r["accuracy"].notna() & (df_r["accuracy"] != "")]
     df_r = df_r[df_r["nrows"].astype(str) == "all"]

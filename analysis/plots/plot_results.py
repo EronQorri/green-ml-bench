@@ -56,7 +56,7 @@ df_results_main = df_results[df_results["nrows"].astype(str) == "all"]
 # df = main runs only — used for Plots 1, 2, 3
 df = pd.merge(
     df_results_main,
-    df_inf[df_inf["nrows"].astype(str) == "all"][["model", "dataset", "nrows", "inference_time"]],
+    df_inf[df_inf["nrows"].astype(str) == "all"][["model", "dataset", "nrows", "inference_time", "cpu_power_inference_w"]],
     on=["model", "dataset", "nrows"],
     how="left",
 )
@@ -265,7 +265,7 @@ else:
 
 # ── Plot 4: MLP architecture variation — depth × width grid on HIGGS ──────────
 
-mlp_var = df_results_main[df_results_main["dataset"] == "higgs"].copy()
+mlp_var = df_results[df_results["dataset"] == "higgs"].copy()
 mlp_var = mlp_var[mlp_var["model"].str.match(r"^MLP_\d+x\d+$", na=False)]
 
 if not mlp_var.empty:
@@ -276,44 +276,27 @@ if not mlp_var.empty:
     mlp_var["f1"] = pd.to_numeric(mlp_var["f1"], errors="coerce")
     mlp_var = mlp_var.dropna(subset=["depth", "width", "f1", "co2eq_kg"])
 
-    widths = sorted(mlp_var["width"].unique())
-    depths = sorted(mlp_var["depth"].unique())
-    width_palette = dict(zip(widths, sns.color_palette("viridis", len(widths))))
-    depth_palette = dict(zip(depths, sns.color_palette("viridis", len(depths))))
+    piv_f1  = mlp_var.pivot_table(index="depth", columns="width", values="f1",      aggfunc="mean")
+    piv_co2 = mlp_var.pivot_table(index="depth", columns="width", values="co2eq_kg", aggfunc="mean")
 
-    fig, axes = plt.subplots(2, 2, figsize=(13, 9))
+    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
     fig.suptitle("MLP Architecture Variation — HIGGS", fontsize=14, fontweight="bold")
 
-    for w in widths:
-        sub = mlp_var[mlp_var["width"] == w].sort_values("depth")
-        axes[0, 0].plot(sub["depth"], sub["f1"], marker="o",
-                        color=width_palette[w], label=f"{w}")
-        axes[0, 1].plot(sub["depth"], sub["co2eq_kg"], marker="o",
-                        color=width_palette[w], label=f"{w}")
-    axes[0, 0].set(xlabel="Depth (hidden layers)", ylabel="Weighted F1",
-                   title="F1 vs depth (per width)", xticks=depths)
-    axes[0, 1].set(xlabel="Depth (hidden layers)", ylabel="CO₂ (kg, log)",
-                   title="CO₂ vs depth (per width)", xticks=depths)
-    axes[0, 1].set_yscale("log")
-    axes[0, 0].legend(title="Width", fontsize=8)
-    axes[0, 1].legend(title="Width", fontsize=8)
+    sns.heatmap(piv_f1, ax=axes[0], annot=True, fmt=".3f", cmap="Blues",
+                linewidths=0.5, linecolor="white", annot_kws={"size": 9},
+                cbar_kws={"label": "Weighted F1"})
+    axes[0].set_title("Weighted F1")
+    axes[0].set_xlabel("Width (units per layer)")
+    axes[0].set_ylabel("Depth (hidden layers)")
 
-    for d in depths:
-        sub = mlp_var[mlp_var["depth"] == d].sort_values("width")
-        label = f"{d} layer" + ("s" if d > 1 else "")
-        axes[1, 0].plot(sub["width"], sub["f1"], marker="o",
-                        color=depth_palette[d], label=label)
-        axes[1, 1].plot(sub["width"], sub["co2eq_kg"], marker="o",
-                        color=depth_palette[d], label=label)
-    axes[1, 0].set(xlabel="Width (units per layer)", ylabel="Weighted F1",
-                   title="F1 vs width (per depth)", xticks=widths)
-    axes[1, 1].set(xlabel="Width (units per layer)", ylabel="CO₂ (kg, log)",
-                   title="CO₂ vs width (per depth)", xticks=widths)
-    axes[1, 1].set_yscale("log")
-    axes[1, 0].legend(title="Depth", fontsize=8)
-    axes[1, 1].legend(title="Depth", fontsize=8)
+    sns.heatmap(piv_co2, ax=axes[1], annot=True, fmt=".3f", cmap="Oranges",
+                linewidths=0.5, linecolor="white", annot_kws={"size": 9},
+                cbar_kws={"label": "CO₂ (kg)"})
+    axes[1].set_title("CO₂ Emissions (kg)")
+    axes[1].set_xlabel("Width (units per layer)")
+    axes[1].set_ylabel("Depth (hidden layers)")
 
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.tight_layout(rect=[0, 0, 1, 0.93])
     plt.savefig(PLOTS_DIR / "mlp_variation.pdf", bbox_inches="tight")
     print("Saved: analysis/plots/mlp_variation.pdf")
     plt.close()

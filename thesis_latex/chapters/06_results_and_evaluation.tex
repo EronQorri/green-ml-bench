@@ -108,19 +108,53 @@ Tuning itself consumes energy that forms part of the total experimental budget. 
 \label{fig:scaling_higgs}
 \end{figure}
 
+\Cref{fig:scaling_higgs} shows CO\textsubscript{2} emissions, training time, and weighted F1 as a function of dataset size across nine HIGGS subsets ranging from 1{,}000 to 11{,}000{,}000 rows. The following observations summarise the key findings.
 
-\todo[inline]{Abbildung: Scaling-Plot (CO2 und F1 über Subset-Größen für LR, XGB-CPU, XGB-GPU, MLP)}
+\begin{itemize}
+  \item \textbf{Random Forest has the highest emissions of all models, despite its conceptual simplicity.}
+        At 500{,}000 rows, Random Forest emits 8.39\,mg\,CO\textsubscript{2}, compared to 2.75\,mg for MLP and 0.50\,mg for XGBoost CPU.
+        It was excluded from runs above 500{,}000 rows due to prohibitive training time, meaning its full scaling behaviour is not visible in the plot.
+        The underlying reason is architectural: training an ensemble of independent decision trees requires sequential or coarse-grained parallel tree construction, which does not map efficiently onto GPU acceleration and scales super-linearly with dataset size.
+        This result illustrates that ecological cost is not determined by model complexity in the abstract sense, but by how well a model's training procedure exploits available hardware parallelism.
 
-\todo[inline]{Zahlen: Wie skalieren Emissions und F1 mit wachsender Datenmenge? Wo flacht der Accuracy-Gewinn ab?}
+  \item \textbf{At 500{,}000 rows, MLP achieves a higher F1-score than Random Forest while emitting less than one third of its CO\textsubscript{2}.}
+        MLP reaches a weighted F1 of 0.745 against Random Forest's 0.732, at 2.75\,mg versus 8.39\,mg CO\textsubscript{2}.
+        The model that is architecturally more complex therefore dominates on both axes simultaneously at this scale.
+
+  \item \textbf{XGBoost GPU is the most emissions-efficient model at large scale.}
+        At 5{,}000{,}000 rows it emits 0.98\,mg CO\textsubscript{2} while matching XGBoost CPU in F1 (0.757 vs.\ 0.757) at roughly one sixth of its emissions.
+        At 11{,}000{,}000 rows the gap widens further: XGBoost GPU emits 2.10\,mg while XGBoost CPU emits 14.65\,mg for identical predictive performance.
+
+  \item \textbf{Logistic Regression shows near-flat accuracy above approximately 10{,}000 rows.}
+        Weighted F1 improves from 0.626 at 1{,}000 rows to 0.637 at 100{,}000 rows, and does not improve further at any larger subset size.
+        Additional data therefore yields no accuracy return for this model on HIGGS, making any compute spent beyond 100{,}000 rows ecologically wasteful relative to the gain.
+
+  \item \textbf{Accuracy gains diminish for all models above 1{,}000{,}000 rows.}
+        XGBoost CPU improves from 0.746 at 1\,M rows to 0.757 at 5\,M rows and 0.760 at 11\,M rows, a gain of 0.014 over a tenfold increase in data.
+        MLP improves from 0.755 at 1\,M to 0.787 at 11\,M rows, the largest absolute gain among the remaining models, but at a CO\textsubscript{2} cost that grows disproportionately: emissions increase by a factor of 28 over the same range while F1 improves by 4 percentage points.
+\end{itemize}
+
+\todo[inline]{Zahlen nach finalem Run prüfen}
 
 
 % ── MLP Architecture Variation ─────────────────────────────────────────────────
 \section{MLP Architecture Variation}
 \label{sec:results_mlp_arch}
 
-\todo[inline]{Abbildung: Heatmap oder Grouped-Bar (Depth x Width vs. CO2 / F1 auf HIGGS)}
+\Cref{fig:mlp_variation} shows weighted F1 and CO\textsubscript{2} emissions for all twelve MLP configurations (depth $\in \{1,2,3,4\}$, width $\in \{128, 256, 512\}$) trained on the full HIGGS dataset.
 
-\todo[inline]{Zahlen: Wie ändern sich Emissions und F1 mit Tiefe/Breite? Wann hört der Gain auf?}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{mlp_variation.pdf}
+\caption{MLP architecture variation on HIGGS: weighted F1 (left) and CO\textsubscript{2} emissions (right) for all depth-width combinations. Darker cells indicate higher values.}
+\label{fig:mlp_variation}
+\end{figure}
+
+Width has a stronger effect on predictive performance than depth. Moving from 128 to 512 units per layer increases F1 by roughly 0.04 across all depth levels, whereas adding layers beyond two yields gains below 0.01. The F1 ceiling is reached early: the 2$\times$512 architecture already achieves a weighted F1 of 0.775, only 0.007 below the best-observed configuration (4$\times$512, F1\,=\,0.782).
+
+The CO\textsubscript{2} picture is more nuanced. For narrow networks (width\,=\,128), emissions \textit{decrease} with depth, falling from 0.129\,kg at depth~1 to 0.071\,kg at depth~3, before recovering slightly to 0.074\,kg at depth~4. This counterintuitive pattern reflects early stopping: deeper narrow networks appear to converge in fewer epochs on HIGGS, so the total compute per training run is lower despite the larger parameter count. For wider networks this effect disappears; at width\,=\,512, emissions increase monotonically with depth from 0.144\,kg to 0.310\,kg.
+
+Taken together, the results identify 2$\times$512 as a practically efficient architecture: it captures 98.2\,\% of the best-observed F1 at 58\,\% of its CO\textsubscript{2} cost (0.181\,kg vs.\ 0.310\,kg). Configurations with three or four layers offer only marginal predictive improvements while incurring substantially higher emissions, illustrating the diminishing-returns structure that motivates architecture search from an ecological standpoint.
 
 
 % ── Carbon Intensity Analysis ──────────────────────────────────────────────────
