@@ -41,7 +41,7 @@ The Default of Credit Card Clients (hereafter: Credit) dataset contains 30,000 i
 
 The HIGGS dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \cite{whitesonHIGGS2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
 
-These three datasets vary significantly in size, enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity.
+These three datasets vary significantly in size, enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity. The jump from 30,000 to 11,000,000 instances is large, spanning nearly three orders of magnitude. This gap is addressed by the dataset scaling experiment described in \Cref{sec:experimental_protocol}, which trains models on seven intermediate HIGGS subset sizes ranging from 1,000 to 11,000,000 instances and thereby provides a continuous view of how performance and emissions evolve across the full size range.
 
 \section{Models}
 \label{design_models}
@@ -72,7 +72,7 @@ The \gls{mlp} was selected as the most complex model, representing the neural ne
 \end{table}
 
 
-Random Forest is the only model excluded from one dataset combination: due to prohibitive training runtimes at 11 million instances, it is not evaluated on HIGGS. All other model--dataset combinations are included in the main benchmark.
+Random Forest is the only model excluded from one dataset combination: due to prohibitive training runtimes at 11 million instances, it is not evaluated on HIGGS in the main benchmark. It is, however, included in the dataset scaling experiment for subset sizes up to 500{,}000 instances, where runtimes remain manageable. This provides data on the point at which Random Forest becomes computationally impractical relative to the other models. All other model--dataset combinations are included in the main benchmark.
 
 Together, the selected models cover a broad spectrum of algorithmic complexity, from a linear baseline to gradient boosting and deep learning, enabling a meaningful comparison of both predictive performance and energy efficiency across fundamentally different model types. The following section defines the metrics used to evaluate these dimensions.
 
@@ -132,7 +132,7 @@ The research questions are operationalized through five experiments. Each isolat
 
 The \textbf{main cross-dataset benchmark} trains all five models on all three datasets, yielding 14 model--dataset combinations (Random Forest on HIGGS is excluded, as described in \Cref{design_models}). It forms the empirical backbone of the study and addresses the overall energy-performance trade-off across model complexity and dataset scale.
 
-The \textbf{dataset scaling experiment} holds everything constant except the number of training instances. Four models are trained on nine HIGGS subset sizes ranging from 1{,}000 to 11{,}000{,}000 instances. Because all other variables are fixed, observed differences in performance and emissions can be attributed exclusively to dataset size. The experiment directly addresses RQ4 and, through the XGBoost \gls{cpu}/\gls{gpu} pairing, also feeds into RQ3.
+The \textbf{dataset scaling experiment} holds everything constant except the number of training instances. All five models are included at subset sizes up to 500{,}000 instances; beyond that threshold Random Forest is excluded due to prohibitive runtimes, leaving four models for the larger subsets up to 11{,}000{,}000. Because all other variables are fixed, observed differences in performance and emissions can be attributed exclusively to dataset size. The gap between the 30{,}000-instance Credit dataset and the full 11-million-instance HIGGS dataset is bridged by the intermediate subset sizes in this experiment, which cover the range that is typical of many real-world tabular classification tasks. The experiment directly addresses RQ4 and, through the XGBoost \gls{cpu}/\gls{gpu} pairing, also feeds into RQ3.
 
 The \textbf{\gls{mlp} architecture variation} isolates the effect of network depth and width by training a grid of 12 architectures on HIGGS: three widths (128, 256, 512 neurons) crossed with four depths (1--4 hidden layers). Non-architectural hyperparameters are fixed to neutral defaults to prevent any single configuration from being inadvertently favoured by the tuning results. This directly addresses RQ2.
 
