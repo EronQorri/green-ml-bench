@@ -7,7 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import os
 
-output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "electricity_mix_germany.png")
+output_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "electricity_mix_germany.pdf")
 load_dotenv()
 API_KEY = os.getenv("ELECTRICITYMAPS_API_KEY")
 

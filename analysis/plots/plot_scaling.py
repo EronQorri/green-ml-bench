@@ -115,13 +115,12 @@ df_scaling = df[df["dataset"] == "higgs"].copy()
 scaling_models = [m for m in MODEL_ORDER if m in df_scaling["model"].unique()]
 
 if len(scaling_models) >= 2 and df_scaling["nrows_int"].nunique() >= 3:
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+    fig, axes = plt.subplots(1, 2, figsize=(11, 5))
     fig.suptitle("Scaling Analysis: Higgs Subsets — All Models", fontsize=13, fontweight="bold")
 
     for ax, (col, title, log) in zip(axes, [
-        ("co2eq_kg",        "CO₂ (kg)",         True),
-        ("training_time_s", "Training Time (s)", True),
-        ("f1",              "F1-Score",          False),
+        ("co2eq_kg", "CO₂ (kg)",  True),
+        ("f1",       "F1-Score",  False),
     ]):
         for model in scaling_models:
             sub = df_scaling[df_scaling["model"] == model].sort_values("nrows_int")

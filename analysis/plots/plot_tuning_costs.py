@@ -5,6 +5,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.patches as mpatches
+from matplotlib.transforms import blended_transform_factory
+from pathlib import Path
 
 mpl.rcParams.update({
     "font.family":     "serif",
@@ -16,117 +18,114 @@ mpl.rcParams.update({
     "legend.fontsize":  9,
 })
 
-from pathlib import Path
-
 BASE_DIR  = Path(__file__).parent.parent.parent
 PLOTS_DIR = Path(__file__).parent
 
-DATASET_PALETTE = {
-    "wine":   (123/255, 167/255, 188/255),
-    "credit": (212/255, 149/255, 106/255),
-    "higgs":  (130/255, 185/255, 154/255),
+MODEL_PALETTE = {
+    "tune_RFC": (212/255, 149/255, 106/255),
+    "tune_XGB": (130/255, 185/255, 154/255),
+    "tune_MLP": (155/255, 135/255, 181/255),
+}
+MODEL_LABELS = {
+    "tune_RFC": "Random Forest",
+    "tune_XGB": "XGBoost",
+    "tune_MLP": "MLP",
 }
 DATASET_LABELS = {"wine": "Wine", "credit": "Credit", "higgs": "HIGGS"}
-MODEL_ORDER  = ["tune_RFC", "tune_XGB", "tune_MLP"]
-MODEL_LABELS = {"tune_RFC": "Random Forest", "tune_XGB": "XGBoost", "tune_MLP": "MLP"}
-DATASETS     = ["wine", "credit", "higgs"]
+SHADE_COLORS   = {"wine": "#f8f5f2", "credit": "#f2f6f2", "higgs": "#f2f2f8"}
+
+def fmt_time(s):
+    if s >= 3600: return f"{s/3600:.1f} h"
+    if s >= 60:   return f"{s/60:.0f} min"
+    return f"{s:.0f} s"
+
+def fmt_co2(g):
+    if g >= 1000: return f"{g/1000:.2f} kg"
+    if g >= 1:    return f"{g:.1f} g"
+    return f"{g:.2f} g"
 
 df = pd.read_csv(BASE_DIR / "results" / "results.csv")
 df.columns = df.columns.str.strip()
 df = df[df["model"].str.startswith("tune_")].copy()
-df["co2_g"]    = df["co2eq_kg"].astype(float) * 1000
-df["time_s"]   = df["training_time_s"].astype(float)
+df["co2_g"] = df["co2eq_kg"].astype(float) * 1000
+df["time_s"] = df["training_time_s"].astype(float)
 
-co2  = {m: {} for m in MODEL_ORDER}
-time = {m: {} for m in MODEL_ORDER}
-for _, row in df.iterrows():
-    m, d = row["model"], row["dataset"]
-    if m in co2:
-        co2[m][d]  = row["co2_g"]
-        time[m][d] = row["time_s"]
+# HIGGS → Credit → Wine, within each group descending by CO2 (largest at top)
+rows = []
+for ds in ["higgs", "credit", "wine"]:
+    subset = df[df["dataset"] == ds].sort_values("co2_g", ascending=False)
+    for _, r in subset.iterrows():
+        rows.append({
+            "model":   r["model"],
+            "dataset": r["dataset"],
+            "co2_g":   r["co2_g"],
+            "time_s":  r["time_s"],
+        })
 
+n     = len(rows)
+y_pos = np.arange(n)
 
-def fmt_co2(g):
-    if g >= 1000:
-        return f"{g/1000:.2f} kg"
-    return f"{g:.1f} g"
+fig, ax = plt.subplots(figsize=(8, 4.0))
 
+# Shaded dataset bands
+ds_groups = {}
+for i, r in enumerate(rows):
+    ds_groups.setdefault(r["dataset"], []).append(i)
 
-def fmt_time(s):
-    if s >= 3600:
-        return f"{s/3600:.1f} h"
-    if s >= 60:
-        return f"{s/60:.0f} min"
-    return f"{s:.0f} s"
+for ds, indices in ds_groups.items():
+    ylo, yhi = min(indices) - 0.45, max(indices) + 0.45
+    ax.axhspan(ylo, yhi, color=SHADE_COLORS[ds], zorder=0, lw=0)
 
+# Horizontal bars
+x_left = 0.15
+for i, r in enumerate(rows):
+    ax.barh(i, r["co2_g"], left=x_left, height=0.55,
+            color=MODEL_PALETTE[r["model"]], zorder=2,
+            edgecolor="white", linewidth=0.4)
 
-x      = np.arange(len(MODEL_ORDER))
-width  = 0.23
-offsets = np.array([-1, 0, 1]) * width
+# CO2 value inside bar (near left edge), duration to the right with gap
+for i, r in enumerate(rows):
+    ax.text(x_left * 1.3, i, fmt_time(r["time_s"]),
+            ha="left", va="center", fontsize=7.5, color="white", fontweight="bold")
+    ax.text(r["co2_g"] * 1.5, i, fmt_co2(r["co2_g"]),
+            ha="left", va="center", fontsize=8.0, color="#333333")
 
-fig, (ax_co2, ax_time) = plt.subplots(
-    2, 1, figsize=(9, 7), sharex=True,
-    gridspec_kw={"hspace": 0.12},
-)
-fig.suptitle("Hyperparameter Tuning Overhead", fontsize=13, fontweight="bold", y=0.97)
+# y-axis: model names
+ax.set_yticks(y_pos)
+ax.set_yticklabels([MODEL_LABELS[r["model"]] for r in rows], fontsize=9)
 
-for ax, data_dict, ylabel in [
-    (ax_co2,  co2,  r"CO$_2$ (g)"),
-    (ax_time, time, "Duration (s)"),
-]:
-    for i, ds in enumerate(DATASETS):
-        off = offsets[i]
-        for j, model in enumerate(MODEL_ORDER):
-            val = data_dict[model].get(ds)
-            if val is None:
-                continue
-            ax.bar(x[j] + off, val, width,
-                   color=DATASET_PALETTE[ds], zorder=3,
-                   edgecolor="white", linewidth=0.4)
-            label = fmt_co2(val) if ax is ax_co2 else fmt_time(val)
-            ax.text(x[j] + off, val * 1.25, label,
-                    ha="center", va="bottom", fontsize=6.5,
-                    rotation=45, color="#333333")
+# Dataset group labels on the right margin
+trans = blended_transform_factory(ax.transAxes, ax.transData)
+for ds, indices in ds_groups.items():
+    mid = np.mean(indices)
+    ax.text(1.015, mid, DATASET_LABELS[ds], transform=trans,
+            ha="left", va="center", fontsize=8.5,
+            style="italic", color="#666666")
 
-    ax.set_yscale("log")
-    ax.set_ylabel(ylabel, fontsize=10)
-    ax.yaxis.grid(True, which="both", linestyle="--", alpha=0.35, zorder=0)
-    ax.set_axisbelow(True)
-    ylo, yhi = ax.get_ylim()
-    ax.set_ylim(bottom=ylo, top=yhi * 8)  # headroom for labels + annotation
+# x-axis
+ax.set_xscale("log")
+ax.set_xlim(x_left * 0.5, max(r["co2_g"] for r in rows) * 14)
+ax.set_xlabel(r"Tuning CO$_2$ (g, log scale)", fontsize=10)
+ax.xaxis.grid(False)
+ax.yaxis.grid(False)
+ax.set_ylim(-0.6, n - 0.4)
 
-# ── annotate the MLP-HIGGS outlier on both panels ─────────────────────────────
-for ax, data_dict in [(ax_co2, co2), (ax_time, time)]:
-    val = data_dict["tune_MLP"]["higgs"]
-    bx  = x[2] + offsets[2]          # MLP group, higgs bar (rightmost offset)
-    ax.annotate(
-        "MLP × HIGGS\n≈ 95 h tuning",
-        xy=(bx, val),
-        xytext=(bx + 0.52, val * 0.35),
-        fontsize=7.5,
-        color="#222222",
-        arrowprops=dict(arrowstyle="->", color="#555555", lw=0.8),
-        bbox=dict(boxstyle="round,pad=0.25", fc="white", ec="#aaaaaa", lw=0.7),
-    )
+# Spines
+for spine in ["top", "right", "left"]:
+    ax.spines[spine].set_visible(False)
 
-# ── x-axis labels (bottom panel only, shared) ─────────────────────────────────
-ax_time.set_xticks(x)
-ax_time.set_xticklabels([MODEL_LABELS[m] for m in MODEL_ORDER], fontsize=10)
+# Legend
+patches = [mpatches.Patch(color=MODEL_PALETTE[m], label=MODEL_LABELS[m])
+           for m in ["tune_RFC", "tune_XGB", "tune_MLP"]]
+ax.legend(handles=patches, loc="upper right", frameon=True,
+          fontsize=8.5, framealpha=0.9)
 
-# ── legend ────────────────────────────────────────────────────────────────────
-patches = [mpatches.Patch(color=DATASET_PALETTE[d], label=DATASET_LABELS[d])
-           for d in DATASETS]
-fig.legend(handles=patches, loc="upper center", bbox_to_anchor=(0.5, 0.935),
-           ncol=3, frameon=True, fontsize=9,
-           title="Dataset", title_fontsize=9)
+# Footnote
+fig.text(0.5, -0.04,
+         "Random Forest was not tuned on HIGGS; literature defaults were used instead.",
+         ha="center", fontsize=7.5, color="#666666", style="italic")
 
-fig.text(
-    0.5, 0.005,
-    "* Random Forest was not tuned on HIGGS; "
-    "RFC hyperparameters were set from literature defaults.",
-    ha="center", fontsize=7.5, color="#555555", style="italic",
-)
-
+plt.tight_layout()
 plt.savefig(PLOTS_DIR / "tuning_costs.pdf", bbox_inches="tight")
 print("Saved: analysis/plots/tuning_costs.pdf")
 plt.close()

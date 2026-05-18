@@ -63,6 +63,8 @@ def load_data():
     df["co2eq_kg"]        = pd.to_numeric(df["co2eq_kg"],        errors="coerce")
     df["cpu_power_hw_w"]  = pd.to_numeric(df["cpu_power_hw_w"],  errors="coerce")
     df["cpu_energy_hw_wh"]= pd.to_numeric(df["cpu_energy_hw_wh"],errors="coerce")
+    df["gpu_energy_wh"]   = pd.to_numeric(df["gpu_energy_wh"],   errors="coerce").fillna(0)
+    df["ram_energy_wh"]   = pd.to_numeric(df["ram_energy_wh"],   errors="coerce").fillna(0)
     df["inference_time"]  = pd.to_numeric(df["inference_time"],  errors="coerce")
     if "cpu_power_inference_w" in df.columns:
         df["cpu_power_inference_w"] = pd.to_numeric(df["cpu_power_inference_w"], errors="coerce")
@@ -71,8 +73,9 @@ def load_data():
 
 def compute_breakeven(df):
     df = df.copy()
-    # carbon intensity per run [kg CO2 / kWh]
-    df["carbon_intensity"] = df["co2eq_kg"] / (df["cpu_energy_hw_wh"] / 1000)
+    # carbon intensity per run [kg CO2 / kWh] — use total measured energy (CPU+GPU+RAM)
+    df["total_energy_wh"] = df["cpu_energy_hw_wh"] + df["gpu_energy_wh"] + df["ram_energy_wh"]
+    df["carbon_intensity"] = df["co2eq_kg"] / (df["total_energy_wh"] / 1000)
 
     # Use measured inference power where available; fall back to training power.
     # Training power is a known overestimate for inference (no backward pass),
@@ -106,58 +109,58 @@ def plot_breakeven_bars(df):
     fs  = 9
     GAP = 1  # blank-position gap between dataset groups
 
-    # Build rows bottom-to-top: reversed DATASET_ORDER puts Wine at the top
-    rows         = []  # (y_pos, dataset, model, break_even)
-    group_bounds = {}  # dataset -> (y_min, y_max)
+    # Build columns left-to-right: wine | credit | higgs
+    cols         = []  # (x_pos, dataset, model, break_even)
+    group_bounds = {}  # dataset -> (x_min, x_max)
     pos = 0
-    for i, dataset in enumerate(reversed(datasets)):
+    for i, dataset in enumerate(datasets):
         if i > 0:
             pos += GAP
         sub = df[df["dataset"] == dataset].copy()
         sub["model_order"] = sub["model"].map({m: idx for idx, m in enumerate(MODEL_ORDER)})
-        sub = sub.sort_values("model_order", ascending=False)
-        y_start = pos
+        sub = sub.sort_values("model_order")
+        x_start = pos
         for _, row in sub.iterrows():
-            rows.append((pos, dataset, row["model"], row["break_even"]))
+            cols.append((pos, dataset, row["model"], row["break_even"]))
             pos += 1
-        group_bounds[dataset] = (y_start, pos - 1)
+        group_bounds[dataset] = (x_start, pos - 1)
 
-    positions  = np.array([r[0] for r in rows], dtype=float)
-    values     = np.array([r[3] for r in rows], dtype=float)
-    model_list = [r[2] for r in rows]
+    positions  = np.array([c[0] for c in cols], dtype=float)
+    values     = np.array([c[3] for c in cols], dtype=float)
+    model_list = [c[2] for c in cols]
     labels     = [MODEL_LABELS[m] for m in model_list]
     colors     = [palette[m] for m in model_list]
 
-    fig, ax = plt.subplots(figsize=(8, 7))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
-    bars = ax.barh(positions, values, color=colors, height=0.7,
-                   edgecolor="white", linewidth=0.6, zorder=2)
+    bars = ax.bar(positions, values, color=colors, width=0.7,
+                  edgecolor="white", linewidth=0.6, zorder=2)
 
     for bar, val in zip(bars, values):
-        ax.text(val * 1.05, bar.get_y() + bar.get_height() / 2,
-                f"{val:,.0f}", ha="left", va="center", fontsize=fs - 2, zorder=3)
+        ax.text(bar.get_x() + bar.get_width() / 2, val * 1.15,
+                f"{val:,.0f}", ha="center", va="bottom", fontsize=fs - 2,
+                zorder=3)
 
-    ax.set_yticks(positions)
-    ax.set_yticklabels(labels, fontsize=fs - 1)
-    ax.set_xscale("log")
-    ax.set_xlabel("Break-even (# predictions)", fontsize=fs - 1)
-    ax.grid(True, axis="x", which="major", alpha=0.25, linestyle="--", zorder=1)
+    ax.set_xticks(positions)
+    ax.set_xticklabels(labels, fontsize=fs - 1, rotation=45, ha="right")
+    ax.set_yscale("log")
+    ax.set_ylabel("Break-even (# predictions)", fontsize=fs - 1)
+    ax.grid(True, axis="y", which="major", alpha=0.25, linestyle="--", zorder=1)
     ax.set_axisbelow(True)
-    ax.set_xlim(right=values.max() * 4)
+    ax.set_ylim(top=values.max() * 8)
 
-    # Dataset section labels on the right (axes-x / data-y coordinates)
-    trans = blended_transform_factory(ax.transAxes, ax.transData)
+    # Dataset section labels on top (data-x / axes-y coordinates)
+    trans = blended_transform_factory(ax.transData, ax.transAxes)
     for dataset in datasets:
-        y_min, y_max = group_bounds[dataset]
-        ax.text(1.02, (y_min + y_max) / 2, dataset.capitalize(),
-                transform=trans, ha="left", va="center",
+        x_min, x_max = group_bounds[dataset]
+        ax.text((x_min + x_max) / 2, 1.02, dataset.capitalize(),
+                transform=trans, ha="center", va="bottom",
                 fontsize=fs, fontweight="bold")
 
     # Dashed separator lines between groups
-    ds_bottom_to_top = list(reversed(datasets))
-    for i in range(len(ds_bottom_to_top) - 1):
-        y_sep = (group_bounds[ds_bottom_to_top[i]][1] + group_bounds[ds_bottom_to_top[i + 1]][0]) / 2
-        ax.axhline(y_sep, color="gray", linewidth=0.6, linestyle="--", alpha=0.4)
+    for i in range(len(datasets) - 1):
+        x_sep = (group_bounds[datasets[i]][1] + group_bounds[datasets[i + 1]][0]) / 2
+        ax.axvline(x_sep, color="gray", linewidth=0.6, linestyle="--", alpha=0.4)
 
     fig.tight_layout()
     out = PLOTS_DIR / "lifecycle_breakeven.pdf"

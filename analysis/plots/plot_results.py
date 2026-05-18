@@ -23,37 +23,30 @@ PLOTS_DIR = Path(__file__).parent
 
 MODEL_ORDER = ["LogisticRegression", "RandomForest", "XGBoost", "XGBoost_GPU", "MLP_PyTorch"]
 MODEL_PALETTE = {
-    "LogisticRegression": (123/255, 167/255, 188/255),  # clrLR
-    "RandomForest":       (212/255, 149/255, 106/255),  # clrRF
-    "XGBoost":            (130/255, 185/255, 154/255),  # clrXC
-    "XGBoost_GPU":        (192/255, 112/255, 112/255),  # clrXG
-    "MLP_PyTorch":        (155/255, 135/255, 181/255),  # clrML
+    "LogisticRegression": (123/255, 167/255, 188/255),
+    "RandomForest":       (212/255, 149/255, 106/255),
+    "XGBoost":            (130/255, 185/255, 154/255),
+    "XGBoost_GPU":        (192/255, 112/255, 112/255),
+    "MLP_PyTorch":        (155/255, 135/255, 181/255),
 }
-METHOD_PALETTE = {
-    "HardwareMonitor (corrected)": ( 90/255, 140/255, 170/255),
-    "CodeCarbon":                  (210/255, 175/255, 130/255),
-}
-
 df_results = pd.read_csv(RESULTS_DIR / "results.csv")
 df_inf = pd.read_csv(RESULTS_DIR / "inference_time.csv")
 df_results.columns = df_results.columns.str.strip()
 df_inf.columns = df_inf.columns.str.strip()
 
 df_results["dataset"] = df_results["dataset"].astype(str).str.strip()
-df_results["model"] = df_results["model"].astype(str).str.strip()
-df_results["nrows"] = df_results["nrows"].astype(str).str.strip()
-df_inf["dataset"] = df_inf["dataset"].astype(str).str.strip()
-df_inf["model"] = df_inf["model"].astype(str).str.strip()
-df_inf["nrows"] = df_inf["nrows"].astype(str).str.strip()
+df_results["model"]   = df_results["model"].astype(str).str.strip()
+df_results["nrows"]   = df_results["nrows"].astype(str).str.strip()
+df_inf["dataset"]     = df_inf["dataset"].astype(str).str.strip()
+df_inf["model"]       = df_inf["model"].astype(str).str.strip()
+df_inf["nrows"]       = df_inf["nrows"].astype(str).str.strip()
 
-# keep only training rows (tuning rows have no accuracy)
 df_results = df_results[df_results["accuracy"].notna() & (df_results["accuracy"] != "")]
 df_results = df_results.drop_duplicates(subset=["dataset", "nrows", "model"], keep="last")
-df_inf = df_inf.drop_duplicates(subset=["dataset", "nrows", "model"], keep="last")
+df_inf     = df_inf.drop_duplicates(subset=["dataset", "nrows", "model"], keep="last")
 
 df_results_main = df_results[df_results["nrows"].astype(str) == "all"]
 
-# df = main runs only — used for Plots 1, 2, 3
 df = pd.merge(
     df_results_main,
     df_inf[df_inf["nrows"].astype(str) == "all"][["model", "dataset", "nrows", "inference_time", "cpu_power_inference_w"]],
@@ -61,10 +54,8 @@ df = pd.merge(
     how="left",
 )
 
-# EWF1: portable log-ratio penalty. C0 = 1e-3 kg is a fixed reference unit
-# (1 gram CO2), making scores comparable across studies and model pools.
 lam = 1.0
-C0 = 1e-3  # kg CO2 reference unit
+C0  = 1e-3
 df["ewf1"] = df["f1"] / (1 + lam * np.log1p(df["co2eq_kg"] / C0))
 
 
@@ -82,12 +73,117 @@ def custom_format(val):
         return f"{val:.1f}".rstrip("0").rstrip(".")
 
 
-# ── Plot 1: main comparison dashboard ───────────────────���────────────────────
+DATASET_LABELS = {"wine": "Wine", "credit": "Credit", "higgs": "HIGGS"}
+
+# ── Plot 1b: Predictive Performance (Accuracy + Weighted F1) ─────────────────
+
+bp_perf = dict(hue="model", hue_order=MODEL_ORDER, palette=MODEL_PALETTE, errorbar=None)
+
+fig, axes_perf = plt.subplots(1, 2, figsize=(12, 5))
+fig.suptitle("Predictive Performance across Datasets", fontsize=13, fontweight="bold")
+
+sns.barplot(data=df, x="dataset", y="accuracy", ax=axes_perf[0], **bp_perf)
+axes_perf[0].set_title("Accuracy")
+axes_perf[0].set_ylim(0, 1.15)
+axes_perf[0].set_xlabel("")
+axes_perf[0].set_ylabel("Accuracy")
+
+sns.barplot(data=df, x="dataset", y="f1", ax=axes_perf[1], **bp_perf)
+axes_perf[1].set_title("Weighted F1-Score")
+axes_perf[1].set_ylim(0, 1.15)
+axes_perf[1].set_xlabel("")
+axes_perf[1].set_ylabel("Weighted F1")
+
+for ax in axes_perf:
+    for container in ax.containers:
+        labels = [custom_format(v) for v in container.datavalues]
+        ax.bar_label(container, labels=labels, padding=4, fontsize=8)
+    if ax.get_legend():
+        ax.get_legend().remove()
+
+handles, labels = axes_perf[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.93),
+           ncol=5, fontsize=10)
+plt.tight_layout(rect=[0, 0, 1, 0.90])
+plt.savefig(PLOTS_DIR / "vergleich_performance.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/vergleich_performance.pdf")
+plt.close()
+
+
+# ── Plot 1c: Ecological Cost (CO₂ Emissions + Training Time) ─────────────────
+
+bp_eff = dict(hue="model", hue_order=MODEL_ORDER, palette=MODEL_PALETTE, errorbar=None)
+
+fig, axes_eff = plt.subplots(1, 2, figsize=(12, 5))
+fig.suptitle("Ecological Cost across Datasets", fontsize=13, fontweight="bold")
+
+sns.barplot(data=df, x="dataset", y="co2eq_kg", ax=axes_eff[0], **bp_eff)
+axes_eff[0].set_title("CO₂ Emissions — corrected (kg, log)")
+axes_eff[0].set_yscale("log")
+axes_eff[0].set_xlabel("")
+axes_eff[0].set_ylabel("CO₂ (kg)")
+
+sns.barplot(data=df, x="dataset", y="training_time_s", ax=axes_eff[1], **bp_eff)
+axes_eff[1].set_title("Training Time (s, log)")
+axes_eff[1].set_yscale("log")
+axes_eff[1].set_xlabel("")
+axes_eff[1].set_ylabel("Training Time (s)")
+
+for ax in axes_eff:
+    for container in ax.containers:
+        labels = [custom_format(v) for v in container.datavalues]
+        ax.bar_label(container, labels=labels, padding=4, fontsize=8)
+    if ax.get_legend():
+        ax.get_legend().remove()
+    ylo, yhi = ax.get_ylim()
+    ax.set_ylim(bottom=ylo, top=yhi * 2)
+
+handles, labels = axes_eff[0].get_legend_handles_labels()
+fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.93),
+           ncol=5, fontsize=10)
+plt.tight_layout(rect=[0, 0, 1, 0.90])
+plt.savefig(PLOTS_DIR / "vergleich_efficiency.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/vergleich_efficiency.pdf")
+plt.close()
+
+
+# ── Plot 1d: Carbon-Penalised F1 (EWF1) per Dataset ─────────────────────────
+
+fig, axes_ewf1 = plt.subplots(1, 3, figsize=(14, 5))
+fig.suptitle("EWF1 per Dataset", fontsize=13, fontweight="bold")
+
+for ax, ds in zip(axes_ewf1, ["wine", "credit", "higgs"]):
+    subset = df[df["dataset"] == ds]
+    if subset.empty:
+        ax.set_visible(False)
+        continue
+    models_in_ds = [m for m in MODEL_ORDER if m in subset["model"].values]
+    sns.barplot(data=subset, x="model", y="ewf1",
+                order=models_in_ds, hue="model", hue_order=models_in_ds,
+                palette=MODEL_PALETTE, ax=ax, dodge=False, errorbar=None)
+    ax.set_title(DATASET_LABELS.get(ds, ds))
+    ax.set_xlabel("")
+    ax.set_ylabel("EWF1" if ds == "wine" else "")
+    ax.set_ylim(0, 1.1)
+    ax.tick_params(axis="x", rotation=45)
+    for container in ax.containers:
+        labels = [custom_format(v) for v in container.datavalues]
+        ax.bar_label(container, labels=labels, padding=4, fontsize=8)
+    if ax.get_legend():
+        ax.get_legend().remove()
+
+plt.tight_layout(rect=[0, 0, 1, 0.93])
+plt.savefig(PLOTS_DIR / "vergleich_ewf1.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/vergleich_ewf1.pdf")
+plt.close()
+
+
+# ── Full dashboard (vergleich.pdf, kept for reference) ────────────────────────
 
 layout = [
-    ["emissions", "emissions", "time",     "time",     "inf_time",   "inf_time"],
-    ["acc",       "acc",       "acc",      "f1",       "f1",         "f1"],
-    ["carb_wine", "carb_wine", "carb_credit", "carb_credit", "carb_higgs", "carb_higgs"],
+    ["emissions", "emissions", "time",        "time",        "inf_time",   "inf_time"],
+    ["acc",       "acc",       "acc",          "f1",          "f1",         "f1"],
+    ["carb_wine", "carb_wine", "carb_credit",  "carb_credit", "carb_higgs", "carb_higgs"],
 ]
 
 fig, axes = plt.subplot_mosaic(layout, figsize=(18, 12))
@@ -95,7 +191,7 @@ fig.suptitle("Model Comparison: Efficiency vs. Accuracy", fontsize=15, fontweigh
 
 bp_kwargs = dict(hue="model", hue_order=MODEL_ORDER, palette=MODEL_PALETTE)
 
-sns.barplot(data=df, x="dataset", y="co2eq_kg", ax=axes["emissions"], **bp_kwargs)
+sns.barplot(data=df, x="dataset", y="co2eq_kg",       ax=axes["emissions"], **bp_kwargs)
 axes["emissions"].set_title("CO₂ Emissions — corrected (kg, log)")
 axes["emissions"].set_yscale("log")
 axes["emissions"].set_xlabel("")
@@ -105,7 +201,7 @@ axes["time"].set_title("Training Time (s, log)")
 axes["time"].set_yscale("log")
 axes["time"].set_xlabel("")
 
-sns.barplot(data=df, x="dataset", y="inference_time", ax=axes["inf_time"], **bp_kwargs)
+sns.barplot(data=df, x="dataset", y="inference_time",  ax=axes["inf_time"], **bp_kwargs)
 axes["inf_time"].set_title("Inference Time per Sample (s, log)")
 axes["inf_time"].set_yscale("log")
 axes["inf_time"].set_xlabel("")
@@ -131,7 +227,7 @@ for ds, key in zip(["wine", "credit", "higgs"], ["carb_wine", "carb_credit", "ca
                 palette=MODEL_PALETTE, ax=axes[key], dodge=False)
     axes[key].set_title(f"EWF1: {ds}")
     axes[key].set_xlabel("")
-    axes[key].set_ylim(0, None)  # auto-scale; EWF1 is no longer bounded by 1
+    axes[key].set_ylim(0, None)
     axes[key].tick_params(axis="x", rotation=45)
 
 for name, ax in axes.items():
@@ -143,7 +239,6 @@ for name, ax in axes.items():
     ylo, yhi = ax.get_ylim()
     if ax.get_yscale() == "log":
         ax.set_ylim(bottom=ylo, top=yhi * 2)
-    
 
 handles, labels = axes["emissions"].get_legend_handles_labels()
 fig.legend(handles, labels, loc="upper center", bbox_to_anchor=(0.5, 0.94),
@@ -154,15 +249,10 @@ print("Saved: analysis/plots/vergleich.pdf")
 plt.close()
 
 
-# ── Plot 2: CodeCarbon vs. HardwareMonitor — Underestimation Factor ──────────
+# ── CodeCarbon vs. HardwareMonitor underestimation factor ────────────────────
 
 cc_cols = ["co2eq_codecarbon_kg", "cpu_power_hw_w"]
 if all(c in df.columns for c in cc_cols):
-    DATASET_PALETTE = {
-        "wine":   (123/255, 167/255, 188/255),  # clrLR
-        "credit": (212/255, 149/255, 106/255),  # clrRF
-        "higgs":  (130/255, 185/255, 154/255),  # clrXC
-    }
     MODEL_LABELS = {
         "LogisticRegression": "LR",
         "RandomForest":       "RF",
@@ -175,12 +265,12 @@ if all(c in df.columns for c in cc_cols):
     df_ratio = df_ratio[df_ratio["co2eq_codecarbon_kg"] > 0].copy()
     df_ratio["factor"] = df_ratio["co2eq_kg"] / df_ratio["co2eq_codecarbon_kg"]
 
-    datasets_order = [d for d in ["wine", "credit", "higgs"] if d in df_ratio["dataset"].values]
-    models_in_data = [m for m in MODEL_ORDER if m in df_ratio["model"].values]
+    datasets_order  = [d for d in ["wine", "credit", "higgs"] if d in df_ratio["dataset"].values]
+    models_in_data  = [m for m in MODEL_ORDER if m in df_ratio["model"].values]
 
-    x = np.arange(len(datasets_order))
-    n = len(models_in_data)
-    width = 0.15
+    x       = np.arange(len(datasets_order))
+    n       = len(models_in_data)
+    width   = 0.15
     offsets = np.linspace(-(n - 1) / 2, (n - 1) / 2, n) * width
 
     fig, ax = plt.subplots(figsize=(10, 5))
@@ -210,14 +300,14 @@ else:
     print("Skipping CodeCarbon vs. HardwareMonitor plot — columns not found.")
 
 
-# ── Plot 3: XGBoost CPU vs GPU ────────────────────────────────────────────────
+# ── XGBoost CPU vs GPU ────────────────────────────────────────────────────────
 
 df_xgb = df[df["model"].isin(["XGBoost", "XGBoost_GPU"])].copy()
 
 if not df_xgb.empty:
     XGB_PALETTE = {"XGBoost": MODEL_PALETTE["XGBoost"], "XGBoost_GPU": MODEL_PALETTE["XGBoost_GPU"]}
-    xgb_kwargs = dict(hue="model", hue_order=["XGBoost", "XGBoost_GPU"],
-                      palette=XGB_PALETTE, errorbar=None)
+    xgb_kwargs  = dict(hue="model", hue_order=["XGBoost", "XGBoost_GPU"],
+                       palette=XGB_PALETTE, errorbar=None)
 
     fig, axes_arr = plt.subplots(2, 2, figsize=(10, 8))
     axes = {"co2": axes_arr[0, 0], "time": axes_arr[0, 1],
@@ -225,10 +315,10 @@ if not df_xgb.empty:
     fig.suptitle("XGBoost: CPU vs. GPU", fontweight="bold")
 
     metrics = [
-        ("co2eq_kg",        "co2", r"CO$_2$ (kg)",          True),
-        ("training_time_s", "time", "Training Time (s)",     True),
-        ("accuracy",        "acc",  "Accuracy",              False),
-        ("inference_time",  "inf",  "Inference Time (s)",    False),
+        ("co2eq_kg",        "co2",  r"CO$_2$ (kg)",       True),
+        ("training_time_s", "time", "Training Time (s)",   True),
+        ("accuracy",        "acc",  "Accuracy",            False),
+        ("inference_time",  "inf",  "Inference Time (s)",  False),
     ]
 
     for col, key, ylabel, log in metrics:
@@ -263,20 +353,20 @@ else:
     print("Skipping XGBoost CPU vs GPU plot — no data found.")
 
 
-# ── Plot 4: MLP architecture variation — depth × width grid on HIGGS ──────────
+# ── MLP architecture variation (depth × width grid on HIGGS) ─────────────────
 
 mlp_var = df_results[df_results["dataset"] == "higgs"].copy()
 mlp_var = mlp_var[mlp_var["model"].str.match(r"^MLP_\d+x\d+$", na=False)]
 
 if not mlp_var.empty:
     parsed = mlp_var["model"].str.extract(r"^MLP_(\d+)x(\d+)$")
-    mlp_var["depth"] = pd.to_numeric(parsed[0])
-    mlp_var["width"] = pd.to_numeric(parsed[1])
+    mlp_var["depth"]    = pd.to_numeric(parsed[0])
+    mlp_var["width"]    = pd.to_numeric(parsed[1])
     mlp_var["co2eq_kg"] = pd.to_numeric(mlp_var["co2eq_kg"], errors="coerce")
-    mlp_var["f1"] = pd.to_numeric(mlp_var["f1"], errors="coerce")
+    mlp_var["f1"]       = pd.to_numeric(mlp_var["f1"], errors="coerce")
     mlp_var = mlp_var.dropna(subset=["depth", "width", "f1", "co2eq_kg"])
 
-    piv_f1  = mlp_var.pivot_table(index="depth", columns="width", values="f1",      aggfunc="mean")
+    piv_f1  = mlp_var.pivot_table(index="depth", columns="width", values="f1",       aggfunc="mean")
     piv_co2 = mlp_var.pivot_table(index="depth", columns="width", values="co2eq_kg", aggfunc="mean")
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 4))
