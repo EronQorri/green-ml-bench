@@ -56,15 +56,15 @@
 \chapter{Full MLP Architecture Variation Results}
 \label{app:mlp_variation}
 
-\Cref{tab:app_mlp_full} gives the complete numeric results for all twelve \gls{mlp} architecture configurations evaluated in the variation experiment (\Cref{design_mlp_variation,sec:results_mlp_arch}). The heatmaps in \Cref{fig:mlp_variation,fig:mlp_variation_ewf1} visualize the same data. All runs use the full 11M-row HIGGS dataset. \gls{ewf1} is computed using $\text{EWF1} = \text{WF1} / (1 + \lambda \cdot \hat{c})$, where $\hat{c}$ is the min-max normalized CO\textsubscript{2} within the variation grid (min\,=\,0.071\,g at 3$\times$128, max\,=\,0.310\,g at 4$\times$512).
+\Cref{tab:app_mlp_full} gives the complete numeric results for all twelve \gls{mlp} architecture configurations evaluated in the variation experiment (\Cref{design_mlp_variation,sec:results_mlp_arch}). The heatmaps in \Cref{fig:mlp_variation,fig:mlp_variation_cf1} visualize the same data. All runs use the full 11M-row HIGGS dataset. \gls{cf1} is computed as $\text{CF1} = c_{\mathrm{mg}} / (\text{WF1} \times 100)$, where $c_{\mathrm{mg}}$ is CO\textsubscript{2} in milligrams; lower values indicate a more ecologically efficient configuration.
 
 \begin{table}[htbp]
 \centering
-\caption{Complete results for the 12 \gls{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is total 5-fold \gls{cv} wall-clock time. \gls{ewf1} uses min-max normalized emissions within the grid ($\lambda = 1$). Bold marks the best value per column.}
+\caption{Complete results for the 12 \gls{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is total 5-fold \gls{cv} wall-clock time. \gls{cf1} is mg CO\textsubscript{2} per WF1 percentage point; lower is better. Bold marks the best value per column.}
 \label{tab:app_mlp_full}
 \begin{tabular}{@{} l r r r r r @{}}
 \toprule
-\textbf{Config} & \textbf{WF1} & \textbf{CO\textsubscript{2} (g)} & \textbf{Time (h)} & \textbf{EWF1} \\
+\textbf{Config} & \textbf{WF1} & \textbf{CO\textsubscript{2} (g)} & \textbf{Time (h)} & \textbf{CF1} \\
 \midrule
 $1\times 128$   & 0.729 & 0.129 & 3.04 & 0.587 \\
 $2\times 128$   & 0.757 & 0.097 & 2.28 & 0.682 \\
@@ -91,6 +91,7 @@ $4\times 512$   & \textbf{0.782} & 0.310 & 6.45 & 0.391 \\
 
 The three figures below show per-dataset benchmark breakdowns for Wine, Credit, and HIGGS. The combined cross-dataset comparison is presented in \Cref{sec:results_main}; these figures provide a higher-resolution view of each dataset in isolation.
 
+\todo[inline]{Regenerate after run\_all: \texttt{python analysis/plots/plot\_per\_dataset.py}}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{wine_benchmark.pdf}
@@ -98,6 +99,7 @@ The three figures below show per-dataset benchmark breakdowns for Wine, Credit, 
 \label{fig:app_wine}
 \end{figure}
 
+\todo[inline]{Regenerate after run\_all: \texttt{python analysis/plots/plot\_per\_dataset.py}}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{credit_benchmark.pdf}
@@ -105,6 +107,7 @@ The three figures below show per-dataset benchmark breakdowns for Wine, Credit, 
 \label{fig:app_credit}
 \end{figure}
 
+\todo[inline]{Regenerate after run\_all: \texttt{python analysis/plots/plot\_per\_dataset.py}}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{higgs_benchmark.pdf}

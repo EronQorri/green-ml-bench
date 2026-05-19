@@ -19,10 +19,13 @@ mpl.rcParams.update({
 BASE_DIR  = Path(__file__).parent.parent.parent
 PLOTS_DIR = Path(__file__).parent
 
-lam = 1.0
-
-df = pd.read_csv(BASE_DIR / "results" / "results.csv")
-df.columns = df.columns.str.strip()
+COLS = [
+    "timestamp", "model", "dataset", "nrows",
+    "accuracy", "f1", "co2eq_kg", "co2eq_codecarbon_kg",
+    "cpu_power_hw_w", "cpu_energy_hw_wh", "gpu_energy_wh",
+    "ram_energy_wh", "training_time_s",
+]
+df = pd.read_csv(BASE_DIR / "results" / "mlp_variation.csv", header=None, names=COLS)
 df["model"]   = df["model"].astype(str).str.strip()
 df["dataset"] = df["dataset"].astype(str).str.strip()
 
@@ -35,15 +38,12 @@ mlp_var["co2eq_kg"] = pd.to_numeric(mlp_var["co2eq_kg"], errors="coerce")
 mlp_var["f1"]       = pd.to_numeric(mlp_var["f1"],       errors="coerce")
 mlp_var = mlp_var.dropna(subset=["depth", "width", "f1", "co2eq_kg"])
 
-mn = mlp_var["co2eq_kg"].min()
-mx = mlp_var["co2eq_kg"].max()
-mlp_var["co2eq_kg_scaled"] = (mlp_var["co2eq_kg"] - mn) / max(mx - mn, 1e-9)
-mlp_var["ewf1"] = mlp_var["f1"] / (1 + lam * mlp_var["co2eq_kg_scaled"])
+mlp_var["cf1"] = (mlp_var["co2eq_kg"] * 1e6) / (mlp_var["f1"] * 100)
 
-piv = mlp_var.pivot_table(index="depth", columns="width", values="ewf1", aggfunc="mean")
+piv = mlp_var.pivot_table(index="depth", columns="width", values="cf1", aggfunc="mean")
 
-# find best cell for annotation
-best_idx = mlp_var["ewf1"].idxmax()
+# find best cell (lowest CF1) for annotation
+best_idx = mlp_var["cf1"].idxmin()
 best_depth = mlp_var.loc[best_idx, "depth"]
 best_width = mlp_var.loc[best_idx, "width"]
 
@@ -51,11 +51,11 @@ fig, ax = plt.subplots(figsize=(6, 4))
 
 sns.heatmap(
     piv, ax=ax,
-    annot=True, fmt=".3f",
-    cmap="YlGn",
+    annot=True, fmt=".1f",
+    cmap="YlGn_r",
     linewidths=0.5, linecolor="white",
     annot_kws={"size": 9},
-    cbar_kws={"label": "EWF1"},
+    cbar_kws={"label": "CF1 (mg CO₂ / F1%)"},
 )
 
 # mark the best cell with a border
@@ -66,11 +66,11 @@ ax.add_patch(plt.Rectangle(
     fill=False, edgecolor="black", linewidth=2.0, clip_on=False,
 ))
 
-ax.set_title("MLP Architecture Variation — EWF1 (HIGGS)", pad=10)
+ax.set_title("MLP Architecture Variation — CF1 (HIGGS)", pad=10)
 ax.set_xlabel("Width (units per layer)")
 ax.set_ylabel("Depth (hidden layers)")
 
 plt.tight_layout()
-plt.savefig(PLOTS_DIR / "mlp_variation_ewf1.pdf", bbox_inches="tight")
-print("Saved: analysis/plots/mlp_variation_ewf1.pdf")
+plt.savefig(PLOTS_DIR / "mlp_variation_cf1.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/mlp_variation_cf1.pdf")
 plt.close()

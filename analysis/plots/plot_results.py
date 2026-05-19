@@ -54,11 +54,7 @@ df = pd.merge(
     how="left",
 )
 
-lam = 1.0
-mn = df.groupby("dataset")["co2eq_kg"].transform("min")
-mx = df.groupby("dataset")["co2eq_kg"].transform("max")
-df["co2eq_kg_scaled"] = (df["co2eq_kg"] - mn) / (mx - mn).clip(lower=1e-9)
-df["ewf1"] = df["f1"] / (1 + lam * df["co2eq_kg_scaled"])
+df["cf1"] = (df["co2eq_kg"] * 1e6) / (df["f1"] * 100)
 
 
 def custom_format(val):
@@ -149,24 +145,23 @@ print("Saved: analysis/plots/vergleich_efficiency.pdf")
 plt.close()
 
 
-# ── Plot 1d: Carbon-Penalised F1 (EWF1) per Dataset ─────────────────────────
+# ── Plot 1d: CF1 per Dataset ─────────────────────────────────────────────────
 
-fig, axes_ewf1 = plt.subplots(1, 3, figsize=(14, 5))
-fig.suptitle("EWF1 per Dataset", fontsize=13, fontweight="bold")
+fig, axes_cf1 = plt.subplots(1, 3, figsize=(14, 5))
+fig.suptitle("CF1 per Dataset", fontsize=13, fontweight="bold")
 
-for ax, ds in zip(axes_ewf1, ["wine", "credit", "higgs"]):
+for ax, ds in zip(axes_cf1, ["wine", "credit", "higgs"]):
     subset = df[df["dataset"] == ds]
     if subset.empty:
         ax.set_visible(False)
         continue
     models_in_ds = [m for m in MODEL_ORDER if m in subset["model"].values]
-    sns.barplot(data=subset, x="model", y="ewf1",
+    sns.barplot(data=subset, x="model", y="cf1",
                 order=models_in_ds, hue="model", hue_order=models_in_ds,
                 palette=MODEL_PALETTE, ax=ax, dodge=False, errorbar=None)
     ax.set_title(DATASET_LABELS.get(ds, ds))
     ax.set_xlabel("")
-    ax.set_ylabel("EWF1" if ds == "wine" else "")
-    ax.set_ylim(0, 1.1)
+    ax.set_ylabel("CF1 (mg CO₂ / F1%)" if ds == "wine" else "")
     ax.tick_params(axis="x", rotation=45)
     for container in ax.containers:
         labels = [custom_format(v) for v in container.datavalues]
@@ -175,8 +170,8 @@ for ax, ds in zip(axes_ewf1, ["wine", "credit", "higgs"]):
         ax.get_legend().remove()
 
 plt.tight_layout(rect=[0, 0, 1, 0.93])
-plt.savefig(PLOTS_DIR / "vergleich_ewf1.pdf", bbox_inches="tight")
-print("Saved: analysis/plots/vergleich_ewf1.pdf")
+plt.savefig(PLOTS_DIR / "vergleich_cf1.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/vergleich_cf1.pdf")
 plt.close()
 
 
@@ -224,10 +219,10 @@ for ds, key in zip(["wine", "credit", "higgs"], ["carb_wine", "carb_credit", "ca
         axes[key].set_visible(False)
         continue
     models_in_ds = [m for m in MODEL_ORDER if m in subset["model"].values]
-    sns.barplot(data=subset, x="model", y="ewf1",
+    sns.barplot(data=subset, x="model", y="cf1",
                 order=models_in_ds, hue="model", hue_order=models_in_ds,
                 palette=MODEL_PALETTE, ax=axes[key], dodge=False)
-    axes[key].set_title(f"EWF1: {ds}")
+    axes[key].set_title(f"CF1: {ds}")
     axes[key].set_xlabel("")
     axes[key].set_ylim(0, None)
     axes[key].tick_params(axis="x", rotation=45)

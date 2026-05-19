@@ -1,19 +1,16 @@
 """
-Compares WF1 vs EWF1 Optuna HPO on a 1M-row stratified HIGGS subset.
+Compares WF1 vs CF1 Optuna HPO on a 1M-row stratified HIGGS subset.
 
 Study A: maximize WF1  (standard)
-Study B: maximize EWF1 = WF1 / (1 + LAMBDA * co2_g)
-         where co2_g is hardware-corrected CO2 in grams for that trial.
-         No normalization needed — the penalty is absolute and computed
-         directly per trial. LAMBDA=0.1 is chosen so that a typical
-         expensive trial (~10g) yields a denominator of ~2, comparable
-         to the min-max range used in the thesis.
+Study B: minimize CF1 = CO2_mg / (WF1 * 100)
+         where CO2_mg is hardware-corrected CO2 in milligrams for that trial.
+         Lower CF1 means less carbon per unit of predictive performance.
 
-Post-hoc: pools all 80 trials, applies the same EWF1 formula to every
+Post-hoc: pools all 80 trials, applies the same CF1 formula to every
 trial uniformly, and reports which config each approach found.
 
 Usage:
-    python scripts/tune_mlp_ewf1_comparison.py [wf1|ewf1|both|analyze]
+    python scripts/tune_mlp_cf1_comparison.py [wf1|cf1|both|analyze]
     Default: both
 
 Resume: safe to re-run — Optuna picks up from its SQLite DB and the
@@ -44,12 +41,11 @@ from config import BASE_DIR, CV_FOLDS, RANDOM_STATE
 from models.power_monitor import CPUPowerMonitor, compute_corrected_co2
 from models.utils import load_data
 
-LAMBDA = 0.1        # penalty weight; co2 in grams → denominator ~ [1.2, 2.5] for typical trials
 N_TRIALS = 40
 HIGGS_NROWS = 500_000
 
-RESULTS_DIR = BASE_DIR / "results" / "ewf1_comparison"
-EMISSIONS_DIR = BASE_DIR / "emissions" / "ewf1_comparison"
+RESULTS_DIR = BASE_DIR / "results" / "cf1_comparison"
+EMISSIONS_DIR = BASE_DIR / "emissions" / "cf1_comparison"
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 EMISSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -125,7 +121,7 @@ def measure_trial(trial, study_type):
     """Train one trial; return (wf1, co2_g, duration_s)."""
     pipe = build_pipeline(trial)
     tracker = EmissionsTracker(
-        project_name=f"ewf1_cmp_{study_type}_t{trial.number}",
+        project_name=f"cf1_cmp_{study_type}_t{trial.number}",
         output_dir=str(EMISSIONS_DIR),
         log_level="error",
         save_to_file=True,
@@ -145,13 +141,13 @@ def measure_trial(trial, study_type):
     return float(wf1), float(co2_g), float(duration_s)
 
 
-# ── EWF1 formula ─────────────────────────────────────────────────────────────
-def ewf1(wf1, co2_g):
-    return wf1 / (1 + LAMBDA * co2_g)
+# ── CF1 formula ──────────────────────────────────────────────────────────────
+def cf1(wf1, co2_g):
+    return (co2_g * 1000) / (wf1 * 100)
 
 
 # ── Trial logging ─────────────────────────────────────────────────────────────
-_FIELDS = ["trial", "wf1", "co2_g", "ewf1", "duration_s", "params"]
+_FIELDS = ["trial", "wf1", "co2_g", "cf1", "duration_s", "params"]
 
 
 def log_trial(study_type, trial_number, wf1, co2_g, duration_s, params):
@@ -165,7 +161,7 @@ def log_trial(study_type, trial_number, wf1, co2_g, duration_s, params):
             "trial": trial_number,
             "wf1": round(wf1, 6),
             "co2_g": round(co2_g, 4),
-            "ewf1": round(ewf1(wf1, co2_g), 6),
+            "cf1": round(cf1(wf1, co2_g), 6),
             "duration_s": round(duration_s, 1),
             "params": json.dumps(params),
         })
@@ -177,21 +173,21 @@ def make_wf1_objective():
         wf1, co2_g, duration_s = measure_trial(trial, "wf1")
         log_trial("wf1", trial.number, wf1, co2_g, duration_s, trial.params)
         print(
-            f"  [WF1 ] t{trial.number:02d}: WF1={wf1:.4f}  "
-            f"CO2={co2_g:.2f}g  EWF1={ewf1(wf1, co2_g):.4f}  {duration_s/60:.1f}min"
+            f"  [WF1] t{trial.number:02d}: WF1={wf1:.4f}  "
+            f"CO2={co2_g:.2f}g  CF1={cf1(wf1, co2_g):.2f}  {duration_s/60:.1f}min"
         )
         return wf1
     return objective
 
 
-def make_ewf1_objective():
+def make_cf1_objective():
     def objective(trial):
-        wf1, co2_g, duration_s = measure_trial(trial, "ewf1")
-        score = ewf1(wf1, co2_g)
-        log_trial("ewf1", trial.number, wf1, co2_g, duration_s, trial.params)
+        wf1, co2_g, duration_s = measure_trial(trial, "cf1")
+        score = cf1(wf1, co2_g)
+        log_trial("cf1", trial.number, wf1, co2_g, duration_s, trial.params)
         print(
-            f"  [EWF1] t{trial.number:02d}: WF1={wf1:.4f}  "
-            f"CO2={co2_g:.2f}g  EWF1={score:.4f}  {duration_s/60:.1f}min"
+            f"  [CF1] t{trial.number:02d}: WF1={wf1:.4f}  "
+            f"CO2={co2_g:.2f}g  CF1={score:.2f}  {duration_s/60:.1f}min"
         )
         return score
     return objective
@@ -200,15 +196,16 @@ def make_ewf1_objective():
 # ── Run a study ───────────────────────────────────────────────────────────────
 def run_study(study_type):
     print(f"\n{'='*62}")
-    print(f"  Study: {study_type.upper()}  |  {N_TRIALS} trials  |  HIGGS {HIGGS_NROWS:,} rows  |  λ={LAMBDA}")
+    print(f"  Study: {study_type.upper()}  |  {N_TRIALS} trials  |  HIGGS {HIGGS_NROWS:,} rows")
     print(f"{'='*62}")
 
-    objective = make_wf1_objective() if study_type == "wf1" else make_ewf1_objective()
+    objective = make_wf1_objective() if study_type == "wf1" else make_cf1_objective()
+    direction = "maximize" if study_type == "wf1" else "minimize"
 
     study = optuna.create_study(
         study_name=f"mlp_higgs1m_{study_type}",
-        storage=f"sqlite:///{BASE_DIR}/optuna_ewf1_cmp_{study_type}.db",
-        direction="maximize",
+        storage=f"sqlite:///{BASE_DIR}/optuna_cf1_cmp_{study_type}.db",
+        direction=direction,
         sampler=optuna.samplers.TPESampler(seed=RANDOM_STATE),
         load_if_exists=True,
     )
@@ -246,7 +243,7 @@ def run_study(study_type):
 # ── Post-hoc analysis ─────────────────────────────────────────────────────────
 def analyze():
     rows = []
-    for study_type in ["wf1", "ewf1"]:
+    for study_type in ["wf1", "cf1"]:
         path = RESULTS_DIR / f"trials_{study_type}.csv"
         if not path.exists():
             print(f"  No trial log for {study_type}, skipping.")
@@ -258,7 +255,7 @@ def analyze():
                     "trial": int(row["trial"]),
                     "wf1": float(row["wf1"]),
                     "co2_g": float(row["co2_g"]),
-                    "ewf1": float(row["ewf1"]),
+                    "cf1": float(row["cf1"]),
                     "duration_s": float(row["duration_s"]),
                     "params": row["params"],
                 })
@@ -268,27 +265,27 @@ def analyze():
         return
 
     print(f"\n{'='*62}")
-    print(f"  Post-hoc comparison  |  λ={LAMBDA}  |  {len(rows)} total trials")
+    print(f"  Post-hoc comparison  |  {len(rows)} total trials")
     print(f"{'='*62}")
 
-    for study_type in ["wf1", "ewf1"]:
+    for study_type in ["wf1", "cf1"]:
         sr = [r for r in rows if r["study_type"] == study_type]
         if not sr:
             continue
-        best_ewf1 = max(sr, key=lambda r: r["ewf1"])
-        best_wf1  = max(sr, key=lambda r: r["wf1"])
-        mean_co2  = sum(r["co2_g"] for r in sr) / len(sr)
+        best_cf1 = min(sr, key=lambda r: r["cf1"])
+        best_wf1 = max(sr, key=lambda r: r["wf1"])
+        mean_co2 = sum(r["co2_g"] for r in sr) / len(sr)
 
         print(f"\n  [{study_type.upper()}]  n={len(sr)}  mean CO2={mean_co2:.2f}g")
-        print(f"    Best by EWF1 → t{best_ewf1['trial']:02d}: "
-              f"WF1={best_ewf1['wf1']:.4f}  CO2={best_ewf1['co2_g']:.2f}g  EWF1={best_ewf1['ewf1']:.4f}")
-        print(f"    Best by WF1  → t{best_wf1['trial']:02d}: "
-              f"WF1={best_wf1['wf1']:.4f}  CO2={best_wf1['co2_g']:.2f}g  EWF1={best_wf1['ewf1']:.4f}")
-        print(f"    Params (best EWF1): {best_ewf1['params']}")
+        print(f"    Best by CF1 → t{best_cf1['trial']:02d}: "
+              f"WF1={best_cf1['wf1']:.4f}  CO2={best_cf1['co2_g']:.2f}g  CF1={best_cf1['cf1']:.2f}")
+        print(f"    Best by WF1 → t{best_wf1['trial']:02d}: "
+              f"WF1={best_wf1['wf1']:.4f}  CO2={best_wf1['co2_g']:.2f}g  CF1={best_wf1['cf1']:.2f}")
+        print(f"    Params (best CF1): {best_cf1['params']}")
 
     out = RESULTS_DIR / "all_trials.csv"
     with open(out, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["study_type", "trial", "wf1", "co2_g", "ewf1", "duration_s", "params"])
+        writer = csv.DictWriter(f, fieldnames=["study_type", "trial", "wf1", "co2_g", "cf1", "duration_s", "params"])
         writer.writeheader()
         writer.writerows(rows)
     print(f"\n  Saved to {out}")
@@ -300,7 +297,7 @@ def notify(msg):
         requests.post(
             "https://ntfy.sh/eron_thesis_higgs_run_123",
             data=msg.encode("utf-8"),
-            headers={"Title": "Thesis: EWF1 Comparison", "Priority": "default", "Tags": "tada"},
+            headers={"Title": "Thesis: CF1 Comparison", "Priority": "default", "Tags": "tada"},
             timeout=5,
         )
     except Exception:
@@ -311,21 +308,21 @@ def notify(msg):
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "both"
 
-    if mode not in ("wf1", "ewf1", "both", "analyze"):
-        print(f"Unknown mode '{mode}'. Use: wf1 | ewf1 | both | analyze")
+    if mode not in ("wf1", "cf1", "both", "analyze"):
+        print(f"Unknown mode '{mode}'. Use: wf1 | cf1 | both | analyze")
         sys.exit(1)
 
     if mode in ("wf1", "both"):
         run_study("wf1")
         notify(f"WF1 study fertig! ({N_TRIALS} trials, HIGGS 1M)")
 
-    if mode in ("ewf1", "both"):
-        run_study("ewf1")
-        notify(f"EWF1 study fertig! ({N_TRIALS} trials, HIGGS 1M)")
+    if mode in ("cf1", "both"):
+        run_study("cf1")
+        notify(f"CF1 study fertig! ({N_TRIALS} trials, HIGGS 1M)")
 
     if mode in ("both", "analyze"):
         analyze()
-        notify("EWF1-Vergleich komplett!")
+        notify("CF1-Vergleich komplett!")
 
     if not os.environ.get("NO_SHUTDOWN") and mode == "both":
         os.system("shutdown /s /t 30")

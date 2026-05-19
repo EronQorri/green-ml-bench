@@ -64,12 +64,7 @@ df_inf = df_inf.drop_duplicates(subset=["dataset", "model"], keep="last")
 df = pd.merge(df, df_inf[["model", "dataset", "nrows", "inference_time"]],
               on=["model", "dataset", "nrows"], how="left")
 
-# ── per-dataset EWF1 (thesis formula: WF1 / (1 + min-max norm CO2)) ──────────
-lam = 1.0
-mn = df.groupby("dataset")["co2eq_kg"].transform("min")
-mx = df.groupby("dataset")["co2eq_kg"].transform("max")
-df["co2eq_norm"] = (df["co2eq_kg"] - mn) / (mx - mn).clip(lower=1e-12)
-df["ewf1"]       = df["f1"] / (1.0 + lam * df["co2eq_norm"])
+df["cf1"] = (df["co2eq_kg"] * 1e6) / (df["f1"] * 100)
 
 
 def fmt(val):
@@ -89,7 +84,7 @@ def fmt(val):
 # ── per-dataset settings ──────────────────────────────────────────────────────
 # co2_log:  use log scale for CO2?
 # time_log: use log scale for time?
-# wf1_pad, ewf1_pad: fractional headroom above max bar for labels
+# wf1_pad, cf1_pad: fractional headroom above max bar for labels
 # co2_top_mult, time_top_mult: multiply max value for upper ylim
 DATASET_CFG = {
     "wine": {
@@ -98,7 +93,7 @@ DATASET_CFG = {
         "co2_top_mult":   1.45,   # linear: tight ceiling
         "time_top_mult":  1.40,
         "wf1_pad":        0.10,   # absolute headroom above max bar
-        "ewf1_pad":       0.10,
+        "cf1_pad":       0.10,
     },
     "credit": {
         "co2_log":        True,
@@ -106,7 +101,7 @@ DATASET_CFG = {
         "co2_top_mult":   6.0,    # log: more headroom so labels clear
         "time_top_mult":  6.0,
         "wf1_pad":        0.10,
-        "ewf1_pad":       0.10,
+        "cf1_pad":       0.10,
     },
     "higgs": {
         "co2_log":        True,
@@ -114,7 +109,7 @@ DATASET_CFG = {
         "co2_top_mult":   3.0,    # fine as-is per user
         "time_top_mult":  3.0,
         "wf1_pad":        0.10,
-        "ewf1_pad":       0.06,
+        "cf1_pad":       0.06,
     },
 }
 
@@ -131,7 +126,7 @@ for ds, cfg in DATASET_CFG.items():
 
     fig, axes = plt.subplots(2, 2, figsize=(10, 8))
     fig.suptitle(DATASET_LABELS[ds], fontsize=14, fontweight="bold")
-    ax_wf1, ax_co2, ax_time, ax_ewf1 = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
+    ax_wf1, ax_co2, ax_time, ax_cf1 = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
 
     def bar(ax, col):
         vals   = [sub.loc[sub["model"] == m, col].values[0]
@@ -181,12 +176,12 @@ for ds, cfg in DATASET_CFG.items():
     else:
         ax_time.set_ylim(0, max(valid_time) / 0.85)
 
-    # ── EWF1 ─────────────────────────────────────────────────────────────────
-    ewf1_vals = bar(ax_ewf1, "ewf1")
-    ax_ewf1.set_title("EWF1")
-    ax_ewf1.set_ylabel("EWF1")
-    valid_ewf1 = [v for v in ewf1_vals if not np.isnan(v)]
-    ax_ewf1.set_ylim(0, max(valid_ewf1) / 0.85)
+    # ── CF1 ──────────────────────────────────────────────────────────────────
+    cf1_vals = bar(ax_cf1, "cf1")
+    ax_cf1.set_title("CF1 (mg CO₂ / F1%)")
+    ax_cf1.set_ylabel("CF1")
+    valid_cf1 = [v for v in cf1_vals if not np.isnan(v)]
+    ax_cf1.set_ylim(0, max(valid_cf1) / 0.85)
 
     plt.tight_layout(rect=[0, 0, 1, 0.96])
     out = PLOTS_DIR / f"{ds}_benchmark.pdf"
