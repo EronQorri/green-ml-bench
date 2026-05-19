@@ -8,7 +8,7 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import RANDOM_STATE, config, BASE_DIR
+from config import RANDOM_STATE, config, BASE_DIR, TEST_SIZE
 
 PARAMS_FILE = BASE_DIR / "models" / "best_params.json"
 
@@ -23,10 +23,6 @@ def load_data(dataset):
     cfg = config[dataset]
     if dataset == "higgs":
         df = pd.read_parquet(cfg["path"])
-        test_nrows = os.environ.get("TEST_NROWS")
-        nrows = int(test_nrows) if test_nrows else cfg.get("nrows")
-        if nrows:
-            df, _ = train_test_split(df, train_size=nrows, stratify=df[cfg["target"]], random_state=RANDOM_STATE)
     else:
         df = pd.read_csv(
             cfg["path"],
@@ -36,11 +32,21 @@ def load_data(dataset):
         )
     if cfg.get("drop_cols"):
         df = df.drop(cfg["drop_cols"], axis=1)
+    test_nrows = os.environ.get("TEST_NROWS")
+    nrows = int(test_nrows) if test_nrows else cfg.get("nrows")
+    if nrows and nrows < len(df):
+        df, _ = train_test_split(df, train_size=nrows, stratify=df[cfg["target"]], random_state=RANDOM_STATE)
     X = df.drop(cfg["target"], axis=1)
     y = df[cfg["target"]]
     if cfg.get("label_offset"):
         y = y + cfg["label_offset"]
     return X, y
+
+
+def load_data_split(dataset):
+    """Stratified 80/20 train/test split. Consistent across tune and eval scripts."""
+    X, y = load_data(dataset)
+    return train_test_split(X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE)
 
 
 def save_best_params(model_key, dataset, data):

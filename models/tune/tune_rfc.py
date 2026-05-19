@@ -5,9 +5,9 @@ import json
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils import load_data, save_best_params
+from utils import load_data_split, save_best_params
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.metrics import f1_score, make_scorer
 from config import config, RANDOM_STATE, CV_FOLDS
 from codecarbon import EmissionsTracker
@@ -16,8 +16,8 @@ import optuna
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
 N_TRIALS = int(os.environ.get("N_TRIALS", 40))
 
-X, y = load_data(DATASET)
-cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
+X_train, X_test, y_train, y_test = load_data_split(DATASET)
+cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 
 def objective(trial):
@@ -32,7 +32,7 @@ def objective(trial):
     }
     model = RandomForestClassifier(**params)
     return cross_val_score(
-        model, X, y, cv=cv, scoring=make_scorer(f1_score, average="weighted")
+        model, X_train, y_train, cv=cv, scoring=make_scorer(f1_score, average="weighted")
     ).mean()
 
 

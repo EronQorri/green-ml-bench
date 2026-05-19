@@ -6,22 +6,20 @@ import joblib
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from utils import load_data, save_results, save_inference_time, get_nrows
+from utils import load_data_split, save_results, save_inference_time, get_nrows
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
 
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 
-from sklearn.model_selection import KFold, cross_validate
-from sklearn.metrics import f1_score, make_scorer
+from sklearn.metrics import f1_score, accuracy_score
 from codecarbon import EmissionsTracker
-from config import config, RANDOM_STATE, CV_FOLDS, BASE_DIR
+from config import config, RANDOM_STATE, BASE_DIR
 
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
-cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
-X, y = load_data(DATASET)
+X_train, X_test, y_train, y_test = load_data_split(DATASET)
 nrows = get_nrows(DATASET)
 
 pipeline = make_pipeline(
@@ -38,14 +36,7 @@ cpu_monitor.start()
 tracker.start()
 
 start = time.time()
-cv_results = cross_validate(
-    pipeline,
-    X,
-    y,
-    cv=cv,
-    scoring={"accuracy": "accuracy", "f1": make_scorer(f1_score, average="weighted")},
-    return_estimator=True,
-)
+pipeline.fit(X_train, y_train)
 training_time = time.time() - start
 emissions_cc = tracker.stop()
 cpu_result = cpu_monitor.stop()
@@ -53,13 +44,16 @@ cpu_result = cpu_monitor.stop()
 co2_corrected = compute_corrected_co2(tracker, cpu_result)
 print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
+y_pred = pipeline.predict(X_test)
+test_accuracy = accuracy_score(y_test, y_pred)
+test_f1 = f1_score(y_test, y_pred, average="weighted")
+
 saved_models_dir = BASE_DIR / "saved_models"
 saved_models_dir.mkdir(exist_ok=True)
-pipeline.fit(X, y)
 joblib.dump(pipeline, saved_models_dir / f"lr_{DATASET}.joblib")
 
 trained_model = joblib.load(saved_models_dir / f"lr_{DATASET}.joblib")
-single_row = X[:1]
+single_row = X_test[:1]
 inference_monitor = CPUPowerMonitor()
 inference_monitor.start()
 trained_model.predict(single_row)  # warmup
@@ -74,8 +68,8 @@ inference_cpu_result = inference_monitor.stop()
 save_results(
     "LogisticRegression",
     DATASET,
-    cv_results["test_accuracy"].mean(),
-    cv_results["test_f1"].mean(),
+    test_accuracy,
+    test_f1,
     co2_corrected,
     emissions_cc,
     cpu_result,

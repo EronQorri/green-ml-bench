@@ -24,8 +24,7 @@ import requests
 import torch
 import torch.nn as nn
 from codecarbon import EmissionsTracker
-from sklearn.metrics import f1_score, make_scorer
-from sklearn.model_selection import KFold, cross_validate
+from sklearn.metrics import f1_score, accuracy_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from skorch import NeuralNetClassifier
@@ -35,9 +34,9 @@ _ROOT = Path(__file__).parent.parent
 sys.path.append(str(_ROOT))
 sys.path.append(str(_ROOT / "models"))
 
-from config import BASE_DIR, CV_FOLDS, RANDOM_STATE
+from config import BASE_DIR, RANDOM_STATE
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
-from utils import load_data, save_inference_time, save_results
+from utils import load_data_split, save_inference_time, save_results
 
 DATASET = "higgs"
 EPOCHS = 200
@@ -71,7 +70,7 @@ class MLPModule(nn.Module):
         return self.network(X)
 
 
-def run_arch(layer_sizes, X, y, input_dim, num_classes, nrows, device, cv):
+def run_arch(layer_sizes, X_train, X_test, y_train, y_test, input_dim, num_classes, nrows, device):
     torch.manual_seed(RANDOM_STATE)
     label = f"{len(layer_sizes)}x{layer_sizes[0]}"
     model_name = f"MLP_{label}"
@@ -106,11 +105,7 @@ def run_arch(layer_sizes, X, y, input_dim, num_classes, nrows, device, cv):
     tracker.start()
     t0 = time.time()
 
-    cv_results = cross_validate(
-        pipeline, X, y, cv=cv,
-        scoring={"accuracy": "accuracy", "f1": make_scorer(f1_score, average="weighted")},
-        return_estimator=True,
-    )
+    pipeline.fit(X_train, y_train)
 
     training_time = time.time() - t0
     emissions_cc = tracker.stop()
@@ -118,27 +113,30 @@ def run_arch(layer_sizes, X, y, input_dim, num_classes, nrows, device, cv):
     co2 = compute_corrected_co2(tracker, cpu_result)
     print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
-    trained_model = cv_results["estimator"][0]
-    single_row = X[:1]
-    trained_model.predict(single_row)  # warmup
+    y_pred = pipeline.predict(X_test)
+    test_accuracy = accuracy_score(y_test, y_pred)
+    test_f1 = f1_score(y_test, y_pred, average="weighted")
+
+    single_row = X_test[:1]
+    pipeline.predict(single_row)  # warmup
     _times = []
     for _ in range(100):
         _t0 = time.perf_counter()
-        trained_model.predict(single_row)
+        pipeline.predict(single_row)
         _times.append(time.perf_counter() - _t0)
     inference_time = float(np.median(_times))
 
     save_results(
         model_name, DATASET,
-        cv_results["test_accuracy"].mean(),
-        cv_results["test_f1"].mean(),
+        test_accuracy,
+        test_f1,
         co2, emissions_cc, cpu_result,
         training_time, nrows,
         tracker,
     )
     save_inference_time(model_name, DATASET, co2, nrows, inference_time)
 
-    print(f"    OK — {training_time / 60:.1f} min | F1={cv_results['test_f1'].mean():.4f} | CO2={co2:.2e} kg")
+    print(f"    OK — {training_time / 60:.1f} min | F1={test_f1:.4f} | CO2={co2:.2e} kg")
     return True
 
 
@@ -166,20 +164,21 @@ print(f"Fixed: lr={FIXED_LR}, dropout={FIXED_DROPOUT}, batch_size={FIXED_BATCH_S
 print("=" * 60)
 
 print(f"Loading {DATASET}...")
-X_df, y_df = load_data(DATASET)
-X = X_df.to_numpy().astype(np.float32)
-y = y_df.to_numpy().astype(np.int64)
-input_dim = X.shape[1]
-num_classes = int(np.unique(y).size)
-nrows = X.shape[0]
+X_train_df, X_test_df, y_train_df, y_test_df = load_data_split(DATASET)
+X_train = X_train_df.to_numpy().astype(np.float32)
+X_test = X_test_df.to_numpy().astype(np.float32)
+y_train = y_train_df.to_numpy().astype(np.int64)
+y_test = y_test_df.to_numpy().astype(np.int64)
+input_dim = X_train.shape[1]
+num_classes = int(np.unique(y_train).size)
+nrows = len(X_train) + len(X_test)
 device = "cuda" if torch.cuda.is_available() else "cpu"
-cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 print(f"device={device} | input_dim={input_dim} | nrows={nrows:,}")
 
 for layer_sizes in ARCHITECTURES:
     try:
-        run_arch(layer_sizes, X, y, input_dim, num_classes, nrows, device, cv)
+        run_arch(layer_sizes, X_train, X_test, y_train, y_test, input_dim, num_classes, nrows, device)
         _notify(f"MLP_{'{}x{}'.format(len(layer_sizes), layer_sizes[0])} [{DATASET}] fertig", "")
     except Exception as e:
         label = f"{len(layer_sizes)}x{layer_sizes[0]}"

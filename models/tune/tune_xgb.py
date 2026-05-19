@@ -5,9 +5,9 @@ import json
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils import load_data, save_best_params
+from utils import load_data_split, save_best_params
 from xgboost import XGBClassifier
-from sklearn.model_selection import KFold, cross_val_score
+from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.metrics import f1_score, make_scorer
 from config import config, RANDOM_STATE, CV_FOLDS
 from codecarbon import EmissionsTracker
@@ -17,8 +17,8 @@ DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
 N_TRIALS = int(os.environ.get("N_TRIALS", 40))
 
 nrows = config[DATASET].get("nrows")
-X, y = load_data(DATASET)
-cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
+X_train, X_test, y_train, y_test = load_data_split(DATASET)
+cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 xgb_base = {
     "wine": {"objective": "multi:softmax", "num_class": 3, "eval_metric": "mlogloss", "device": "cuda"},
@@ -40,7 +40,7 @@ def objective(trial):
     }
     model = XGBClassifier(**params)
     return cross_val_score(
-        model, X, y, cv=cv, scoring=make_scorer(f1_score, average="weighted")
+        model, X_train, y_train, cv=cv, scoring=make_scorer(f1_score, average="weighted")
     ).mean()
 
 

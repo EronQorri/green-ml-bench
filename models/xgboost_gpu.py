@@ -5,18 +5,15 @@ import numpy as np
 import joblib
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_results, save_inference_time, load_best_params, get_nrows
+from utils import load_data_split, save_results, save_inference_time, load_best_params, get_nrows
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
 from xgboost import XGBClassifier
-from sklearn.model_selection import KFold, cross_validate
-from sklearn.metrics import f1_score, make_scorer
+from sklearn.metrics import f1_score, accuracy_score
 from codecarbon import EmissionsTracker
-from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
+from config import BASE_DIR, config, RANDOM_STATE
 import time
 
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
-
-cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 _tuned = load_best_params("xgb", DATASET)["best_params"]
 
@@ -26,7 +23,7 @@ xgb_base = {
     "higgs":  {"objective": "binary:logistic", "eval_metric": "logloss"},
 }
 
-X, y = load_data(DATASET)
+X_train, X_test, y_train, y_test = load_data_split(DATASET)
 nrows = get_nrows(DATASET)
 
 tracker = EmissionsTracker(
@@ -40,14 +37,7 @@ tracker.start()
 model = XGBClassifier(**xgb_base[DATASET], **_tuned, random_state=RANDOM_STATE, device="cuda")
 
 start = time.time()
-cv_results = cross_validate(
-    model,
-    X,
-    y,
-    cv=cv,
-    scoring={"accuracy": "accuracy", "f1": make_scorer(f1_score, average="weighted")},
-    return_estimator=True,
-)
+model.fit(X_train, y_train)
 training_time = time.time() - start
 emissions_cc = tracker.stop()
 cpu_result = cpu_monitor.stop()
@@ -55,13 +45,16 @@ cpu_result = cpu_monitor.stop()
 co2_corrected = compute_corrected_co2(tracker, cpu_result)
 print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
+y_pred = model.predict(X_test)
+test_accuracy = accuracy_score(y_test, y_pred)
+test_f1 = f1_score(y_test, y_pred, average="weighted")
+
 saved_models_dir = BASE_DIR / "saved_models"
 saved_models_dir.mkdir(exist_ok=True)
-model.fit(X, y)
 joblib.dump(model, saved_models_dir / f"xgb_gpu_{DATASET}.joblib")
 
 trained_model = joblib.load(saved_models_dir / f"xgb_gpu_{DATASET}.joblib")
-single_row = X[:1]
+single_row = X_test[:1]
 inference_monitor = CPUPowerMonitor()
 inference_monitor.start()
 trained_model.predict(single_row)  # warmup
@@ -76,8 +69,8 @@ inference_cpu_result = inference_monitor.stop()
 save_results(
     "XGBoost_GPU",
     DATASET,
-    cv_results["test_accuracy"].mean(),
-    cv_results["test_f1"].mean(),
+    test_accuracy,
+    test_f1,
     co2_corrected,
     emissions_cc,
     cpu_result,

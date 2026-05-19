@@ -36,3 +36,4 @@ config = {
 
 RANDOM_STATE = 42
 CV_FOLDS = 5
+TEST_SIZE = 0.2

@@ -8,21 +8,18 @@ import torch
 import torch.nn as nn
 from torch import nn
 from skorch import NeuralNetClassifier
-from sklearn.model_selection import KFold, cross_validate
-from sklearn.metrics import f1_score, make_scorer
+from sklearn.metrics import f1_score, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from codecarbon import EmissionsTracker
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from utils import load_data, save_inference_time, save_results, load_best_params, get_nrows
+from utils import load_data_split, save_inference_time, save_results, load_best_params, get_nrows
 from power_monitor import CPUPowerMonitor, compute_corrected_co2, print_cpu_summary
-from config import BASE_DIR, config, RANDOM_STATE, CV_FOLDS
+from config import BASE_DIR, config, RANDOM_STATE
 
 EPOCHS = 200  # the earlyStopping will be reached before the 200 anyway
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
-
-cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 
 class MLPModule(nn.Module):
@@ -54,13 +51,15 @@ dropout_rate = _p["dropout_rate"]
 lr = _p["lr"]
 batch_size = _p["batch_size"]
 
-X, y = load_data(DATASET)
+X_train, X_test, y_train, y_test = load_data_split(DATASET)
 
-X_array = X.to_numpy().astype(np.float32)
-y_array = y.to_numpy().astype(np.int64)
+X_train_array = X_train.to_numpy().astype(np.float32)
+X_test_array = X_test.to_numpy().astype(np.float32)
+y_train_array = y_train.to_numpy().astype(np.int64)
+y_test_array = y_test.to_numpy().astype(np.int64)
 
 nrows = get_nrows(DATASET)
-input_dim = X_array.shape[1]
+input_dim = X_train_array.shape[1]
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 torch.manual_seed(RANDOM_STATE)
@@ -94,14 +93,7 @@ cpu_monitor.start()
 tracker.start()
 
 start = time.time()
-cv_results = cross_validate(
-    pipeline,
-    X_array,
-    y_array,
-    cv=cv,
-    scoring={"accuracy": "accuracy", "f1": make_scorer(f1_score, average="weighted")},
-    return_estimator=True,
-)
+pipeline.fit(X_train_array, y_train_array)
 training_time = time.time() - start
 emissions_cc = tracker.stop()
 cpu_result = cpu_monitor.stop()
@@ -109,13 +101,16 @@ cpu_result = cpu_monitor.stop()
 co2_corrected = compute_corrected_co2(tracker, cpu_result)
 print_cpu_summary(cpu_result, tracker.final_emissions_data.cpu_energy)
 
+y_pred = pipeline.predict(X_test_array)
+test_accuracy = accuracy_score(y_test_array, y_pred)
+test_f1 = f1_score(y_test_array, y_pred, average="weighted")
+
 saved_models_dir = BASE_DIR / "saved_models"
 saved_models_dir.mkdir(exist_ok=True)
-pipeline.fit(X_array, y_array)
 joblib.dump(pipeline, saved_models_dir / f"mlp_{DATASET}.joblib")
 
 trained_model = joblib.load(saved_models_dir / f"mlp_{DATASET}.joblib")
-single_row = X_array[:1]
+single_row = X_test_array[:1]
 inference_monitor = CPUPowerMonitor()
 inference_monitor.start()
 trained_model.predict(single_row)  # warmup
@@ -130,8 +125,8 @@ inference_cpu_result = inference_monitor.stop()
 save_results(
     "MLP_PyTorch",
     DATASET,
-    cv_results["test_accuracy"].mean(),
-    cv_results["test_f1"].mean(),
+    test_accuracy,
+    test_f1,
     co2_corrected,
     emissions_cc,
     cpu_result,

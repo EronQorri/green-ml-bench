@@ -3,8 +3,8 @@ import sys
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-from models.utils import load_data, save_best_params
-from sklearn.model_selection import KFold, cross_val_score
+from models.utils import load_data_split, save_best_params
+from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.metrics import f1_score, make_scorer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -28,13 +28,13 @@ mlp_config = {
     "credit": {"num_classes": 2},
     "higgs": {"num_classes": 2},
 }
-X, y = load_data(DATASET)
-X_array = X.to_numpy().astype(np.float32)
-y_array = y.to_numpy().astype(np.int64)
+X_train, X_test, y_train, y_test = load_data_split(DATASET)
+X_array = X_train.to_numpy().astype(np.float32)
+y_array = y_train.to_numpy().astype(np.int64)
 input_dim = X_array.shape[1]
 num_classes = mlp_config[DATASET]["num_classes"]
 device = "cuda" if torch.cuda.is_available() else "cpu"
-cv = KFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
+cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
 class MLPModule(nn.Module):
     def __init__(self, input_dim, num_classes, layer_sizes=[256, 128], dropout_rate=0.2):

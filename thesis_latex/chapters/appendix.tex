@@ -175,7 +175,7 @@ fastparquet      & 2026.3.0 \\
 \section{XGBoost CPU vs.\ GPU}
 \label{app:xgb_cpugpu}
 
-\Cref{tab:app_xgb_cpugpu} gives exact values for the XGBoost \gls{cpu} vs.\ \gls{gpu} comparison discussed in \Cref{sec:results_xgb_cpugpu}; \Cref{fig:xgb_cpugpu} visualises the same data. Both variants implement the same algorithm and produce equivalent predictive performance --- any sub-0.001 difference in WF1 across runs is attributable to floating-point precision differences between \gls{cpu} (float64) and \gls{gpu} (float32) arithmetic and carries no practical meaning. The table therefore omits accuracy and WF1, focusing on the metrics that actually differ: CO\textsubscript{2} emissions, training time, and inference latency. Bold marks the better value within each dataset.
+\Cref{tab:app_xgb_cpugpu} gives exact values for the XGBoost \gls{cpu} vs.\ \gls{gpu} comparison discussed in \Cref{sec:results_xgb}; \Cref{fig:xgb_cpu_vs_gpu} visualises the same data. Both variants implement the same algorithm and produce equivalent predictive performance --- any sub-0.001 difference in WF1 across runs is attributable to floating-point precision differences between \gls{cpu} (float64) and \gls{gpu} (float32) arithmetic and carries no practical meaning. The table therefore omits accuracy and WF1, focusing on the metrics that actually differ: CO\textsubscript{2} emissions, training time, and inference latency. Bold marks the better value within each dataset.
 
 \begin{table}[htbp]
 \centering
@@ -233,7 +233,7 @@ December  & 380 & 383 & 152 & 658 & 128 \\
 
 
 % ══════════════════════════════════════════════════════════════════════════════
-\chapter{Full Counterfactual CO\textsubscript{2} Scenario Results}
+\chapter{Full Counterfactual CO\texorpdfstring{\textsubscript{2}}{2} Scenario Results}
 \label{app:counterfactual}
 
 \Cref{tab:app_cf_wine,tab:app_cf_credit,tab:app_cf_higgs} give exact CO\textsubscript{2} values for all models under the eight carbon intensity scenarios introduced in \Cref{sec:results_carbon}. The \emph{Static (CC)} row is the hardware-corrected energy multiplied by CodeCarbon's built-in static intensity for Germany; the remaining seven rows use scenario intensities derived from the 2024 ElectricityMaps data. Wine and Credit values are in milligrams; HIGGS values are in grams.
