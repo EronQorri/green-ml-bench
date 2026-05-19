@@ -1,0 +1,299 @@
+\appendix
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Full HIGGS Scaling Experiment Results}
+\label{app:scaling}
+
+\Cref{tab:app_scaling_wf1,tab:app_scaling_co2} provide the complete numeric results for the HIGGS subset scaling experiment introduced in \Cref{design_scaling} and discussed in \Cref{sec:results_scaling}. \Cref{fig:scaling_higgs} in the main text shows these values as line charts; the tables below give exact figures for reproducibility. Random Forest is excluded from subset sizes above 500{,}000 due to prohibitive training times. All CO\textsubscript{2} values are hardware-corrected (see \Cref{implementation_emissions}).
+
+\begin{table}[htbp]
+\centering
+\caption{Weighted F1-score per model and HIGGS subset size. Dashes indicate runs that were not performed.}
+\label{tab:app_scaling_wf1}
+\begin{tabular}{@{} r rrrrr @{}}
+\toprule
+\textbf{Rows} & \textbf{Log.\ Reg.} & \textbf{Random Forest} & \textbf{XGBoost (CPU)} & \textbf{XGBoost (GPU)} & \textbf{MLP} \\
+\midrule
+1{,}000       & 0.626 & 0.659 & 0.682 & 0.673 & 0.541 \\
+5{,}000       & 0.632 & 0.689 & 0.680 & 0.677 & 0.600 \\
+10{,}000      & 0.635 & 0.703 & 0.692 & 0.690 & 0.621 \\
+50{,}000      & 0.634 & 0.719 & 0.713 & 0.714 & 0.693 \\
+100{,}000     & 0.636 & 0.723 & 0.719 & 0.717 & 0.710 \\
+500{,}000     & 0.638 & 0.732 & 0.737 & 0.737 & 0.745 \\
+1{,}000{,}000 & 0.638 & ---   & 0.746 & 0.745 & 0.755 \\
+5{,}000{,}000 & 0.638 & ---   & 0.757 & 0.757 & 0.777 \\
+11{,}000{,}000 & 0.637 & ---  & 0.760 & 0.760 & 0.787 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{sidewaystable}[htbp]
+\centering
+\caption{Hardware-corrected CO\textsubscript{2} emissions (mg) and training time (s) per model and HIGGS subset size. Values below 0.1\,mg are shown to three significant figures. Random Forest at 500{,}000 rows (8{,}390\,mg\,=\,8.39\,g) is the study's highest single training cost behind the \gls{mlp} at 11M rows.}
+\label{tab:app_scaling_co2}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{} r rr rr rr rr rr @{}}
+\toprule
+ & \multicolumn{2}{c}{\textbf{Log.\ Reg.}} & \multicolumn{2}{c}{\textbf{Random Forest}} & \multicolumn{2}{c}{\textbf{XGBoost (CPU)}} & \multicolumn{2}{c}{\textbf{XGBoost (GPU)}} & \multicolumn{2}{c}{\textbf{MLP}} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+\textbf{Rows} & CO\textsubscript{2} (mg) & Time (s) & CO\textsubscript{2} (mg) & Time (s) & CO\textsubscript{2} (mg) & Time (s) & CO\textsubscript{2} (mg) & Time (s) & CO\textsubscript{2} (mg) & Time (s) \\
+\midrule
+1{,}000        & 0.011 & 0.05   & 0.046 & 2.6    & 0.027 & 0.9    & 0.051 & 2.7    & 0.038 & 2.1    \\
+5{,}000        & 0.012 & 0.11   & 0.074 & 3.7    & 0.047 & 1.8    & 0.080 & 4.3    & 0.048 & 2.8    \\
+10{,}000       & 0.014 & 0.18   & 0.116 & 5.7    & 0.061 & 2.5    & 0.090 & 4.9    & 0.067 & 4.2    \\
+50{,}000       & 0.021 & 0.80   & 0.503 & 25.0   & 0.117 & 5.2    & 0.123 & 6.9    & 0.302 & 23.1   \\
+100{,}000      & 0.030 & 1.6    & 1.089 & 54.7   & 0.159 & 7.4    & 0.143 & 7.9    & 0.711 & 42.6   \\
+500{,}000      & 0.146 & 12.0   & 8{,}390 & 445  & 0.496 & 25.1   & 0.216 & 11.5   & 2.75  & 199    \\
+1{,}000{,}000  & 0.331 & 28.6   & ---  & ---    & 0.970 & 50.0   & 0.303 & 15.0   & 5.22  & 405    \\
+5{,}000{,}000  & 2.050 & 184    & ---  & ---    & 5.942 & 333    & 0.978 & 43.9   & 36.2  & 2{,}917 \\
+11{,}000{,}000 & 5.148 & 436    & ---  & ---    & 14.65 & 828    & 2.104 & 90.2   & 145.9 & 11{,}175 \\
+\bottomrule
+\end{tabular}
+\end{sidewaystable}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Full MLP Architecture Variation Results}
+\label{app:mlp_variation}
+
+\Cref{tab:app_mlp_full} gives the complete numeric results for all twelve \gls{mlp} architecture configurations evaluated in the variation experiment (\Cref{design_mlp_variation,sec:results_mlp_arch}). The heatmaps in \Cref{fig:mlp_variation,fig:mlp_variation_ewf1} visualize the same data. All runs use the full 11M-row HIGGS dataset. \gls{ewf1} is computed using $\text{EWF1} = \text{WF1} / (1 + \lambda \cdot \hat{c})$, where $\hat{c}$ is the min-max normalized CO\textsubscript{2} within the variation grid (min\,=\,0.071\,g at 3$\times$128, max\,=\,0.310\,g at 4$\times$512).
+
+\begin{table}[htbp]
+\centering
+\caption{Complete results for the 12 \gls{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is total 5-fold \gls{cv} wall-clock time. \gls{ewf1} uses min-max normalized emissions within the grid ($\lambda = 1$). Bold marks the best value per column.}
+\label{tab:app_mlp_full}
+\begin{tabular}{@{} l r r r r r @{}}
+\toprule
+\textbf{Config} & \textbf{WF1} & \textbf{CO\textsubscript{2} (g)} & \textbf{Time (h)} & \textbf{EWF1} \\
+\midrule
+$1\times 128$   & 0.729 & 0.129 & 3.04 & 0.587 \\
+$2\times 128$   & 0.757 & 0.097 & 2.28 & 0.682 \\
+$3\times 128$   & 0.757 & \textbf{0.071} & \textbf{1.65} & \textbf{0.757} \\
+$4\times 128$   & 0.756 & 0.074 & 1.72 & 0.746 \\
+\midrule
+$1\times 256$   & 0.737 & 0.113 & 2.65 & 0.627 \\
+$2\times 256$   & 0.767 & 0.134 & 3.09 & 0.607 \\
+$3\times 256$   & 0.771 & 0.170 & 3.85 & 0.545 \\
+$4\times 256$   & 0.771 & 0.169 & 3.81 & 0.547 \\
+\midrule
+$1\times 512$   & 0.743 & 0.144 & 3.35 & 0.569 \\
+$2\times 512$   & 0.776 & 0.181 & 4.04 & 0.531 \\
+$3\times 512$   & 0.781 & 0.261 & 5.65 & 0.435 \\
+$4\times 512$   & \textbf{0.782} & 0.310 & 6.45 & 0.391 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Per-Dataset Benchmark Figures}
+\label{app:per_dataset}
+
+The three figures below show per-dataset benchmark breakdowns for Wine, Credit, and HIGGS. The combined cross-dataset comparison is presented in \Cref{sec:results_main}; these figures provide a higher-resolution view of each dataset in isolation.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{wine_benchmark.pdf}
+\caption{Detailed benchmark results for the Wine dataset across all five models.}
+\label{fig:app_wine}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{credit_benchmark.pdf}
+\caption{Detailed benchmark results for the Credit Card Default dataset across all five models.}
+\label{fig:app_credit}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\linewidth]{higgs_benchmark.pdf}
+\caption{Detailed benchmark results for the HIGGS dataset. Random Forest is excluded due to prohibitive training times at 11M rows.}
+\label{fig:app_higgs}
+\end{figure}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Experimental Setup Reference}
+\label{app:setup}
+
+\section{Dataset Characteristics}
+\label{app:datasets}
+
+\Cref{tab:app_datasets} summarises the key properties of the three datasets. The feature count excludes the target column; for Credit the identifier column (\texttt{ID}) is additionally dropped before training. Class distribution is measured on the full dataset before any train/test split.
+
+\begin{table}[htbp]
+\centering
+\caption{Key properties of the three benchmark datasets.}
+\label{tab:app_datasets}
+\begin{tabular}{@{} l r r r l @{}}
+\toprule
+\textbf{Dataset} & \textbf{Samples} & \textbf{Features} & \textbf{Classes} & \textbf{Class distribution} \\
+\midrule
+Wine         &        178 & 13 & 3 & 33.1\,\% / 39.9\,\% / 27.0\,\% \\
+Credit       &     30{,}000 & 23 & 2 & 77.9\,\% (no default) / 22.1\,\% (default) \\
+HIGGS        & 11{,}000{,}000 & 28 & 2 & 47.0\,\% (background) / 53.0\,\% (signal) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Python Software Environment}
+\label{app:software}
+
+\Cref{tab:app_software} lists the versions of all core libraries used in this study. A complete \texttt{requirements.txt} is included in the accompanying code repository. All experiments were run on Python 3.13.0 on Windows~11.
+
+\begin{table}[htbp]
+\centering
+\caption{Core Python library versions used in all experiments.}
+\label{tab:app_software}
+\begin{tabular}{ll}
+\toprule
+\textbf{Library} & \textbf{Version} \\
+\midrule
+Python           & 3.13.0 \\
+scikit-learn     & 1.8.0 \\
+XGBoost          & 3.2.0 \\
+PyTorch          & 2.7.0+cu128 \\
+Skorch           & 1.3.1 \\
+Optuna           & 4.8.0 \\
+CodeCarbon       & 3.2.3 \\
+HardwareMonitor  & 1.1.0 \\
+pandas           & 3.0.2 \\
+NumPy            & 2.4.4 \\
+matplotlib       & 3.10.8 \\
+seaborn          & 0.13.2 \\
+fastparquet      & 2026.3.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Supplementary Numeric Results}
+\label{app:supplementary}
+
+\section{XGBoost CPU vs.\ GPU}
+\label{app:xgb_cpugpu}
+
+\Cref{tab:app_xgb_cpugpu} gives exact values for the XGBoost \gls{cpu} vs.\ \gls{gpu} comparison discussed in \Cref{sec:results_xgb_cpugpu}; \Cref{fig:xgb_cpugpu} visualises the same data. Both variants implement the same algorithm and produce equivalent predictive performance --- any sub-0.001 difference in WF1 across runs is attributable to floating-point precision differences between \gls{cpu} (float64) and \gls{gpu} (float32) arithmetic and carries no practical meaning. The table therefore omits accuracy and WF1, focusing on the metrics that actually differ: CO\textsubscript{2} emissions, training time, and inference latency. Bold marks the better value within each dataset.
+
+\begin{table}[htbp]
+\centering
+\caption{Hardware efficiency results for XGBoost \gls{cpu} and \gls{gpu} variants across all three datasets. CO\textsubscript{2} is hardware-corrected training emissions; inference latency is mean per-sample wall-clock time. Predictive performance (WF1) is equivalent across variants on all datasets.}
+\label{tab:app_xgb_cpugpu}
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{@{} l l r r r r @{}}
+\toprule
+\textbf{Dataset} & \textbf{Variant} & \textbf{WF1} & \textbf{CO\textsubscript{2} (g)} & \textbf{Time (s)} & \textbf{Latency ($\mu$s)} \\
+\midrule
+\multirow{2}{*}{Wine}
+  & XGBoost (CPU) & 0.989 & \textbf{0.021} & \textbf{0.4}  & \textbf{1450} \\
+  & XGBoost (GPU) & 0.989 & 0.051          & 2.4           & 2328 \\
+\midrule
+\multirow{2}{*}{Credit}
+  & XGBoost (CPU) & 0.800 & \textbf{0.043} & \textbf{1.5}  & \textbf{2743} \\
+  & XGBoost (GPU) & 0.801 & 0.052          & 2.4           & 3457 \\
+\midrule
+\multirow{2}{*}{HIGGS}
+  & XGBoost (CPU) & 0.760 & 14.650         & 827.7         & \textbf{2012} \\
+  & XGBoost (GPU) & 0.760 & \textbf{2.104} & \textbf{90.2} & 2973 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+\section{Monthly Carbon Intensity Statistics --- German Grid 2024}
+\label{app:carbon_monthly}
+
+\Cref{tab:app_carbon_monthly} summarises the carbon intensity of the German electricity grid for each calendar month of 2024, derived from 8{,}760 hourly observations obtained via the ElectricityMaps API. These values underpin the seasonal counterfactual analysis in \Cref{sec:results_carbon}. The winter months (October--January) consistently show higher mean intensity than the summer months, driven by reduced solar generation and higher gas and coal dispatch. November records the highest monthly mean; June records the single lowest hourly minimum.
+
+\begin{table}[htbp]
+\centering
+\caption{Descriptive statistics of hourly carbon intensity (\gls{gco2eq}/\gls{kwh}) for the German bidding zone, January--December 2024. All values are rounded to the nearest integer.}
+\label{tab:app_carbon_monthly}
+\begin{tabular}{@{} l r r r r r @{}}
+\toprule
+\textbf{Month} & \textbf{Mean} & \textbf{Median} & \textbf{Min} & \textbf{Max} & \textbf{SD} \\
+\midrule
+January   & 382 & 380 & 159 & 650 & 127 \\
+February  & 344 & 338 & 167 & 576 & 101 \\
+March     & 359 & 354 & 143 & 612 & 122 \\
+April     & 288 & 272 & 129 & 562 & 101 \\
+May       & 290 & 278 & 134 & 509 &  92 \\
+June      & 298 & 288 & 119 & 525 & 108 \\
+July      & 294 & 289 & 127 & 520 & 107 \\
+August    & 320 & 315 & 115 & 536 & 117 \\
+September & 322 & 322 & 127 & 546 & 103 \\
+October   & 380 & 389 & 147 & 606 & 105 \\
+November  & 435 & 456 & 143 & 642 & 117 \\
+December  & 380 & 383 & 152 & 658 & 128 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+% ══════════════════════════════════════════════════════════════════════════════
+\chapter{Full Counterfactual CO\textsubscript{2} Scenario Results}
+\label{app:counterfactual}
+
+\Cref{tab:app_cf_wine,tab:app_cf_credit,tab:app_cf_higgs} give exact CO\textsubscript{2} values for all models under the eight carbon intensity scenarios introduced in \Cref{sec:results_carbon}. The \emph{Static (CC)} row is the hardware-corrected energy multiplied by CodeCarbon's built-in static intensity for Germany; the remaining seven rows use scenario intensities derived from the 2024 ElectricityMaps data. Wine and Credit values are in milligrams; HIGGS values are in grams.
+
+\begin{table}[htbp]
+\centering
+\caption{Counterfactual CO\textsubscript{2} emissions (mg) for the Wine dataset under eight carbon intensity scenarios.}
+\label{tab:app_cf_wine}
+\begin{tabular}{@{} l r r r r r @{}}
+\toprule
+\textbf{Scenario} & \textbf{Log.\ Reg.} & \textbf{Rand.\ Forest} & \textbf{XGB (CPU)} & \textbf{XGB (GPU)} & \textbf{\gls{mlp}} \\
+\midrule
+Static (CC)    & 13.7 & 28.8 & 20.5 &  51.2 &  58.7 \\
+Year mean      & 12.3 & 25.8 & 18.3 &  45.8 &  52.6 \\
+Year best      &  4.1 &  8.7 &  6.2 &  15.5 &  17.7 \\
+Year worst     & 23.7 & 49.8 & 35.3 &  88.5 & 101.4 \\
+Winter mean    & 13.3 & 27.9 & 19.8 &  49.6 &  56.9 \\
+Summer mean    & 10.9 & 23.0 & 16.3 &  40.8 &  46.8 \\
+Summer noon    &  7.0 & 14.6 & 10.4 &  26.0 &  29.8 \\
+Winter evening & 14.0 & 29.4 & 20.9 &  52.2 &  59.9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Counterfactual CO\textsubscript{2} emissions (mg) for the Credit dataset under eight carbon intensity scenarios.}
+\label{tab:app_cf_credit}
+\begin{tabular}{@{} l r r r r r @{}}
+\toprule
+\textbf{Scenario} & \textbf{Log.\ Reg.} & \textbf{Rand.\ Forest} & \textbf{XGB (CPU)} & \textbf{XGB (GPU)} & \textbf{\gls{mlp}} \\
+\midrule
+Static (CC)    &  60.5 &    831.6 & 43.3 &  51.7 &    633.0 \\
+Year mean      &  54.2 &    744.2 & 38.8 &  46.3 &    566.5 \\
+Year best      &  18.3 &    251.0 & 13.1 &  15.6 &    191.1 \\
+Year worst     & 104.5 & 1{,}436.1 & 74.9 &  89.3 & 1{,}093.2 \\
+Winter mean    &  58.6 &    805.6 & 42.0 &  50.1 &    613.2 \\
+Summer mean    &  48.2 &    662.7 & 34.5 &  41.2 &    504.5 \\
+Summer noon    &  30.7 &    422.2 & 22.0 &  26.3 &    321.4 \\
+Winter evening &  61.7 &    848.1 & 44.2 &  52.7 &    645.6 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Counterfactual CO\textsubscript{2} emissions (g) for the HIGGS dataset under eight carbon intensity scenarios. Random Forest was not run on the full 11M-row dataset.}
+\label{tab:app_cf_higgs}
+\begin{tabular}{@{} l r r r r @{}}
+\toprule
+\textbf{Scenario} & \textbf{Log.\ Reg.} & \textbf{XGB (CPU)} & \textbf{XGB (GPU)} & \textbf{\gls{mlp}} \\
+\midrule
+Static (CC)    &   5.148 &  14.650 &  2.104 & 145.892 \\
+Year mean      &   4.607 &  13.110 &  1.883 & 130.558 \\
+Year best      &   1.554 &   4.422 &  0.635 &  44.036 \\
+Year worst     &   8.891 &  25.301 &  3.634 & 251.960 \\
+Winter mean    &   4.987 &  14.192 &  2.038 & 141.329 \\
+Summer mean    &   4.103 &  11.676 &  1.677 & 116.269 \\
+Summer noon    &   2.614 &   7.438 &  1.068 &  74.075 \\
+Winter evening &   5.251 &  14.941 &  2.146 & 148.792 \\
+\bottomrule
+\end{tabular}
+\end{table}
