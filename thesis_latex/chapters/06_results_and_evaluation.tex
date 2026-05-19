@@ -169,7 +169,7 @@ datasets exposes a different axis of that contingency.
 
 \begin{table}[htbp]
 \centering
-\caption{Main benchmark results for all 14 model-dataset combinations. CO\textsubscript{2} is the hardware-corrected training footprint in grams. Training time is in seconds. \gls{ewf1} is computed with $\lambda=1$, $C_0=10^{-3}$\,g (see \Cref{design_metrics}). Bold marks the best value per column per dataset; for CO\textsubscript{2} and time, lowest is best. Random Forest was not run on HIGGS.}
+\caption{Main benchmark results for all 14 model-dataset combinations. CO\textsubscript{2} is the hardware-corrected training footprint in grams. Training time is in seconds. \gls{ewf1} is computed with $\lambda=1$ using min-max normalized emissions per dataset (see \Cref{design_metrics}). Bold marks the best value per column per dataset; for CO\textsubscript{2} and time, lowest is best. Random Forest was not run on HIGGS.}
 \label{tab:main_results}
 \small
 \begin{tabular}{@{} l l r r r r r @{}}
@@ -177,24 +177,24 @@ datasets exposes a different axis of that contingency.
 Dataset & Model & Acc. & WF1 & CO\textsubscript{2} (g) & Time (s) & EWF1 \\
 \midrule
 \multirow{5}{*}{Wine}
-  & Logistic Regression & \textbf{0.989} & \textbf{0.989} & \textbf{0.014} & \textbf{0.04} & \textbf{0.976} \\
-  & Random Forest       & 0.983          & 0.983          &          0.029 &         1.3   & 0.956 \\
-  & XGBoost (CPU)       & \textbf{0.989} & \textbf{0.989} &          0.020 &         0.4   & 0.969 \\
-  & XGBoost (GPU)       & \textbf{0.989} & \textbf{0.989} &          0.051 &         2.4   & 0.942 \\
-  & MLP                 & \textbf{0.989} & \textbf{0.989} &          0.059 &         3.4   & 0.935 \\
+  & Logistic Regression & \textbf{0.989} & \textbf{0.989} & \textbf{0.014} & \textbf{0.04} & \textbf{0.989} \\
+  & Random Forest       & 0.983          & 0.983          &          0.029 &         1.3   & 0.736 \\
+  & XGBoost (CPU)       & \textbf{0.989} & \textbf{0.989} &          0.020 &         0.4   & 0.860 \\
+  & XGBoost (GPU)       & \textbf{0.989} & \textbf{0.989} &          0.051 &         2.4   & 0.539 \\
+  & MLP                 & \textbf{0.989} & \textbf{0.989} &          0.059 &         3.4   & 0.494 \\
 \midrule
 \multirow{5}{*}{Credit}
-  & Logistic Regression & 0.810          & 0.771          &          0.061 &         3.9   & 0.728 \\
-  & Random Forest       & 0.821          & 0.800          &          0.832 &        41.7   & 0.499 \\
-  & XGBoost (CPU)       & 0.821          & 0.800          & \textbf{0.043} & \textbf{1.5}  & \textbf{0.767} \\
-  & XGBoost (GPU)       & \textbf{0.822} & 0.801          &          0.052 &         2.4   & 0.762 \\
-  & MLP                 & 0.818          & \textbf{0.804} &          0.633 &        47.6   & 0.539 \\
+  & Logistic Regression & 0.810          & 0.771          &          0.061 &         3.9   & 0.755 \\
+  & Random Forest       & 0.821          & 0.800          &          0.832 &        41.7   & 0.400 \\
+  & XGBoost (CPU)       & 0.821          & 0.800          & \textbf{0.043} & \textbf{1.5}  & \textbf{0.800} \\
+  & XGBoost (GPU)       & \textbf{0.822} & 0.801          &          0.052 &         2.4   & 0.792 \\
+  & MLP                 & 0.818          & \textbf{0.804} &          0.633 &        47.6   & 0.460 \\
 \midrule
 \multirow{4}{*}{HIGGS}
-  & Logistic Regression & 0.642          & 0.637          &          5.148 &       436     & 0.226 \\
-  & XGBoost (CPU)       & 0.760          & 0.760          &         14.650 &       828     & 0.203 \\
-  & XGBoost (GPU)       & 0.760          & 0.760          & \textbf{2.104} & \textbf{90}   & \textbf{0.356} \\
-  & MLP                 & \textbf{0.788} & \textbf{0.787} &        145.891 &    11{,}175   & 0.131 \\
+  & Logistic Regression & 0.642          & 0.637          &          5.148 &       436     & 0.624 \\
+  & XGBoost (CPU)       & 0.760          & 0.760          &         14.650 &       828     & 0.699 \\
+  & XGBoost (GPU)       & 0.760          & 0.760          & \textbf{2.104} & \textbf{90}   & \textbf{0.760} \\
+  & MLP                 & \textbf{0.788} & \textbf{0.787} &        145.891 &    11{,}175   & 0.394 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -241,7 +241,7 @@ fixed entry costs cannot be amortized.
 The \gls{ewf1} metric is designed to surface exactly this kind of
 disproportionality. Logistic Regression, which requires no \gls{gpu} and
 imposes the lowest computational overhead, leads the \gls{ewf1} ranking at
-0.975. This result perfectly illustrates a core principle of Green \gls{ai}: applying complex and power-hungry hardware
+0.989. This result perfectly illustrates a core principle of Green \gls{ai}: applying complex and power-hungry hardware
 to a problem that a linear model solves equally well is not merely suboptimal
 but ecologically wasteful.
 
@@ -279,16 +279,16 @@ makes training expensive for identical reasons, and no amount of
 hyperparameter optimisation removes it.
 
 The \gls{ewf1} metric captures this disproportionality directly. Random
-Forest drops to last place at 0.499, the steepest single-model penalty in
+Forest drops to last place at 0.400, the steepest single-model penalty in
 the entire benchmark. XGBoost \gls{cpu}, delivering equivalent accuracy at
-a fraction of the cost, takes first at 0.767. Two results further down the
+a fraction of the cost, takes first at 0.800. Two results further down the
 ranking are also worth noting. Logistic Regression, despite posting the
 lowest predictive score on this dataset (\gls{wf1} of 0.771), ranks second
-in \gls{ewf1} at 0.729: its trivially cheap training cost outweighs its
+in \gls{ewf1} at 0.755: its trivially cheap training cost outweighs its
 predictive disadvantage. \gls{mlp}, conversely, achieves the best \gls{wf1}
 at 0.804, but emits 633\,mg CO\textsubscript{2}, nearly fifteen times
 XGBoost \gls{cpu}'s 43\,mg, for a predictive gain of just 0.004 points.
-Its \gls{ewf1} (0.539) falls well below both XGBoost variants. The Credit
+Its \gls{ewf1} (0.460) falls well below both XGBoost variants. The Credit
 ranking therefore illustrates two complementary efficiency failure modes:
 the severe algorithmic overhead of Random Forest at the bottom, and the
 disproportionate cost of marginal neural-network gains in the middle.
@@ -333,10 +333,10 @@ backpropagation passes over eleven million samples, driving its energy
 consumption to the highest single-run cost in the entire benchmark.
 
 The \gls{ewf1} ranking on HIGGS inverts relative to raw F1. XGBoost
-\gls{gpu} leads at 0.356, and \gls{mlp}, despite its predictive advantage,
-finishes last at 0.131. The logarithmic emissions penalty in the \gls{ewf1}
-formula amplifies the cost of the \gls{mlp}'s training footprint to the
-point where its predictive lead cannot compensate for it. Whether deployment-scale inference changes
+\gls{gpu} leads at 0.760, and \gls{mlp}, despite its predictive advantage,
+finishes last at 0.394. The min-max normalized emissions penalty in the \gls{ewf1}
+formula assigns the \gls{mlp} the maximum relative cost, as its training
+footprint dwarfs every other model on HIGGS, and its predictive lead cannot compensate for it. Whether deployment-scale inference changes
 this assessment is the subject of \Cref{sec:results_lifecycle}.
 
 
@@ -471,7 +471,7 @@ In the high-data regime above 1{,}000{,}000 rows, all non-linear models face the
 
 \FloatBarrier
 \paragraph{Synthesis: Rethinking the Big Data Dogma}
-Assessed through the \gls{ewf1} lens, the diverse scaling patterns compress into a single, clarifying trend: as dataset size grows, the emissions gap between hardware-aligned models and inefficient algorithms drastically widens. XGBoost \gls{gpu} sustains the highest \gls{ewf1} across every scale above its hardware break-even point, proving that large-scale learning is only ecologically viable when software is perfectly aligned with \gls{simt} acceleration. At five million rows it reaches an \gls{ewf1} of 0.448 against 0.258 for XGBoost \gls{cpu} at the same F1 of 0.757, a gap that widens further at the full eleven million row dataset.
+Assessed through the \gls{ewf1} lens, the diverse scaling patterns compress into a single, clarifying trend: as dataset size grows, the emissions gap between hardware-aligned models and inefficient algorithms drastically widens. XGBoost \gls{gpu} sustains the highest \gls{ewf1} across every scale above its hardware break-even point, proving that large-scale learning is only ecologically viable when software is perfectly aligned with \gls{simt} acceleration. At five million rows it reaches an \gls{ewf1} of 0.757 against 0.663 for XGBoost \gls{cpu} at the same F1 of 0.757, a gap that widens further at the full eleven million row dataset.
 
 More profoundly, these scaling curves challenge the pervasive assumption that more data is unconditionally better, which drives modern machine learning. In the pursuit of state-of-the-art accuracy, the default industrial practice is to feed algorithms the largest dataset available \parencite{schwartzGreenAI2020}. The empirical evidence here proves that this practice is often an ecological liability. At the tail end of a learning curve, forcing a model to ingest ten million additional rows to extract a marginal gain in F1-score results in a disproportionate explosion of carbon emissions. True Green \gls{ai} requires practitioners to abandon the assumption that all available data must be used. Instead, as recent data-centric \gls{ai} studies argue, we must proactively identify the threshold where predictive returns diminish \parencite{verdecchiaDataCentricGreenAI2022a}, treating dataset size not as a fixed asset, but as a hyperparameter that must be aggressively tuned to halt training before the ecological cost eclipses the scientific value.
 
@@ -502,7 +502,7 @@ Taken together, these results highlight a structural mismatch between standard d
 \label{fig:mlp_variation_ewf1}
 \end{figure}
 
-Evaluating the twelve configurations through the \gls{ewf1} lens, as seen in \Cref{fig:mlp_variation_ewf1} makes this trade-off explicit. The logarithmic emissions penalty favors shallower, narrower architectures whose modest accuracy reductions are more than offset by their lower training costs. The 3$\times$128 configuration achieves the highest \gls{ewf1} at 0.143, entirely displacing the 4$\times$512 configuration that posted the highest raw \gls{wf1} but only an \gls{ewf1} of 0.116. For neural networks applied to tabular data, this suggests treating depth not as a default but as a resource justified only by proportional predictive returns.
+Evaluating the twelve configurations through the \gls{ewf1} lens, as seen in \Cref{fig:mlp_variation_ewf1} makes this trade-off explicit. The min-max normalized emissions penalty favors shallower, narrower architectures whose modest accuracy reductions are more than offset by their lower training costs. The 3$\times$128 configuration achieves the highest \gls{ewf1} at 0.757, entirely displacing the 4$\times$512 configuration that posted the highest raw \gls{wf1} but only an \gls{ewf1} of 0.391. For neural networks applied to tabular data, this suggests treating depth not as a default but as a resource justified only by proportional predictive returns.
 
 
 % ── Carbon Intensity Analysis ──────────────────────────────────────────────────
@@ -738,7 +738,7 @@ This creates a direct inversion of the training-only rankings for high-volume de
 \section{Chapter Summary}
 \label{sec:results_summary}
 
-Across the eight analyses in this chapter, the empirical answer to the core research question is conditional rather than absolute. On the \gls{ewf1} metric, Logistic Regression leads on Wine (0.975), XGBoost \gls{cpu} on Credit (0.767), and XGBoost \gls{gpu} on HIGGS (0.356). No single model occupies all three positions because ecological efficiency depends entirely on the fit between model capacity, hardware utilization, and task complexity. Logistic Regression is efficient where a linear decision boundary is sufficient. XGBoost \gls{gpu} is efficient where the massive parallelism of \gls{gpu}-accelerated tree construction finally outweighs its fixed overhead. The rankings are dataset-contingent by design, demonstrating empirically that any claim that one classifier is categorically more ecological than another must strictly specify the scale and hardware context in which that claim is meant to hold.
+Across the eight analyses in this chapter, the empirical answer to the core research question is conditional rather than absolute. On the \gls{ewf1} metric, Logistic Regression leads on Wine (0.989), XGBoost \gls{cpu} on Credit (0.800), and XGBoost \gls{gpu} on HIGGS (0.760). No single model occupies all three positions because ecological efficiency depends entirely on the fit between model capacity, hardware utilization, and task complexity. Logistic Regression is efficient where a linear decision boundary is sufficient. XGBoost \gls{gpu} is efficient where the massive parallelism of \gls{gpu}-accelerated tree construction finally outweighs its fixed overhead. The rankings are dataset-contingent by design, demonstrating empirically that any claim that one classifier is categorically more ecological than another must strictly specify the scale and hardware context in which that claim is meant to hold.
 
 More profoundly, the full accounting of the machine learning pipeline shifts this picture further in every dimension examined, exposing the severe ecological limitations of standard, training-only benchmarking. Hyperparameter search adds a one-time overhead that can exceed the training benchmark cost by more than an order of magnitude, as the \gls{mlp} tuning run on HIGGS cost roughly 15 times the benchmark run it enabled. Grid carbon intensity introduces a factor-of-two scaling on effective emissions that depends on temporal scheduling alone, entirely independent of any modelling decision. Finally, lifecycle analysis distributes the total cost across the deployment period in ways that vary by roughly five orders of magnitude across model-dataset combinations.
 

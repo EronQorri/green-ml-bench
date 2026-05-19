@@ -55,8 +55,10 @@ df = pd.merge(
 )
 
 lam = 1.0
-C0  = 1e-3
-df["ewf1"] = df["f1"] / (1 + lam * np.log1p(df["co2eq_kg"] / C0))
+mn = df.groupby("dataset")["co2eq_kg"].transform("min")
+mx = df.groupby("dataset")["co2eq_kg"].transform("max")
+df["co2eq_kg_scaled"] = (df["co2eq_kg"] - mn) / (mx - mn).clip(lower=1e-9)
+df["ewf1"] = df["f1"] / (1 + lam * df["co2eq_kg_scaled"])
 
 
 def custom_format(val):

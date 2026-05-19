@@ -20,7 +20,6 @@ BASE_DIR  = Path(__file__).parent.parent.parent
 PLOTS_DIR = Path(__file__).parent
 
 lam = 1.0
-C0  = 1e-3
 
 df = pd.read_csv(BASE_DIR / "results" / "results.csv")
 df.columns = df.columns.str.strip()
@@ -36,7 +35,10 @@ mlp_var["co2eq_kg"] = pd.to_numeric(mlp_var["co2eq_kg"], errors="coerce")
 mlp_var["f1"]       = pd.to_numeric(mlp_var["f1"],       errors="coerce")
 mlp_var = mlp_var.dropna(subset=["depth", "width", "f1", "co2eq_kg"])
 
-mlp_var["ewf1"] = mlp_var["f1"] / (1 + lam * np.log1p(mlp_var["co2eq_kg"] / C0))
+mn = mlp_var["co2eq_kg"].min()
+mx = mlp_var["co2eq_kg"].max()
+mlp_var["co2eq_kg_scaled"] = (mlp_var["co2eq_kg"] - mn) / max(mx - mn, 1e-9)
+mlp_var["ewf1"] = mlp_var["f1"] / (1 + lam * mlp_var["co2eq_kg_scaled"])
 
 piv = mlp_var.pivot_table(index="depth", columns="width", values="ewf1", aggfunc="mean")
 
