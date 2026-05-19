@@ -87,14 +87,14 @@ Training time in seconds was included as a secondary resource metric, as it capt
 Furthermore, inference time was measured across all experimental setups to account for the operational footprint. In large-scale deployment scenarios, the cumulative energy demand of repeated predictions can often rival or even exceed the initial training costs \cite{desislavovTrendsAIInference2023}.
 Together, these metrics enable a direct assessment of whether gains in predictive performance justify the associated increase in resource consumption.
 
-Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020}, a custom composite metric was developed for this study, named \gls{cf1}. \Cref{eq:cf1} defines this metric as the ratio of training CO\textsubscript{2} emissions (in milligrams) to the \acrlong{wf1} expressed as a percentage:
+Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020}, a custom composite metric was developed for this study, named \gls{cf1}. \Cref{eq:cf1} defines this metric as the ratio of training CO\textsubscript{2}eq emissions (in milligrams) to the \acrlong{wf1} expressed as a percentage:
 \begin{equation}
 \text{\gls{cf1}} = \frac{c_{\mathrm{mg}}}{\gls{wf1} \cdot 100}
 \label{eq:cf1}
 \end{equation}
-where $c_{\mathrm{mg}}$ denotes CO\textsubscript{2} emissions in milligrams. Lower values indicate a more ecologically efficient model: less carbon expenditure per unit of predictive performance. Unlike normalization-based composite metrics, \gls{cf1} is an absolute measure — its value is independent of which other models appear in the same comparison, making it meaningful even when a single model is evaluated in isolation.
+where $c_{\mathrm{mg}}$ denotes CO\textsubscript{2}eq emissions in milligrams. Lower values indicate a more ecologically efficient model: less carbon expenditure per unit of predictive performance. Unlike normalization-based composite metrics, \gls{cf1} is an absolute measure: its value is independent of which other models appear in the same comparison, making it meaningful even when a single model is evaluated in isolation.
 
-It should be noted that $c_{\mathrm{mg}}$ is inherently location-dependent, as CO\textsubscript{2} emissions are tied to the carbon intensity of the local electricity grid. Consequently, \gls{cf1} scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures.
+It should be noted that $c_{\mathrm{mg}}$ is inherently location-dependent, as CO\textsubscript{2}eq emissions are tied to the carbon intensity of the local electricity grid. Consequently, \gls{cf1} scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures.
 
 Emissions are tracked exclusively over the training run. Data loading and preprocessing are deliberately excluded from the measurement interval, as their cost scales with dataset size rather than model architecture and would therefore introduce noise into cross-model comparisons. This ensures that all reported emissions reflect model training cost alone.
 

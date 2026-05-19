@@ -178,7 +178,7 @@ fastparquet      & 2026.3.0 \\
 \section{XGBoost CPU vs.\ GPU}
 \label{app:xgb_cpugpu}
 
-\Cref{tab:app_xgb_cpugpu} gives exact values for the XGBoost \gls{cpu} vs.\ \gls{gpu} comparison discussed in \Cref{sec:results_xgb}; \Cref{fig:xgb_cpu_vs_gpu} visualises the same data. Both variants implement the same algorithm and produce equivalent predictive performance --- any sub-0.001 difference in WF1 across runs is attributable to floating-point precision differences between \gls{cpu} (float64) and \gls{gpu} (float32) arithmetic and carries no practical meaning. The table therefore omits accuracy and WF1, focusing on the metrics that actually differ: CO\textsubscript{2} emissions, training time, and inference latency. Bold marks the better value within each dataset.
+\Cref{tab:app_xgb_cpugpu} gives exact values for the XGBoost \gls{cpu} vs.\ \gls{gpu} comparison discussed in \Cref{sec:results_xgb}; \Cref{fig:xgb_cpu_vs_gpu} visualises the same data. Both variants implement the same algorithm and produce equivalent predictive performance; any sub-0.001 difference in WF1 across runs is attributable to floating-point precision differences between \gls{cpu} (float64) and \gls{gpu} (float32) arithmetic and carries no practical meaning. The table therefore omits accuracy and WF1, focusing on the metrics that actually differ: CO\textsubscript{2} emissions, training time, and inference latency. Bold marks the better value within each dataset.
 
 \begin{table}[htbp]
 \centering
@@ -205,7 +205,7 @@ fastparquet      & 2026.3.0 \\
 \end{table}
 
 \clearpage
-\section{Monthly Carbon Intensity Statistics --- German Grid 2024}
+\section{Monthly Carbon Intensity Statistics: German Grid 2024}
 \label{app:carbon_monthly}
 
 \Cref{tab:app_carbon_monthly} summarises the carbon intensity of the German electricity grid for each calendar month of 2024, derived from 8{,}760 hourly observations obtained via the ElectricityMaps API. These values underpin the seasonal counterfactual analysis in \Cref{sec:results_carbon}. The winter months (October--January) consistently show higher mean intensity than the summer months, driven by reduced solar generation and higher gas and coal dispatch. November records the highest monthly mean; June records the single lowest hourly minimum.

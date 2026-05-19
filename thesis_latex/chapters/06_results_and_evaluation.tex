@@ -180,7 +180,7 @@ datasets exposes a different axis of that contingency.
 \begin{table}[htbp]
 \centering
 % TODO: update all values in tab:main_results after rerun
-\caption{Main benchmark results for all 14 model-dataset combinations. CO\textsubscript{2} is the hardware-corrected training footprint in grams. Training time is in seconds. \gls{cf1} is mg CO\textsubscript{2} per WF1 percentage point (see \Cref{design_metrics}); lower is better. Bold marks the best value per column per dataset; for CO\textsubscript{2}, time, and CF1, lowest is best. Random Forest was not run on HIGGS.}
+\caption{Main benchmark results for all 14 model-dataset combinations. CO\textsubscript{2} is the hardware-corrected training footprint in grams. Training time is in seconds. \gls{cf1} is mg CO\textsubscript{2}eq per WF1 percentage point (see \Cref{design_metrics}); lower is better. Bold marks the best value per column per dataset; for CO\textsubscript{2}, time, and CF1, lowest is best. Random Forest was not run on HIGGS.}
 \label{tab:main_results}
 \small
 \begin{tabular}{@{} l l r r r r r @{}}
@@ -269,7 +269,7 @@ Moving to the medium-scale Credit dataset (center cluster in
 \Cref{fig:vergleich_performance} and \Cref{fig:vergleich_efficiency}),
 genuine predictive differentiation appears for the first time.
 \Gls{mlp} achieves the highest \gls{wf1} at 0.804 and XGBoost \gls{cpu}
-reaches 0.800 at a training cost of 43.3\,mg CO\textsubscript{2}. The
+reaches 0.800 at a training cost of 43.3\,mg CO\textsubscript{2}eq. The
 critical data point, however, is Random Forest. It matches XGBoost
 \gls{cpu}'s \gls{wf1} to three decimal places (0.800 vs 0.800) while incurring nearly twenty times
 the carbon cost. Two models, statistically indistinguishable predictive outcomes and an
@@ -303,7 +303,7 @@ further down the ranking are also worth noting. Logistic Regression, despite pos
 the lowest predictive score on this dataset (\gls{wf1} of 0.771), ranks second in
 \gls{cf1} at 0.785\,mg/F1\%: its trivially cheap training cost outweighs its
 predictive disadvantage. \gls{mlp}, conversely, achieves the best \gls{wf1} at 0.804,
-but emits 633\,mg CO\textsubscript{2}, nearly fifteen times XGBoost \gls{cpu}'s 43\,mg,
+but emits 633\,mg CO\textsubscript{2}eq, nearly fifteen times XGBoost \gls{cpu}'s 43\,mg CO\textsubscript{2}eq,
 for a predictive gain of just 0.004 points. Its \gls{cf1} (7.87\,mg/F1\%) falls well
 above both XGBoost variants. The Credit ranking therefore illustrates two complementary
 efficiency failure modes: the severe algorithmic overhead of Random Forest at the top
@@ -369,7 +369,7 @@ equivalent accuracy at a fraction of the cost of its nearest competitor.
 XGBoost \gls{gpu} wins on HIGGS, where dataset scale finally amortizes the
 fixed costs of \gls{gpu} execution.
 
-\todo[inline]{Figure vergleich\_cf1.pdf missing — regenerate once final results are available.}
+\todo[inline]{Figure vergleich\_cf1.pdf missing. Regenerate once final results are available.}
 
 The \gls{cf1} rankings shift substantially between datasets,
 and in each case the shift is mechanistically traceable: to hardware

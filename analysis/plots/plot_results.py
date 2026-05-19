@@ -161,7 +161,7 @@ for ax, ds in zip(axes_cf1, ["wine", "credit", "higgs"]):
                 palette=MODEL_PALETTE, ax=ax, dodge=False, errorbar=None)
     ax.set_title(DATASET_LABELS.get(ds, ds))
     ax.set_xlabel("")
-    ax.set_ylabel("CF1 (mg CO₂ / F1%)" if ds == "wine" else "")
+    ax.set_ylabel("CF1 (mg CO₂eq / F1%)" if ds == "wine" else "")
     ax.tick_params(axis="x", rotation=45)
     for container in ax.containers:
         labels = [custom_format(v) for v in container.datavalues]

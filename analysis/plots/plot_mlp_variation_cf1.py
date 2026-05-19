@@ -55,7 +55,7 @@ sns.heatmap(
     cmap="YlGn_r",
     linewidths=0.5, linecolor="white",
     annot_kws={"size": 9},
-    cbar_kws={"label": "CF1 (mg CO₂ / F1%)"},
+    cbar_kws={"label": "CF1 (mg CO₂eq / F1%)"},
 )
 
 # mark the best cell with a border

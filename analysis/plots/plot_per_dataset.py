@@ -178,7 +178,7 @@ for ds, cfg in DATASET_CFG.items():
 
     # ── CF1 ──────────────────────────────────────────────────────────────────
     cf1_vals = bar(ax_cf1, "cf1")
-    ax_cf1.set_title("CF1 (mg CO₂ / F1%)")
+    ax_cf1.set_title("CF1 (mg CO₂eq / F1%)")
     ax_cf1.set_ylabel("CF1")
     valid_cf1 = [v for v in cf1_vals if not np.isnan(v)]
     ax_cf1.set_ylim(0, max(valid_cf1) / 0.85)
