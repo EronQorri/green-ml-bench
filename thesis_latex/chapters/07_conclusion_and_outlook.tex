@@ -1,6 +1,96 @@
 \chapter{Conclusion and Outlook}
 \label{conclusion}
 
-% TODO: Add limitation sentence for CF1: cross-dataset comparison of absolute CF1 values is limited since task difficulty (and thus inherent compute) varies across datasets.
 % TODO: After rerun (StratifiedKFold + held-out test set), update ALL reported numerical values in this chapter and throughout the thesis (tables, figures, inline numbers). Also update the cumulative energy/emissions figure that covers the entire thesis runtime.
+
+\section{Limitations}
+\label{sec:limitations}
+
+\begin{itemize}
+
+    \item \textbf{Single hardware platform and grid.}
+    All measurements are specific to one machine (AMD Ryzen~7 5700X, RTX~4070) and the
+    German electricity grid. Absolute emission and energy figures do not generalize
+    directly to other hardware configurations or geographic regions. Relative efficiency
+    rankings are more transferable, as they reflect algorithmic properties rather than
+    hardware specifics alone.
+
+    \item \textbf{Small Wine test set.}
+    An 80/20 split of the 178-instance Wine dataset yields approximately 36 test samples,
+    producing a noisier performance estimate than the thousands or millions of test
+    instances available for Credit and HIGGS. This is a structural constraint of the
+    dataset size rather than a methodological choice.
+
+    \item \textbf{Fixed 40-trial \gls{hpo} budget.}
+    The uniform 40-trial Optuna budget does not account for differences in search space
+    dimensionality across models. The \gls{mlp} search space is substantially larger and
+    structurally more complex than those of Random Forest or XGBoost; reported \gls{mlp}
+    performance figures should therefore be interpreted as a lower bound on what a more
+    exhaustive search might achieve.
+
+    \item \textbf{Random Forest excluded from the full HIGGS benchmark.}
+    Prohibitive training runtimes at 11 million instances prevented Random Forest from
+    being included in the main cross-dataset benchmark and in the scaling experiment above
+    500{,}000 rows, leaving the cross-model comparison at large scale incomplete for this
+    algorithm family.
+
+    \item \textbf{Random Forest not tuned on HIGGS.}
+    In the dataset scaling experiment, hyperparameters for Random Forest were taken from
+    literature defaults rather than Optuna tuning, because the per-trial cost at large
+    subset sizes was deemed ecologically unjustifiable. Performance figures for Random
+    Forest at larger HIGGS subsets may therefore be suboptimal.
+
+    \item \textbf{Hyperparameters over-specified for small subsets in the scaling
+    experiment.}
+    The hyperparameters used across all subset sizes were tuned on the full
+    11-million-instance HIGGS dataset and were not re-optimised per subset. At small
+    subsets the model is configured for a much larger dataset; reported accuracy figures
+    at 1{,}000 or 10{,}000 instances are therefore lower bounds on what a properly tuned
+    model could achieve at those scales.
+
+    \item \textbf{\gls{cf1} is grid-dependent and absolute values are not directly
+    comparable across datasets.}
+    CO\textsubscript{2}eq emissions, and therefore \gls{cf1}, are tied to the carbon
+    intensity of the local electricity grid. Additionally, direct comparison of absolute
+    \gls{cf1} values across datasets is limited because task difficulty, and thus
+    inherent compute demand, varies across Wine, Credit and HIGGS.
+
+    \item \textbf{Static carbon intensity factor.}
+    CodeCarbon converts measured energy to CO\textsubscript{2} using a fixed annual
+    average of 381\,\gls{gco2eq}/\gls{kwh} for Germany, which cannot reflect diurnal or
+    seasonal variation in grid composition. All reported CO\textsubscript{2} figures
+    therefore carry an implicit timing uncertainty; the temporal carbon intensity analysis
+    in \Cref{sec:results_carbon} bounds this uncertainty but cannot eliminate it from the
+    primary measurements.
+
+    \item \textbf{\gls{cpu} power measurement is Windows-specific and requires elevated
+    privileges.}
+    The hardware-corrected emissions rely on LibreHardwareMonitor, a Windows-only
+    solution. All measurements were collected under administrator rights; without elevated
+    privileges the \texttt{CPUPowerMonitor} cannot access hardware sensors and the
+    corrected CO\textsubscript{2} estimate cannot be computed. The corrected values
+    reported in this study cannot be reproduced directly on Linux or macOS.
+
+    \item \textbf{Background system activity.}
+    CodeCarbon measures at the process level, meaning Windows~11 background processes
+    contribute to the recorded energy. This effect is expected to be small relative to the
+    dominant training workload but cannot be fully isolated or quantified.
+
+    \item \textbf{\gls{cpu} parallelization asymmetry and absence of an idle baseline.}
+    Logistic Regression uses a single-threaded solver and runs at approximately 10\,\%
+    \gls{cpu} utilisation, while Random Forest and XGBoost saturate all eight cores via
+    \texttt{n\_jobs=-1}. At 10\,\% load, the idle component of \gls{cpu} Package Power
+    represents a disproportionately large share of the measured wattage, meaning Logistic
+    Regression's reported emissions likely overstate its true algorithmic energy cost
+    relative to the multi-threaded models. No idle-power baseline was captured to correct
+    for this effect.
+
+    \item \textbf{\gls{gpu} idle draw not tracked during inference.}
+    The per-prediction CO\textsubscript{2} estimate is derived from \gls{cpu} power
+    measured directly during the inference timing loop. \gls{gpu} idle draw during
+    inference is not tracked, so inference cost figures for \gls{gpu}-trained models
+    (XGBoost \gls{gpu} and \gls{mlp}) represent a lower bound on the true per-prediction
+    footprint.
+
+\end{itemize}
 
