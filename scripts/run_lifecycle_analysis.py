@@ -6,12 +6,12 @@ cumulative inference CO2 footprint surpasses the one-time training footprint.
 
 Methodology:
   - Training CO2 : co2eq_kg from results.csv (HW-corrected)
-  - CO2 per inference: inference_time_s * cpu_power_hw_w / 1000 / 3600 * carbon_intensity
-  - Carbon intensity: derived per run as co2eq_kg / (cpu_energy_hw_wh / 1000) [kg/kWh]
+  - CO2 per inference: energy_per_inference_wh / 1000 * carbon_intensity
+      (energy_per_inference_wh = total CPU window energy / n_predictions over 30 s)
+      Fallback when unavailable: inference_time_s * cpu_power_inference_w / 3_600_000 * carbon_intensity
+  - Carbon intensity: derived per run as co2eq_kg / (total_energy_wh / 1000) [kg/kWh]
+      total_energy_wh includes CPU + GPU + RAM
   - Break-even: training_co2 / co2_per_inference
-
-Caveat: cpu_power_hw_w is the average power during training; inference power may
-differ. This is noted as a methodological limitation in the thesis.
 
 Output: analysis/plots/lifecycle_breakeven.png
 """
@@ -56,8 +56,9 @@ def load_data():
     df_i = df_i.drop_duplicates(subset=["dataset", "model"], keep="last")
 
     infer_cols = ["model", "dataset", "inference_time"]
-    if "cpu_power_inference_w" in df_i.columns:
-        infer_cols.append("cpu_power_inference_w")
+    for col in ("cpu_power_inference_w", "energy_per_inference_wh"):
+        if col in df_i.columns:
+            infer_cols.append(col)
 
     df = df_r.merge(df_i[infer_cols], on=["model", "dataset"], how="inner")
     df["co2eq_kg"]        = pd.to_numeric(df["co2eq_kg"],        errors="coerce")
@@ -68,6 +69,8 @@ def load_data():
     df["inference_time"]  = pd.to_numeric(df["inference_time"],  errors="coerce")
     if "cpu_power_inference_w" in df.columns:
         df["cpu_power_inference_w"] = pd.to_numeric(df["cpu_power_inference_w"], errors="coerce")
+    if "energy_per_inference_wh" in df.columns:
+        df["energy_per_inference_wh"] = pd.to_numeric(df["energy_per_inference_wh"], errors="coerce")
     return df.dropna(subset=["co2eq_kg", "cpu_power_hw_w", "cpu_energy_hw_wh", "inference_time"])
 
 
@@ -77,19 +80,27 @@ def compute_breakeven(df):
     df["total_energy_wh"] = df["cpu_energy_hw_wh"] + df["gpu_energy_wh"] + df["ram_energy_wh"]
     df["carbon_intensity"] = df["co2eq_kg"] / (df["total_energy_wh"] / 1000)
 
-    # Use measured inference power where available; fall back to training power.
-    # Training power is a known overestimate for inference (no backward pass),
-    # so inference-phase measurements are preferred.
-    if "cpu_power_inference_w" in df.columns:
-        df["power_for_inference"] = df["cpu_power_inference_w"].combine_first(df["cpu_power_hw_w"])
+    # CO2 per inference: prefer directly measured energy_per_inference_wh (total monitor energy
+    # divided by number of predictions over the 30-second window). Fall back to t × P only
+    # when the direct measurement is unavailable.
+    if "energy_per_inference_wh" in df.columns and df["energy_per_inference_wh"].notna().any():
+        if "cpu_power_inference_w" in df.columns:
+            df["power_for_inference"] = df["cpu_power_inference_w"].combine_first(df["cpu_power_hw_w"])
+        else:
+            df["power_for_inference"] = df["cpu_power_hw_w"]
+        fallback = df["inference_time"] / 3600 * df["power_for_inference"] / 1000 * df["carbon_intensity"]
+        df["co2_per_inference"] = (
+            df["energy_per_inference_wh"] / 1000 * df["carbon_intensity"]
+        ).combine_first(fallback)
     else:
-        df["power_for_inference"] = df["cpu_power_hw_w"]
-
-    # CO2 emitted per single inference [kg]
-    df["co2_per_inference"] = (
-        df["inference_time"] / 3600 * df["power_for_inference"] / 1000
-        * df["carbon_intensity"]
-    )
+        if "cpu_power_inference_w" in df.columns:
+            df["power_for_inference"] = df["cpu_power_inference_w"].combine_first(df["cpu_power_hw_w"])
+        else:
+            df["power_for_inference"] = df["cpu_power_hw_w"]
+        df["co2_per_inference"] = (
+            df["inference_time"] / 3600 * df["power_for_inference"] / 1000
+            * df["carbon_intensity"]
+        )
 
     df["break_even"] = df["co2eq_kg"] / df["co2_per_inference"]
     return df

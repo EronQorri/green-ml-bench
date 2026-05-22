@@ -124,7 +124,9 @@ def save_results(model, dataset, accuracy, f1, co2_corrected, co2_codecarbon, cp
         )
 
 
-def save_inference_time(model, dataset, emissions, nrows, inference_time, cpu_power_inference_w=None):
+def save_inference_time(model, dataset, emissions, nrows, inference_time,
+                        cpu_power_inference_w=None, energy_per_inference_wh=None,
+                        n_inference_reps=None):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     results_dir = os.path.join(base_dir, "results")
     os.makedirs(results_dir, exist_ok=True)
@@ -141,6 +143,8 @@ def save_inference_time(model, dataset, emissions, nrows, inference_time, cpu_po
                 "inference_time",
                 "co2eq_kg",
                 "cpu_power_inference_w",
+                "energy_per_inference_wh",
+                "n_inference_reps",
             ],
         )
         if not file_exists:
@@ -154,5 +158,7 @@ def save_inference_time(model, dataset, emissions, nrows, inference_time, cpu_po
                 "inference_time": inference_time,
                 "co2eq_kg": emissions,
                 "cpu_power_inference_w": round(cpu_power_inference_w, 4) if cpu_power_inference_w is not None else "",
+                "energy_per_inference_wh": f"{energy_per_inference_wh:.6e}" if energy_per_inference_wh is not None else "",
+                "n_inference_reps": n_inference_reps if n_inference_reps is not None else "",
             }
         )

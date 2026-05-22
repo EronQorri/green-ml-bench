@@ -1,12 +1,13 @@
 \chapter{Results and Discussion}
 \label{results}
 
-% TODO: update all cumulative stats (kWh, compute hours, total CO2, car/phone analogies, MLP HIGGS tuning share) after rerun
+\todo[inline]{update all cumulative stats (kWh, compute hours, total CO2, car/phone analogies, MLP HIGGS tuning share) after rerun}
+
 Across 317 CodeCarbon-tracked runs conducted between March and May 2026, the experiments in this study consumed approximately 10.7\,\gls{kwh} of electricity and 151.7 hours of compute time, with CodeCarbon logging a cumulative 4.06\,\gls{kgco2eq}, equivalent to driving approximately
 35\,km in an average German car \parencite{europeanenvironmentagencyMonitoringCO2Emissions2025} or charging
 a smartphone roughly 535 times on the German grid. Given the systematic underestimation documented in \Cref{sec:results_measurement}, the corrected total is substantially higher. The 4.06\,kg should be read as a lower bound. Hyperparameter tuning for the \gls{mlp} on HIGGS alone accounts for 2.47\,kg of that figure, more than 60\,\% of the logged total, illustrating that the experimental overhead of finding a competitive configuration can dwarf the cost of the benchmark runs themselves.
 
-The chapter is organised in eight sections that together address the five sub-questions set out in \Cref{sec:research_questions}. \Cref{sec:results_measurement} first establishes the hardware-corrected measurement baseline on which all subsequent comparisons rest; \Cref{sec:results_tuning} then quantifies the tuning overhead that standard benchmark tables omit. The main analysis proceeds in four thematic blocks: the cross-dataset benchmark (\Cref{sec:results_main}), the \gls{cpu}--\gls{gpu} hardware comparison (\Cref{sec:results_xgb}), the HIGGS scaling and \gls{mlp} architecture variation experiments (\Cref{sec:results_scaling,sec:results_mlp_arch}) and finally the temporal and lifecycle analyses (\Cref{sec:results_carbon,sec:results_lifecycle}) that extend the efficiency picture beyond training time alone.
+The chapter is organized in eight sections that together address the five sub-questions set out in \Cref{sec:research_questions}. \Cref{sec:results_measurement} first establishes the hardware-corrected measurement baseline on which all subsequent comparisons rest; \Cref{sec:results_tuning} then quantifies the tuning overhead that standard benchmark tables omit. The main analysis proceeds in four thematic blocks: the cross-dataset benchmark (\Cref{sec:results_main}), the \gls{cpu}--\gls{gpu} hardware comparison (\Cref{sec:results_xgb}), the HIGGS scaling and \gls{mlp} architecture variation experiments (\Cref{sec:results_scaling,sec:results_mlp_arch}) and finally the temporal and lifecycle analyses (\Cref{sec:results_carbon,sec:results_lifecycle}) that extend the efficiency picture beyond training time alone.
 
 
 % ── Measurement Validation ─────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ amounts to 2.15\,kg against a training footprint of 145.9\,g: tuning is
 roughly 15 times costlier than the benchmark run it makes possible. That debt does not reset at deployment. A nested \gls{cv}
 approach for hyperparameter evaluation, as described in \Cref{design_validation}, would
 have multiplied these costs fivefold, adding weeks of additional compute on
-HIGGS alone. The 40-trial single-loop design is the result of an active
+HIGGS alone. The 40-trial single-loop \todo{nicht mehr single-loop} design is the result of an active
 ecological trade-off and the 2.15\,kg figure is the lower bound of what
 responsible tuning entails at this scale. Whether the \gls{mlp}'s efficient
 inference architecture can serve enough predictions to offset that
@@ -683,18 +684,19 @@ Training CO\textsubscript{2} is a fixed, one-time cost. Inference
 CO\textsubscript{2} accumulates with every prediction served. Whether
 training or inference dominates the total lifecycle footprint depends on
 deployment volume and that relationship differs markedly across the
-model-dataset combinations in this study. Break-even points are computed
-from the hardware-corrected training footprint and measured per-sample
-inference latency, scaled by the grid carbon intensity derived from the
-total training energy (\gls{cpu}, \gls{gpu} and \gls{ram} combined). \Gls{cpu} power during
-inference was measured directly; \gls{gpu} idle draw during inference is not
-tracked, so inference costs for \gls{gpu}-trained models represent
-a lower bound.
+model-dataset combinations in this study. Break-even points are computed from the hardware-corrected training footprint
+and directly measured per-prediction \gls{cpu} energy, scaled by the grid carbon
+intensity derived from the total training energy (\gls{cpu}, \gls{gpu} and \gls{ram} combined).
+Per-prediction energy was obtained by running each model in a 30-second
+inference loop and dividing the total \gls{cpu} package energy by the number of
+predictions completed, ensuring sufficient power-sensor samples for all
+model speeds. \Gls{gpu} idle draw during inference is not tracked, so inference
+costs for \gls{gpu}-trained models represent a lower bound.
 
 \begin{table}[htbp]
 \centering
 % TODO: update all values in tab:lifecycle after rerun
-\caption{Lifecycle break-even analysis. Training CO\textsubscript{2} is the one-time hardware-corrected footprint. CO\textsubscript{2} per prediction is derived from measured inference latency and \gls{cpu} power, scaled by the same grid intensity as training. Break-even is the number of predictions at which cumulative inference CO\textsubscript{2} equals training CO\textsubscript{2}. Random Forest was not run on HIGGS.}
+\caption{Lifecycle break-even analysis. Training CO\textsubscript{2} is the one-time hardware-corrected footprint. CO\textsubscript{2} per prediction is derived from directly measured per-prediction \gls{cpu} energy (30-second inference window), scaled by the same grid intensity as training. Break-even is the number of predictions at which cumulative inference CO\textsubscript{2} equals training CO\textsubscript{2}. Random Forest was not run on HIGGS.}
 \label{tab:lifecycle}
 \small
 \begin{tabular}{@{} l l r r r @{}}

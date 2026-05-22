@@ -10,7 +10,7 @@ dropout_rate, and batch_size jointly with a specific architecture, so reusing
 them would implicitly favour that architecture. Chosen defaults:
     lr            = 1e-3   (Adam default, Kingma & Ba 2015)
     dropout_rate  = 0.3    (standard mid-range regularisation)
-    batch_size    = 4096   (mid-range of the Optuna search space)
+    batch_size    = 16384  (chosen for GPU efficiency on RTX 4070; ~0.2 % of training data per step)
 
 Must be run as Administrator for CPUPowerMonitor sensor access.
 """
@@ -44,7 +44,7 @@ NTFY_CHANNEL = "eron_thesis_higgs_run_123"
 
 FIXED_LR = 1e-3
 FIXED_DROPOUT = 0.3
-FIXED_BATCH_SIZE = 4096
+FIXED_BATCH_SIZE = 16384
 
 # 3 widths x 4 depths = 12 configs, width-first so each depth curve completes
 # before moving to the next width

@@ -54,16 +54,22 @@ joblib.dump(pipeline, saved_models_dir / f"lr_{DATASET}.joblib")
 
 trained_model = joblib.load(saved_models_dir / f"lr_{DATASET}.joblib")
 single_row = X_test[:1]
+trained_model.predict(single_row)  # warmup before monitor starts
 inference_monitor = CPUPowerMonitor()
 inference_monitor.start()
-trained_model.predict(single_row)  # warmup
+_t_start = time.perf_counter()
 _times = []
-for _ in range(100):
+while time.perf_counter() - _t_start < 30.0:
     _t0 = time.perf_counter()
     trained_model.predict(single_row)
     _times.append(time.perf_counter() - _t0)
-inference_time = float(np.median(_times))
 inference_cpu_result = inference_monitor.stop()
+inference_time = float(np.median(_times))
+_n_inferences = len(_times)
+_energy_per_inference_wh = (
+    inference_cpu_result["energy_wh"] / _n_inferences
+    if inference_cpu_result.get("energy_wh") is not None else None
+)
 
 save_results(
     "LogisticRegression",
@@ -77,4 +83,5 @@ save_results(
     nrows,
     tracker,
 )
-save_inference_time("LogisticRegression", DATASET, co2_corrected, nrows, inference_time, inference_cpu_result.get("avg_watt"))
+save_inference_time("LogisticRegression", DATASET, co2_corrected, nrows, inference_time,
+                    inference_cpu_result.get("avg_watt"), _energy_per_inference_wh, _n_inferences)

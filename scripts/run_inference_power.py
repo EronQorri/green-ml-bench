@@ -121,18 +121,23 @@ CONFIGS = [
 ]
 
 
+_INFERENCE_BUDGET = 30.0
+
 def measure_inference(model, single_row):
-    """Returns (median_latency_s, avg_cpu_watt). Runs 100 predictions after one warmup."""
+    """Runs predictions for 30 s, returns (median_latency_s, avg_cpu_watt, energy_per_inference_wh, n)."""
+    model.predict(single_row)  # warmup before monitor starts
     monitor = CPUPowerMonitor()
     monitor.start()
-    model.predict(single_row)  # warmup
+    t_start = time.perf_counter()
     times = []
-    for _ in range(100):
+    while time.perf_counter() - t_start < _INFERENCE_BUDGET:
         t0 = time.perf_counter()
         model.predict(single_row)
         times.append(time.perf_counter() - t0)
     result = monitor.stop()
-    return float(np.median(times)), result.get("avg_watt")
+    n = len(times)
+    energy_per_inference_wh = (result["energy_wh"] / n) if result.get("energy_wh") is not None else None
+    return float(np.median(times)), result.get("avg_watt"), energy_per_inference_wh, n
 
 
 def load_subset(dataset, nrows):
@@ -183,13 +188,20 @@ def main():
         model = build_model(model_key, dataset, X_fit.shape[1])
         model.fit(X_fit, y_fit)
 
-        print(f"  [{model_name}/{dataset}] measuring...", flush=True)
-        median_latency, avg_watt = measure_inference(model, single_row)
+        print(f"  [{model_name}/{dataset}] measuring (30 s)...", flush=True)
+        median_latency, avg_watt, energy_per_inference_wh, n_reps = measure_inference(model, single_row)
+
+        if "energy_per_inference_wh" not in df.columns:
+            df["energy_per_inference_wh"] = pd.NA
+        if "n_inference_reps" not in df.columns:
+            df["n_inference_reps"] = pd.NA
 
         df.loc[mask, "inference_time"] = median_latency
         df.loc[mask, "cpu_power_inference_w"] = round(avg_watt, 4) if avg_watt is not None else pd.NA
+        df.loc[mask, "energy_per_inference_wh"] = f"{energy_per_inference_wh:.6e}" if energy_per_inference_wh is not None else pd.NA
+        df.loc[mask, "n_inference_reps"] = n_reps
         watt_str = f"{avg_watt:.2f} W" if avg_watt is not None else "sensor unavailable"
-        print(f"  [{model_name}/{dataset}] {median_latency*1e6:.1f} µs  |  {watt_str}")
+        print(f"  [{model_name}/{dataset}] {median_latency*1e6:.1f} µs | {watt_str} | n={n_reps:,}")
 
     df.to_csv(INFERENCE_CSV, index=False)
     print(f"\nUpdated: {INFERENCE_CSV}")
