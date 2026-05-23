@@ -3,7 +3,8 @@ import sys
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
-from models.utils import load_data_split, save_best_params
+from models.utils import load_data_split, save_best_params, save_results, get_nrows
+from models.power_monitor import CPUPowerMonitor, compute_corrected_co2
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.metrics import f1_score, make_scorer
 from sklearn.pipeline import make_pipeline
@@ -29,6 +30,7 @@ mlp_config = {
     "higgs": {"num_classes": 2},
 }
 X_train, X_test, y_train, y_test = load_data_split(DATASET)
+nrows = get_nrows(DATASET)
 X_array = X_train.to_numpy().astype(np.float32)
 y_array = y_train.to_numpy().astype(np.int64)
 input_dim = X_array.shape[1]
@@ -93,6 +95,8 @@ tracker = EmissionsTracker(
     output_dir=str(BASE_DIR / "emissions"),
     log_level="error",
 )
+cpu_monitor = CPUPowerMonitor()
+cpu_monitor.start()
 tracker.start()
 
 study = optuna.create_study(
@@ -105,12 +109,16 @@ study = optuna.create_study(
 study.optimize(objective, n_trials=N_TRIALS)
 
 emissions_kg = tracker.stop()
-
-total_time = (time.time() - start_time) / 60
+cpu_result = cpu_monitor.stop()
+training_time_s = time.time() - start_time
+total_time = training_time_s / 60
+co2_corrected = compute_corrected_co2(tracker, cpu_result)
 
 print(f"\nBest F1: {study.best_value:.4f}")
 print(f"Best params: {study.best_params}")
 print(f"Tuning duration: {total_time:.2f} minutes")
+
+save_results("tune_MLP", DATASET, None, study.best_value, co2_corrected, emissions_kg, cpu_result, training_time_s, nrows, tracker)
 
 save_best_params("mlp", DATASET, {
     "best_f1": study.best_value,

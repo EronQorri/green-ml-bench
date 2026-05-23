@@ -111,7 +111,7 @@ def save_results(model, dataset, accuracy, f1, co2_corrected, co2_codecarbon, cp
                 "model": model,
                 "dataset": dataset,
                 "nrows": nrows if nrows else "all",
-                "accuracy": round(accuracy, 4),
+                "accuracy": round(accuracy, 4) if accuracy is not None else "",
                 "f1": round(f1, 4),
                 "co2eq_kg": co2_corrected,
                 "co2eq_codecarbon_kg": co2_codecarbon,

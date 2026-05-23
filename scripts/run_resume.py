@@ -1,12 +1,11 @@
 """
-run_all.py — full pipeline: hyperparameter tuning → model training.
+run_resume.py — resume after tune_MLP [higgs] crash.
 
-Runs every tuning script and every model script across all datasets.
-Tuning results are written to results/results.csv alongside model results.
-codecarbon tracks emissions for every step.
+Skips all completed tuning steps (RFC wine/credit, XGB wine/credit/higgs,
+MLP wine/credit). Runs tune_MLP higgs, then full Phase 2 model training.
 
 Usage:
-    python run_all.py
+    python scripts/run_resume.py
 """
 
 import os
@@ -24,16 +23,13 @@ TUNE_DIR = BASE_DIR / "models" / "tune"
 MODELS_DIR = BASE_DIR / "models"
 NTFY_CHANNEL = "eron_thesis_higgs_run_123"
 
-# RFC skips higgs (too slow with CV on 11M rows)
 TUNE_SCRIPTS = [
-    ("tune_rfc.py", ["wine", "credit"]),
-    ("tune_xgb.py", ["wine", "credit", "higgs"]),
-    ("tune_mlp.py", ["wine", "credit", "higgs"]),
+    ("tune_mlp.py", ["higgs"]),
 ]
 
 MODEL_SCRIPTS = [
     "log_regression.py",
-    "random_forest.py",   # skips higgs internally
+    "random_forest.py",
     "xgboost_cpu.py",
     "xgboost_gpu.py",
     "mlp.py",
@@ -41,14 +37,12 @@ MODEL_SCRIPTS = [
 
 DATASETS = ["wine", "credit", "higgs"]
 
-# Env vars passed to tune subprocesses
 TUNE_ENV = {
     **os.environ,
-    "NO_SHUTDOWN": "1",  # prevent tune_mlp from shutting down mid-run
-    "NO_NOTIFY": "1",    # suppress per-script ntfy; master sends one at the end
+    "NO_SHUTDOWN": "1",
+    "NO_NOTIFY": "1",
 }
 
-# --- helpers ---
 
 def _notify(title, body, priority="default"):
     try:
@@ -62,7 +56,6 @@ def _notify(title, body, priority="default"):
         pass
 
 
-
 def _tee(src, *dsts):
     for line in iter(src.readline, b""):
         for dst in dsts:
@@ -72,7 +65,6 @@ def _tee(src, *dsts):
 
 
 def _run(script_path, dataset, extra_env=None):
-    """Run script as subprocess; stream output to terminal + log file."""
     env = {**TUNE_ENV, **(extra_env or {})}
     label = f"{script_path.name} [{dataset}]"
     log_path = BASE_DIR / "logs" / f"{script_path.stem}_{dataset}.log"
@@ -97,10 +89,10 @@ def _run(script_path, dataset, extra_env=None):
     return proc.returncode == 0, elapsed
 
 
-# ── Phase 1: Hyperparameter tuning ───────────────────────────────────────────
+# ── Phase 1: tune_MLP higgs only ─────────────────────────────────────────────
 
 print("=" * 60)
-print("PHASE 1 — Hyperparameter Tuning")
+print("PHASE 1 — tune_MLP [higgs] (resume)")
 print("=" * 60)
 
 overall_start = time.time()
@@ -108,7 +100,6 @@ tune_failures = []
 
 for script_name, datasets in TUNE_SCRIPTS:
     script_path = TUNE_DIR / script_name
-    # Model label for results.csv  e.g. "tune_RFC", "tune_XGB", "tune_MLP"
     model_label = "tune_" + script_name.replace("tune_", "").replace(".py", "").upper()
 
     for dataset in datasets:
@@ -139,7 +130,7 @@ if tune_failures:
 
 _notify(
     "Thesis: Tuning abgeschlossen",
-    f"Alle Tuning-Skripte fertig. Failures: {tune_failures or 'keine'}",
+    f"tune_MLP higgs fertig. Failures: {tune_failures or 'keine'}",
     priority="high",
 )
 

@@ -9,22 +9,22 @@
                 "min_samples_leaf": 6,
                 "max_features": "sqrt"
             },
-            "tuning_duration_min": 0.2509794155756632,
-            "emissions_kg": 5.4876907548756674e-05,
-            "n_trials": 5
+            "tuning_duration_min": 1.2941365202267965,
+            "emissions_kg": 0.0004903741798507312,
+            "n_trials": 40
         },
         "credit": {
-            "best_f1": 0.8000881010163685,
+            "best_f1": 0.8002691719999021,
             "best_params": {
-                "n_estimators": 172,
-                "max_depth": 6,
-                "min_samples_split": 7,
-                "min_samples_leaf": 6,
+                "n_estimators": 285,
+                "max_depth": 5,
+                "min_samples_split": 17,
+                "min_samples_leaf": 8,
                 "max_features": null
             },
-            "tuning_duration_min": 0.28466330766677855,
-            "emissions_kg": 7.431234473968687e-05,
-            "n_trials": 5
+            "tuning_duration_min": 5.430318530400594,
+            "emissions_kg": 0.003534515617272175,
+            "n_trials": 40
         },
         "higgs": {
             "best_f1": 0.7230701918576655,
@@ -51,80 +51,84 @@
                 "colsample_bytree": 0.608233797718321,
                 "min_child_weight": 10
             },
-            "tuning_duration_min": 0.354585325717926,
-            "emissions_kg": 0.00011974966139306953,
-            "n_trials": 5
+            "tuning_duration_min": 1.3007124582926433,
+            "emissions_kg": 0.0005993964573692333,
+            "n_trials": 40
         },
         "credit": {
-            "best_f1": 0.7986486032822745,
+            "best_f1": 0.8023922929427701,
             "best_params": {
-                "n_estimators": 433,
-                "max_depth": 4,
-                "learning_rate": 0.01855998084649059,
-                "subsample": 0.6733618039413735,
-                "colsample_bytree": 0.7216968971838151,
-                "min_child_weight": 6
+                "n_estimators": 405,
+                "max_depth": 5,
+                "learning_rate": 0.014873007965445162,
+                "subsample": 0.8685512276588229,
+                "colsample_bytree": 0.9228946641899863,
+                "min_child_weight": 3
             },
-            "tuning_duration_min": 0.33954342603683474,
-            "emissions_kg": 0.00012285701718639752,
-            "n_trials": 5
+            "tuning_duration_min": 2.0403883179028828,
+            "emissions_kg": 0.0010958524758226298,
+            "n_trials": 40
         },
         "higgs": {
-            "best_f1": 0.6979364449498949,
+            "best_f1": 0.7590825663020955,
             "best_params": {
-                "n_estimators": 282,
-                "max_depth": 7,
-                "learning_rate": 0.019721610970574007,
-                "subsample": 0.8056937753654446,
-                "colsample_bytree": 0.836965827544817,
-                "min_child_weight": 1
+                "n_estimators": 406,
+                "max_depth": 8,
+                "learning_rate": 0.22633275750676643,
+                "subsample": 0.8910149050713664,
+                "colsample_bytree": 0.8221793639442114,
+                "min_child_weight": 3
             },
-            "tuning_duration_min": 0.3602081735928853,
-            "emissions_kg": 0.00013984094626704044,
-            "n_trials": 5
+            "tuning_duration_min": 40.13015189965566,
+            "emissions_kg": 0.040469311968126975,
+            "n_trials": 40
         }
     },
     "mlp": {
         "wine": {
-            "best_f1": 0.985974025974026,
+            "best_f1": 0.993183408295852,
             "best_params": {
-                "n_layers": 1,
-                "layer_0": 512,
-                "dropout_rate": 0.13567451588694796,
-                "lr": 0.030634622106220845,
-                "batch_size": 8192
+                "n_layers": 2,
+                "layer_0": 64,
+                "layer_1": 256,
+                "dropout_rate": 0.044838996762112796,
+                "lr": 0.0006584828071481257,
+                "batch_size": 1024
             },
-            "tuning_duration_min": 0.24368016719818114,
-            "emissions_kg": 5.8487726453334985e-05,
-            "n_trials": 5
+            "tuning_duration_min": 0.8122900287310283,
+            "emissions_kg": 0.00032412965158134404,
+            "n_trials": 40
         },
         "credit": {
-            "best_f1": 0.8010865423412717,
+            "best_f1": 0.8025554831375782,
             "best_params": {
-                "n_layers": 2,
-                "layer_0": 64,
+                "n_layers": 4,
+                "layer_0": 128,
                 "layer_1": 128,
-                "dropout_rate": 0.4744427686266666,
-                "lr": 0.07886714129990492,
-                "batch_size": 1024
+                "layer_2": 128,
+                "layer_3": 64,
+                "dropout_rate": 0.20583351260963745,
+                "lr": 0.0007633519183320522,
+                "batch_size": 4096
             },
-            "tuning_duration_min": 0.440744948387146,
-            "emissions_kg": 0.000142187993500824,
-            "n_trials": 5
+            "tuning_duration_min": 11.400635854403179,
+            "emissions_kg": 0.004910045158581949,
+            "n_trials": 40
         },
         "higgs": {
-            "best_f1": 0.6321542456913434,
+            "best_f1": 0.7822773568687095,
             "best_params": {
-                "n_layers": 2,
-                "layer_0": 64,
-                "layer_1": 128,
-                "dropout_rate": 0.4744427686266666,
-                "lr": 0.07886714129990492,
-                "batch_size": 1024
+                "n_layers": 3,
+                "layer_0": 512,
+                "layer_1": 256,
+                "layer_2": 256,
+                "dropout_rate": 0.10406481355823088,
+                "lr": 0.004793246104060971,
+                "batch_size": 8192
             },
-            "tuning_duration_min": 0.44428057670593263,
-            "emissions_kg": 0.00014380745702113025,
-            "n_trials": 5
+            "tuning_duration_min": 4340.034593443076,
+            "emissions_kg": 1.8538496417139383,
+            "n_trials": 40
         }
     }
 }
