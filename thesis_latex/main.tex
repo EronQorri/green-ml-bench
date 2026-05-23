@@ -11,6 +11,7 @@
 \usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{subcaption}
+\usepackage[font=small,labelfont=bf,format=plain,justification=raggedright,singlelinecheck=false]{caption}
 \graphicspath{{../analysis/plots/}{../analysis/carbon_intensity/}{../analysis/electricity_mix/}}
 
 
@@ -77,6 +78,32 @@
 \renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter.\ #1}{}}
 \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
 
+% Truly blank verso pages (suppress header on auto-inserted blanks before chapter openings)
+\let\origdoublepage\cleardoublepage
+\renewcommand{\cleardoublepage}{%
+  \clearpage{\pagestyle{empty}\origdoublepage}}
+
+% Avoid widows (single last line at top of page) and orphans (single first line at bottom)
+\widowpenalty=10000
+\clubpenalty=10000
+
+% Custom environment for the research question (used in ch.1 and ch.4)
+% Italic, indented, with a thin gray rule on the left.
+\newenvironment{researchquestion}{%
+  \par\vspace{0.4\baselineskip}%
+  \begin{list}{}{%
+    \setlength{\leftmargin}{2em}%
+    \setlength{\rightmargin}{1em}%
+    \setlength{\topsep}{0pt}%
+    \setlength{\parsep}{0pt}%
+  }\item[]%
+  {\color{gray!70}\vrule width 2pt}\hspace{0.8em}%
+  \begin{minipage}[t]{\dimexpr\linewidth-3em\relax}\itshape%
+}{%
+  \end{minipage}\end{list}%
+  \par\vspace{0.4\baselineskip}%
+}
+
 % Table of contents
 \setlength{\cftbeforechapskip}{6pt}
 \renewcommand{\cftchapfont}{\bfseries}
@@ -92,10 +119,17 @@
 \includepdf[pages={1}]{deckblatt.pdf}
 
 \frontmatter
-\setcounter{tocdepth}{1}
+\setcounter{tocdepth}{2}
 \tableofcontents
 \newpage
 \printglossary[type=\acronymtype, title={List of Abbreviations}, toctitle={List of Abbreviations}]
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+Green \acrshort{ai} research has established that the energy and carbon cost of machine learning is measurable and consequential, but its empirical scope has remained tied to large-scale deep learning on text and image data. The classical algorithms that dominate deployed tabular classification lack a comparable baseline. This thesis addresses that gap through a systematic benchmark of five classifiers, Logistic Regression, Random Forest, XGBoost on \acrshort{cpu} and \acrshort{gpu}, and an \acrshort{mlp}, on three tabular datasets spanning four orders of magnitude in size, from 178 to 11 million instances. The scope extends beyond the single training run to cover hyperparameter search, temporal variation in grid carbon intensity and the inference break-even point at which cumulative deployment cost overtakes the training footprint. To address the systematic undercounting of software-based estimators, all \acrshort{cpu} energy figures are derived from direct hardware-sensor readings. A composite metric, \acrfull{cf1}, is introduced to express CO\textsubscript{2}eq cost per unit of predictive performance.
+
+The results show that ecological efficiency is not a property of an algorithm but emerges from the fit between its computational structure, the hardware it runs on and the volume of data it processes. No model leads across all three datasets. \acrshort{gpu} acceleration becomes the more efficient choice for XGBoost only above approximately 65{,}000 instances. Below that threshold device initialization overhead dominates and emissions exceed those of the \acrshort{cpu} variant. A constrained 40-trial Optuna search for the \acrshort{mlp} on HIGGS emitted roughly 54 times the carbon of the final training run it enabled. Direct hardware measurement exceeded raw CodeCarbon figures by a median factor of 1.92, and shifting training away from winter evenings towards summer midday reduced absolute emissions by up to 70 percent without altering a single line of code. The contribution of this work is not a ranked list of preferred classifiers but a corrected measurement methodology, a context-sensitive efficiency metric and a lifecycle accounting framework that together make ecological model selection answerable for a given deployment context rather than as a general question.
 
 \mainmatter
 
