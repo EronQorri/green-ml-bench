@@ -156,10 +156,10 @@ To ensure maximum predictive capabilities for the remaining data, the model conf
 \toprule
 Parameter & Wine & Credit \\
 \midrule
-\path{n_estimators} & 250 & 495 \\
-\path{max_depth} & 20 & 20 \\
+\path{n_estimators} & 250 & 285 \\
+\path{max_depth} & 20 & 5 \\
 \path{min_samples_split} & 15 & 17 \\
-\path{min_samples_leaf} & 6 & 3 \\
+\path{min_samples_leaf} & 6 & 8 \\
 \path{max_features} & \path{sqrt} & \path{None} \\
 \bottomrule
 \end{tabular}
@@ -188,12 +188,12 @@ Parameter & Wine & Credit & HIGGS \\
 \path{objective} & \path{multi:softmax} & \path{binary:logistic} & \path{binary:logistic} \\
 \path{eval_metric} & \path{mlogloss} & \path{logloss} & \path{logloss} \\
 \path{num_class} & 3 & N/A & N/A \\
-\path{n_estimators} & 273 & 452 & 406 \\
-\path{max_depth} & 4 & 3 & 8 \\
-\path{learning_rate} & 0.0801 & 0.0411 & 0.2263 \\
-\path{subsample} & 0.6558 & 0.7319 & 0.8910 \\
-\path{colsample_bytree} & 0.7169 & 0.6901 & 0.8222 \\
-\path{min_child_weight} & 4 & 7 & 3 \\
+\path{n_estimators} & 123 & 405 & 406 \\
+\path{max_depth} & 8 & 5 & 8 \\
+\path{learning_rate} & 0.0773 & 0.0149 & 0.2263 \\
+\path{subsample} & 0.8832 & 0.8686 & 0.8910 \\
+\path{colsample_bytree} & 0.6082 & 0.9229 & 0.8222 \\
+\path{min_child_weight} & 10 & 3 & 3 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -217,17 +217,18 @@ A dynamic architecture was chosen to ensure the network structure directly refle
 
 \setlength{\tabcolsep}{5pt}
 
-\begin{minipage}[b]{0.26\linewidth}
+\begin{minipage}[b]{0.28\linewidth}
 \centering
 \small\textit{(a) Wine}\\[4pt]
 \begin{tabular}[b]{l R @{\,$\to$\,} L r}
 \toprule
 \textbf{Lyr} & \multicolumn{2}{c}{\textbf{In/Out}} & \textbf{Par.} \\
 \midrule
-HL 1 & 13  & 128 & 2{,}048 \\
-Out  & 128 & 3   &     387 \\
+HL 1 & 13  &  64 &  1{,}024 \\
+HL 2 & 64  & 256 & 17{,}152 \\
+Out  & 256 & 3   &      771 \\
 \midrule
-\textbf{Total} & \multicolumn{2}{c}{} & \textbf{2{,}435} \\
+\textbf{Total} & \multicolumn{2}{c}{} & \textbf{18{,}947} \\
 \bottomrule
 \end{tabular}
 \end{minipage}
@@ -239,30 +240,30 @@ Out  & 128 & 3   &     387 \\
 \toprule
 \textbf{Lyr} & \multicolumn{2}{c}{\textbf{In/Out}} & \textbf{Par.} \\
 \midrule
-HL 1 & 23  & 512 & 13{,}312 \\
-HL 2 & 512 & 64  & 32{,}960 \\
-HL 3 & 64  & 128 &  8{,}576 \\
-HL 4 & 128 & 256 & 33{,}536 \\
-Out  & 256 & 2   &      514 \\
+HL 1 &  23 & 128 &  3{,}328 \\
+HL 2 & 128 & 128 & 16{,}768 \\
+HL 3 & 128 & 128 & 16{,}768 \\
+HL 4 & 128 &  64 &  8{,}384 \\
+Out  &  64 & 2   &      130 \\
 \midrule
-\textbf{Total} & \multicolumn{2}{c}{} & \textbf{88{,}898} \\
+\textbf{Total} & \multicolumn{2}{c}{} & \textbf{45{,}378} \\
 \bottomrule
 \end{tabular}
 \end{minipage}
 \hfill
-\begin{minipage}[b]{0.32\linewidth}
+\begin{minipage}[b]{0.30\linewidth}
 \centering
 \small\textit{(c) HIGGS}\\[4pt]
 \begin{tabular}[b]{l R @{\,$\to$\,} L r}
 \toprule
 \textbf{Lyr} & \multicolumn{2}{c}{\textbf{In/Out}} & \textbf{Par.} \\
 \midrule
-HL 1 & 28  & 512 &  15{,}872 \\
+HL 1 &  28 & 512 &  15{,}872 \\
 HL 2 & 512 & 256 & 131{,}840 \\
-HL 3 & 256 & 512 & 132{,}608 \\
-Out  & 512 & 2   &   1{,}026 \\
+HL 3 & 256 & 256 &  66{,}304 \\
+Out  & 256 & 2   &       514 \\
 \midrule
-\textbf{Total} & \multicolumn{2}{c}{} & \textbf{281{,}346} \\
+\textbf{Total} & \multicolumn{2}{c}{} & \textbf{214{,}530} \\
 \bottomrule
 \end{tabular}
 \end{minipage}
@@ -280,11 +281,11 @@ Input features are standardized using a \texttt{StandardScaler}, embedded togeth
 \toprule
 Parameter & Wine & Credit & HIGGS \\
 \midrule
-\path{n_layers} & 1 & 4 & 3 \\
-\path{layer_sizes} & [128] & [512, 64, 128, 256] & [512, 256, 512] \\
-\path{dropout_rate} & 0.2936 & 0.3690 & 0.0334 \\
-\path{lr} & 0.0030 & 0.0002 & 0.0077 \\
-\path{batch_size} & 1024 & 1024 & 8192 \\
+\path{n_layers} & 2 & 4 & 3 \\
+\path{layer_sizes} & [64, 256] & [128, 128, 128, 64] & [512, 256, 256] \\
+\path{dropout_rate} & 0.0448 & 0.2058 & 0.1041 \\
+\path{lr} & 0.0007 & 0.0008 & 0.0048 \\
+\path{batch_size} & 1024 & 4096 & 8192 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -432,9 +433,6 @@ The practical consequence is that Logistic Regression's reported emissions likel
 
 \section{Inference Latency Measurement}
 \label{implementation_inference}
-
-\todo[inline]{wenn back am pc alle inference neu runnen mit den 30s rework}
-
 
 Inference latency was measured separately after training, outside the emissions tracker. For each model, a single row from the dataset was passed through the trained model repeatedly and the elapsed time was captured using \texttt{time.perf\_counter()}. This provides a hardware-level estimate of per-sample prediction latency, which is relevant in deployment scenarios where repeated inference can accumulate significant energy costs \cite{desislavovTrendsAIInference2023}.
 
