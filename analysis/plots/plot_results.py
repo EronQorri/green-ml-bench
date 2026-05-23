@@ -163,15 +163,84 @@ for ax, ds in zip(axes_cf1, ["wine", "credit", "higgs"]):
     ax.set_xlabel("")
     ax.set_ylabel("CF1 (mg CO₂eq / F1%)" if ds == "wine" else "")
     ax.tick_params(axis="x", rotation=45)
+    if ds == "higgs":
+        ax.set_yscale("log")
+        ax.set_title("HIGGS (log scale)")
     for container in ax.containers:
         labels = [custom_format(v) for v in container.datavalues]
         ax.bar_label(container, labels=labels, padding=4, fontsize=8)
     if ax.get_legend():
         ax.get_legend().remove()
+    vals = [v for c in ax.containers for v in c.datavalues if v and v == v]
+    if vals:
+        if ds == "higgs":
+            ax.set_ylim(min(vals) * 0.5, max(vals) * 3)
+        else:
+            ax.set_ylim(0, max(vals) * 1.20)
 
 plt.tight_layout(rect=[0, 0, 1, 0.93])
 plt.savefig(PLOTS_DIR / "vergleich_cf1.pdf", bbox_inches="tight")
 print("Saved: analysis/plots/vergleich_cf1.pdf")
+plt.close()
+
+
+# ── Plot: Tuning CF1 per Dataset ─────────────────────────────────────────────
+
+TUNE_ORDER = ["tune_RFC", "tune_XGB", "tune_MLP"]
+TUNE_PALETTE = {
+    "tune_RFC": (212/255, 149/255, 106/255),
+    "tune_XGB": (130/255, 185/255, 154/255),
+    "tune_MLP": (155/255, 135/255, 181/255),
+}
+TUNE_LABELS = {"tune_RFC": "Random Forest", "tune_XGB": "XGBoost", "tune_MLP": "MLP"}
+
+_df_raw = pd.read_csv(RESULTS_DIR / "results.csv")
+_df_raw.columns = _df_raw.columns.str.strip()
+_df_raw["model"]   = _df_raw["model"].astype(str).str.strip()
+_df_raw["dataset"] = _df_raw["dataset"].astype(str).str.strip()
+_df_raw["nrows"]   = _df_raw["nrows"].astype(str).str.strip()
+df_tune = _df_raw[_df_raw["model"].str.startswith("tune_") & (_df_raw["nrows"] == "all")].copy()
+df_tune["cf1"] = (df_tune["co2eq_kg"].astype(float) * 1e6) / (df_tune["f1"].astype(float) * 100)
+
+fig, axes_tune = plt.subplots(1, 3, figsize=(14, 5))
+fig.suptitle("Tuning CF1 per Dataset", fontsize=13, fontweight="bold")
+
+for ax, ds in zip(axes_tune, ["wine", "credit", "higgs"]):
+    subset = df_tune[df_tune["dataset"] == ds]
+    if subset.empty:
+        ax.set_visible(False)
+        continue
+    models_in_ds = [m for m in TUNE_ORDER if m in subset["model"].values]
+    palette_ds = {TUNE_LABELS[m]: TUNE_PALETTE[m] for m in models_in_ds}
+    subset = subset.copy()
+    subset["model_label"] = subset["model"].map(TUNE_LABELS)
+    sns.barplot(data=subset, x="model_label", y="cf1",
+                order=[TUNE_LABELS[m] for m in models_in_ds],
+                hue="model_label", hue_order=[TUNE_LABELS[m] for m in models_in_ds],
+                palette=palette_ds, ax=ax, dodge=False, errorbar=None)
+    if ds == "higgs":
+        ax.set_yscale("log")
+        ax.set_title("HIGGS (log scale)")
+    else:
+        ax.set_title(DATASET_LABELS.get(ds, ds))
+    ax.set_xlabel("")
+    ax.set_ylabel("CF1 (mg CO₂eq / F1%)" if ds == "wine" else "")
+    ax.tick_params(axis="x", rotation=45)
+    for container in ax.containers:
+        labels = [custom_format(v) for v in container.datavalues]
+        ax.bar_label(container, labels=labels, padding=4, fontsize=8)
+    if ax.get_legend():
+        ax.get_legend().remove()
+    vals = [v for c in ax.containers for v in c.datavalues if v and v == v]
+    if vals:
+        if ds == "higgs":
+            ax.set_ylim(min(vals) * 0.5, max(vals) * 3)
+        else:
+            ax.set_ylim(0, max(vals) * 1.20)
+
+plt.tight_layout(rect=[0, 0, 1, 0.93])
+plt.savefig(PLOTS_DIR / "tuning_cf1.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/tuning_cf1.pdf")
 plt.close()
 
 

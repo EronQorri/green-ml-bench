@@ -1,11 +1,9 @@
 \chapter{Results and Discussion}
 \label{results}
-
-\todo[inline]{update all cumulative stats (kWh, compute hours, total CO2, car/phone analogies, MLP HIGGS tuning share) after rerun}
-
-Across 317 CodeCarbon-tracked runs conducted between March and May 2026, the experiments in this study consumed approximately 10.7\,\gls{kwh} of electricity and 151.7 hours of compute time, with CodeCarbon logging a cumulative 4.06\,\gls{kgco2eq}, equivalent to driving approximately
-35\,km in an average German car \parencite{europeanenvironmentagencyMonitoringCO2Emissions2025} or charging
-a smartphone roughly 535 times on the German grid. Given the systematic underestimation documented in \Cref{sec:results_measurement}, the corrected total is substantially higher. The 4.06\,kg should be read as a lower bound. Hyperparameter tuning for the \gls{mlp} on HIGGS alone accounts for 2.47\,kg of that figure, more than 60\,\% of the logged total, illustrating that the experimental overhead of finding a competitive configuration can dwarf the cost of the benchmark runs themselves.
+Across 374 CodeCarbon-tracked runs conducted between March and May 2026, the experiments in this study consumed approximately 15.8\,\gls{kwh} of electricity and 226 hours of compute time, with CodeCarbon logging a cumulative 6.01\,\gls{kgco2eq}, equivalent to driving approximately
+51\,km in an average German car \parencite{europeanenvironmentagencyMonitoringCO2Emissions2025} or charging
+a smartphone roughly 790 times on the German grid. Given the systematic underestimation documented in \Cref{sec:results_measurement}, the corrected total is substantially higher. The 6.01\,kg should be read as a lower bound. Hyperparameter tuning for the \gls{mlp} on HIGGS alone accounts for 4.32\,kg of that figure, more than 71\,\% of the logged total, illustrating that the experimental overhead of finding a competitive configuration can dwarf the cost of the benchmark runs themselves.
+\todo{update after mlp variation and scaling}
 
 The chapter is organized in eight sections that together address the five sub-questions set out in \Cref{sec:research_questions}. \Cref{sec:results_measurement} first establishes the hardware-corrected measurement baseline on which all subsequent comparisons rest; \Cref{sec:results_tuning} then quantifies the tuning overhead that standard benchmark tables omit. The main analysis proceeds in four thematic blocks: the cross-dataset benchmark (\Cref{sec:results_main}), the \gls{cpu}--\gls{gpu} hardware comparison (\Cref{sec:results_xgb}), the HIGGS scaling and \gls{mlp} architecture variation experiments (\Cref{sec:results_scaling,sec:results_mlp_arch}) and finally the temporal and lifecycle analyses (\Cref{sec:results_carbon,sec:results_lifecycle}) that extend the efficiency picture beyond training time alone.
 
@@ -24,42 +22,38 @@ Any comparison of model efficiencies is only as valid as the measurements it res
 \label{fig:codecarbon_vs_hw}
 \end{figure}
 
-% TODO: update ratio range, median and percentage after rerun
 Every one of the 14 model-dataset combinations shows a hardware-corrected value that
-exceeds the raw CodeCarbon figure. The ratio ranges from 1.32 to 2.63 with a median of
-1.87, meaning CodeCarbon, as deployed without modification, would have captured on average
-only about 54\,\% of the true emissions value.
+exceeds the raw CodeCarbon figure. The ratio ranges from 1.30 to 2.63 with a median of
+1.92, meaning CodeCarbon, as deployed without modification, would have captured on average
+only about 52\,\% of the true emissions value.
 \citeauthor{fischerGroundTruthingAIEnergy2025}
 \parencite{fischerGroundTruthingAIEnergy2025} found a consistent underestimation of 20 to
 30\% when validating CodeCarbon against external power meters across a range of workloads.
-% TODO: update LR Wine ratio and percentage after rerun
 The \gls{cpu}-intensive runs in this study exceed even that range. Logistic Regression on
-Wine reaches a ratio of 2.62, meaning CodeCarbon captured less than 40\% of the actual
+Wine reaches a ratio of 2.59, meaning CodeCarbon captured less than 39\,\% of the actual
 energy. The cause is the \gls{tdp} fallback described in \Cref{implementation_emissions}.
 Where \gls{rapl} is unavailable, CodeCarbon estimates \gls{cpu} power from the thermal
 design envelope rather than measuring it and that envelope does not track how the chip
 actually behaves under load \parencite{hendersonSystematicReportingEnergy2020}.
 
 The error is not uniformly distributed and two structural factors account for most of the
-variation. % TODO: update training time ranges, mean ratios, GPU/CPU energy shares and lowest ratio after rerun
-Short runs are hit hardest. Wine combinations, where training times range from
-0.04 to 3.35 seconds, show a mean ratio of 2.27, while HIGGS combinations (90 to
-11{,}175 seconds) land at 1.55. On a sub-second run the \gls{tdp}-based integrator barely
+variation. Short runs are hit hardest. Wine combinations, where training times range from
+0.01 to 2.3 seconds, show a mean ratio of 2.24, while HIGGS combinations (16 to
+4{,}754 seconds) land at 1.50. On a sub-second run the \gls{tdp}-based integrator barely
 accumulates anything while the chip executes a real burst of work. As duration grows and
 load sustains, the heuristic becomes a closer approximation and the ratio shrinks. The
 \gls{gpu} share is the second factor. XGBoost \gls{gpu} on HIGGS, where the \gls{gpu}
-accounts for 58\,\% of total energy and the \gls{cpu} for only 31\,\%, produces the
-lowest ratio at 1.32. Since the correction touches only the \gls{cpu} slice, a smaller
+accounts for 61\,\% of total energy and the \gls{cpu} for only 30\,\%, produces the
+lowest ratio at 1.30. Since the correction touches only the \gls{cpu} slice, a smaller
 \gls{cpu} fraction produces a smaller total distortion even when the underlying power
 discrepancy is comparable to other runs. \citeauthor{fischerGroundTruthingAIEnergy2025}
 \parencite{fischerGroundTruthingAIEnergy2025} document the same asymmetry, finding that
 \gls{cpu}-only workloads showed errors exceeding \gls{gpu} equivalents by more than an
 order of magnitude in some configurations.
 
-% TODO: update LR Wine and XGBoost CPU Wine ratios after rerun
 The measurement error is largest for the runs that correspond to the algorithms Green
 \gls{ai} positions as the efficient choice. Logistic Regression on Wine carries a ratio
-of 2.62, XGBoost \gls{cpu} on Wine 2.63. These are the models a practitioner would reach
+of 2.59, XGBoost \gls{cpu} on Credit 2.63. These are the models a practitioner would reach
 for to minimize ecological footprint and they are precisely the ones where \gls{tdp}-based
 estimation fails most severely. Without correction, they would appear even more
 energy-efficient relative to the heavier workloads than the corrected figures show, because
@@ -81,12 +75,11 @@ executed, each model must be brought to a competitive configuration through
 hyperparameter search and the footprint of that search is never reflected in
 the training figure. For computationally inexpensive models on small datasets
 this omission is negligible. For the \gls{mlp} on HIGGS it is not: as shown
-in \Cref{fig:tuning_costs}, % TODO: update MLP HIGGS tuning hours, CO2, car/phone analogies and comparison to Wine+Credit total after rerun
-a deliberately constrained 40-trial \gls{tpe}
-search required 95.4 hours and emitted 2.15\,kg of CO\textsubscript{2},
-equivalent to approximately 18\,km of car travel
+in \Cref{fig:tuning_costs}, a deliberately constrained 40-trial \gls{tpe}
+search required 72.3 hours and emitted 3.18\,kg of CO\textsubscript{2},
+equivalent to approximately 27\,km of car travel
 \parencite{europeanenvironmentagencyMonitoringCO2Emissions2025} or roughly
-283 full smartphone charges on the German grid, a figure that exceeds the combined training emissions of all Wine and
+418 full smartphone charges on the German grid, a figure that exceeds the combined training emissions of all Wine and
 Credit runs in this study. This is not the outcome of an exhaustive search of the kind
 documented by \citeauthor{strubellEnergyPolicyConsiderations2019}
 \parencite{strubellEnergyPolicyConsiderations2019}, who found that large
@@ -106,7 +99,6 @@ Random Forest was not tuned on HIGGS. Literature defaults were used instead.}
 
 \begin{table}[htbp]
 \centering
-% TODO: update all values in tab:tuning_costs after rerun
 \caption{Hyperparameter tuning cost per model and dataset (40 Optuna \gls{tpe} trials each). Duration in hours; CO\textsubscript{2} is hardware-corrected. Best \gls{wf1} is the highest achieved across all 40 trials. Logistic Regression used sklearn defaults and was not tuned. Random Forest was not tuned on HIGGS; literature defaults were used instead.}
 \label{tab:tuning_costs}
 \small
@@ -114,16 +106,16 @@ Random Forest was not tuned on HIGGS. Literature defaults were used instead.}
 \toprule
 Model & Dataset & Duration (h) & CO\textsubscript{2} (g) & Best WF1 \\
 \midrule
-\multirow{2}{*}{Random Forest}     & Wine   & 0.02 &  0.48 & 0.983 \\
-                                    & Credit & 0.23 & 10.51 & 0.800 \\
+\multirow{2}{*}{Random Forest}     & Wine   & 0.02 &  0.88 & 0.979 \\
+                                    & Credit & 0.09 &  6.09 & 0.800 \\
 \midrule
-\multirow{3}{*}{XGBoost}           & Wine   & 0.03 &  1.04 & 0.989 \\
-                                    & Credit & 0.04 &  1.08 & 0.801 \\
-                                    & HIGGS  & 0.83 & 21.89 & 0.760 \\
+\multirow{3}{*}{XGBoost}           & Wine   & 0.02 &  1.12 & 0.979 \\
+                                    & Credit & 0.03 &  1.92 & 0.802 \\
+                                    & HIGGS  & 0.67 & 54.26 & 0.759 \\
 \midrule
-\multirow{3}{*}{MLP}               & Wine   &  0.01 &    0.39 & 0.994 \\
-                                    & Credit &  0.26 &    6.34 & 0.804 \\
-                                    & HIGGS  & 95.40 & 2{,}149.3 & 0.787 \\
+\multirow{3}{*}{MLP}               & Wine   &  0.01 &     0.67 & 0.993 \\
+                                    & Credit &  0.19 &     8.64 & 0.803 \\
+                                    & HIGGS  & 72.33 & 3{,}182.5 & 0.782 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -131,11 +123,10 @@ Model & Dataset & Duration (h) & CO\textsubscript{2} (g) & Best WF1 \\
 How expensive that search becomes is structurally determined by how well an
 algorithm's training procedure maps onto available hardware during each trial
 evaluation. On the Credit dataset, this difference is already quantifiable.
-% TODO: update XGBoost and RF tuning durations, CO2 and WF1 values on Credit after rerun
-XGBoost completed its tuning study in 130 seconds and 1.08\,g
+XGBoost completed its tuning study in 122 seconds and 1.92\,g
 CO\textsubscript{2}, accelerating each trial on \gls{gpu}. Random Forest
 arrived at a functionally identical result, a \gls{wf1} of 0.800 against
-XGBoost's 0.801, in 815 seconds and 10.5\,g CO\textsubscript{2}: ten times
+XGBoost's 0.802, in 326 seconds and 6.09\,g CO\textsubscript{2}: three times
 the tuning cost for a predictive difference that is statistically negligible.
 The gap reflects an architectural property that scales with search rather than
 just with training: constructing an ensemble of independent decision trees
@@ -151,18 +142,26 @@ delivered, an assessment the scaling analysis in
 The consequence for how the benchmark results in the following sections should
 be interpreted is direct. The training emissions in the benchmark table
 represent the cost of a single run with already-optimized hyperparameters.
-% TODO: update MLP HIGGS tuning CO2, training footprint and multiplier ratio after rerun
 For the HIGGS \gls{mlp}, the initialization cost that precedes that run
-amounts to 2.15\,kg against a training footprint of 145.9\,g: tuning is
-roughly 15 times costlier than the benchmark run it makes possible. That debt does not reset at deployment. A nested \gls{cv}
+amounts to 3.18\,kg against a training footprint of 58.5\,g: tuning is
+roughly 54 times costlier than the benchmark run it makes possible. That debt does not reset at deployment. A nested \gls{cv}
 approach for hyperparameter evaluation, as described in \Cref{design_validation}, would
 have multiplied these costs fivefold, adding weeks of additional compute on
-HIGGS alone. The 40-trial single-loop \todo{nicht mehr single-loop} design is the result of an active
+HIGGS alone. The 40-trial design is the result of an active
 ecological trade-off and the 2.15\,kg figure is the lower bound of what
 responsible tuning entails at this scale. Whether the \gls{mlp}'s efficient
 inference architecture can serve enough predictions to offset that
 initialization cost over a realistic deployment lifetime is a question the
 lifecycle analysis in \Cref{sec:results_lifecycle} addresses directly.
+
+Translating tuning costs into the \gls{cf1} framework extends this picture beyond absolute emissions. \Cref{fig:tuning_cf1} reports the carbon cost per \gls{wf1} percentage point achieved across each tuning study, using the best \gls{wf1} reached over 40 trials as the denominator. On Wine, all three models are tuned at a comparable efficiency of 6--12\,mg\,CO\textsubscript{2}eq per F1\%, with differences small enough to be practically irrelevant at this scale. On Credit, XGBoost separates from the field: its tuning \gls{cf1} of 23.9\,mg/F1\% is three times lower than Random Forest's 76.1\,mg/F1\% and more than four times lower than \gls{mlp}'s 107.7\,mg/F1\%. The gap reflects the same structural property that appears in training: XGBoost's histogram-based search is computationally light per trial, while tree-ensemble and gradient-descent-based searches carry proportionally higher per-trial costs. On HIGGS, the disparity becomes extreme. XGBoost's tuning \gls{cf1} of 714.7\,mg/F1\% is already substantial; \gls{mlp}'s 40{,}682\,mg/F1\% is 57 times larger, reflecting the combination of long per-trial evaluations on eleven million rows and a modest \gls{wf1} gain achieved over the full 40-trial budget. The tuning \gls{cf1} therefore reveals a cost axis that raw emissions alone obscure: whether the accuracy gains unlocked by a search budget are proportionate to its ecological price.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{tuning_cf1.pdf}
+\caption{Tuning \gls{cf1} (mg CO\textsubscript{2}eq per \gls{wf1} percentage point) per tuning study, using the best \gls{wf1} across 40 trials as denominator. Lower is better. The HIGGS panel uses a log scale. Random Forest was not tuned on HIGGS; literature defaults were used instead.}
+\label{fig:tuning_cf1}
+\end{figure}
 
 
 % ── Main Benchmark ─────────────────────────────────────────────────────────────
@@ -180,8 +179,7 @@ datasets exposes a different axis of that contingency.
 
 \begin{table}[htbp]
 \centering
-% TODO: update all values in tab:main_results after rerun
-\caption{Main benchmark results for all 14 model-dataset combinations. CO\textsubscript{2} is the hardware-corrected training footprint in grams. Training time is in seconds. \gls{cf1} is mg CO\textsubscript{2}eq per WF1 percentage point (see \Cref{design_metrics}); lower is better. Bold marks the best value per column per dataset; for CO\textsubscript{2}, time, and CF1, lowest is best. Random Forest was not run on HIGGS.}
+\caption{Main benchmark results for all 14 model-dataset combinations. CO\textsubscript{2} is the hardware-corrected training footprint in grams. Training time is in seconds. \gls{cf1} is \textmu g CO\textsubscript{2}eq per WF1 percentage point (see \Cref{design_metrics}); lower is better. Bold marks the best value per column per dataset; for CO\textsubscript{2}, time, and CF1, lowest is best. Random Forest was not run on HIGGS.}
 \label{tab:main_results}
 \small
 \begin{tabular}{@{} l l r r r r r @{}}
@@ -189,24 +187,24 @@ datasets exposes a different axis of that contingency.
 Dataset & Model & Acc. & WF1 & CO\textsubscript{2} (g) & Time (s) & CF1 \\
 \midrule
 \multirow{5}{*}{Wine}
-  & Logistic Regression & \textbf{0.989} & \textbf{0.989} & \textbf{0.014} & \textbf{0.04} & \textbf{0.989} \\
-  & Random Forest       & 0.983          & 0.983          &          0.029 &         1.3   & 0.736 \\
-  & XGBoost (CPU)       & \textbf{0.989} & \textbf{0.989} &          0.020 &         0.4   & 0.860 \\
-  & XGBoost (GPU)       & \textbf{0.989} & \textbf{0.989} &          0.051 &         2.4   & 0.539 \\
-  & MLP                 & \textbf{0.989} & \textbf{0.989} &          0.059 &         3.4   & 0.494 \\
+  & Logistic Regression & \textbf{0.972} & \textbf{0.972} & \textbf{0.013} & \textbf{0.01} & \textbf{0.130} \\
+  & Random Forest       & \textbf{0.972} & \textbf{0.972} &          0.016 &          0.4  & 0.161 \\
+  & XGBoost (CPU)       & \textbf{0.972} & \textbf{0.972} & \textbf{0.013} &         0.11  & 0.133 \\
+  & XGBoost (GPU)       & \textbf{0.972} & \textbf{0.972} &          0.017 &         0.31  & 0.175 \\
+  & MLP                 & \textbf{0.972} & \textbf{0.972} &          0.039 &          2.3  & 0.399 \\
 \midrule
 \multirow{5}{*}{Credit}
-  & Logistic Regression & 0.810          & 0.771          &          0.061 &         3.9   & 0.755 \\
-  & Random Forest       & 0.821          & 0.800          &          0.832 &        41.7   & 0.400 \\
-  & XGBoost (CPU)       & 0.821          & 0.800          & \textbf{0.043} & \textbf{1.5}  & \textbf{0.800} \\
-  & XGBoost (GPU)       & \textbf{0.822} & 0.801          &          0.052 &         2.4   & 0.792 \\
-  & MLP                 & 0.818          & \textbf{0.804} &          0.633 &        47.6   & 0.460 \\
+  & Logistic Regression & 0.808          & 0.770          & \textbf{0.021} &         0.8   & 0.269 \\
+  & Random Forest       & \textbf{0.820} & 0.797          &          0.045 &         1.7   & 0.560 \\
+  & XGBoost (CPU)       & 0.819          & 0.798          & \textbf{0.021} & \textbf{0.41} & \textbf{0.258} \\
+  & XGBoost (GPU)       & 0.819          & 0.798          &          0.022 &         0.66  & 0.279 \\
+  & MLP                 & 0.818          & \textbf{0.802} &          0.072 &         5.0   & 0.899 \\
 \midrule
 \multirow{4}{*}{HIGGS}
-  & Logistic Regression & 0.642          & 0.637          &          5.148 &       436     & 0.624 \\
-  & XGBoost (CPU)       & 0.760          & 0.760          &         14.650 &       828     & 0.699 \\
-  & XGBoost (GPU)       & 0.760          & 0.760          & \textbf{2.104} & \textbf{90}   & \textbf{0.760} \\
-  & MLP                 & \textbf{0.788} & \textbf{0.787} &        145.891 &    11{,}175   & 0.394 \\
+  & Logistic Regression & 0.641          & 0.637          &          0.961 &        84.7   & 15.09 \\
+  & XGBoost (CPU)       & 0.760          & 0.760          &          2.763 &        155    & 36.38 \\
+  & XGBoost (GPU)       & 0.760          & 0.760          & \textbf{0.393} & \textbf{16.4} & \textbf{5.167} \\
+  & MLP                 & \textbf{0.785} & \textbf{0.785} &         58.461 &    4{,}754    & 744.7 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -215,15 +213,13 @@ Dataset & Model & Acc. & WF1 & CO\textsubscript{2} (g) & Time (s) & CF1 \\
 \paragraph{The Low-Data Regime: When Hardware Overhead Dominates}
 \label{sec:results_wine}
 
-% TODO: update WF1 values, emission spread and XGBoost GPU/CPU ratio on Wine after rerun
 Focusing first on the low-data regime, the leftmost cluster in
-\Cref{fig:vergleich_performance} reveals that four of the five models reach
-a \gls{wf1} of 0.989 on the Wine dataset. Random Forest at 0.983 is the
-only outlier and the margin carries no practical significance. With
+\Cref{fig:vergleich_performance} reveals that all five models converge on
+a \gls{wf1} of 0.972 on the Wine dataset. With
 predictive differentiation absent, the entire comparison reduces to
-emissions, where \Cref{fig:vergleich_efficiency} shows a fourfold spread
+emissions, where \Cref{fig:vergleich_efficiency} shows a threefold spread
 across models that deliver the exact same outcome. The most striking
-observation within that spread is that XGBoost \gls{gpu} emits 2.5 times
+observation within that spread is that XGBoost \gls{gpu} emits 1.3 times
 as much CO\textsubscript{2} as XGBoost \gls{cpu} for an identical result.
 
 \todo[inline]{Regenerate after run\_all: \texttt{python analysis/plots/plot\_results.py}}
@@ -252,11 +248,10 @@ parallelism becomes a liability rather than an advantage: when data volume
 is too small to saturate the available multiprocessors, the architecture's
 fixed entry costs cannot be amortized.
 
-% TODO: update Wine CF1 ranking values after rerun
 The \gls{cf1} metric is designed to surface exactly this kind of
 disproportionality. Logistic Regression, which requires no \gls{gpu} and
 imposes the lowest computational overhead, leads the \gls{cf1} ranking with the lowest score at
-0.139\,mg/F1\%. This result perfectly illustrates a core principle of Green \gls{ai}: applying complex and power-hungry hardware
+0.13\,mg/F1\%. This result perfectly illustrates a core principle of Green \gls{ai}: applying complex and power-hungry hardware
 to a problem that a linear model solves equally well is not merely suboptimal
 but ecologically wasteful.
 
@@ -265,16 +260,15 @@ but ecologically wasteful.
 \paragraph{The Medium-Data Regime: Algorithmic Efficiency Disparities}
 \label{sec:results_credit}
 
-% TODO: update Credit WF1 values, CO2 and RF/XGBoost cost ratio after rerun
 Moving to the medium-scale Credit dataset (center cluster in
 \Cref{fig:vergleich_performance} and \Cref{fig:vergleich_efficiency}),
 genuine predictive differentiation appears for the first time.
-\Gls{mlp} achieves the highest \gls{wf1} at 0.804 and XGBoost \gls{cpu}
-reaches 0.800 at a training cost of 43.3\,mg CO\textsubscript{2}eq. The
+\Gls{mlp} achieves the highest \gls{wf1} at 0.802 and XGBoost \gls{cpu}
+reaches 0.798 at a training cost of 20.6\,mg CO\textsubscript{2}eq. The
 critical data point, however, is Random Forest. It matches XGBoost
-\gls{cpu}'s \gls{wf1} to three decimal places (0.800 vs 0.800) while incurring nearly twenty times
-the carbon cost. Two models, statistically indistinguishable predictive outcomes and an
-order-of-magnitude difference in ecological cost.
+\gls{cpu}'s \gls{wf1} to three decimal places (0.797 vs 0.798) while incurring more than twice
+the carbon cost. Two models, statistically indistinguishable predictive outcomes and a
+more-than-twofold difference in ecological cost.
 
 \todo[inline]{Regenerate after run\_all: \texttt{python analysis/plots/plot\_results.py}}
 \begin{figure}[htb]
@@ -295,20 +289,18 @@ same structural property that inflated Random Forest's tuning cost in
 makes training expensive for identical reasons and no amount of
 hyperparameter optimization removes it.
 
-% TODO: update Credit CF1 values, LR WF1, MLP CO2, XGBoost CO2 and gain magnitude after rerun
 The \gls{cf1} metric captures this disproportionality directly. XGBoost \gls{cpu},
 delivering equivalent accuracy at a fraction of the cost, posts the best \gls{cf1} at
-0.54\,mg/F1\%. Random Forest, by contrast, finishes last with the highest \gls{cf1}
-of 10.39\,mg/F1\%, the steepest single-model cost in the entire benchmark. Two results
-further down the ranking are also worth noting. Logistic Regression, despite posting
-the lowest predictive score on this dataset (\gls{wf1} of 0.771), ranks second in
-\gls{cf1} at 0.785\,mg/F1\%: its trivially cheap training cost outweighs its
-predictive disadvantage. \gls{mlp}, conversely, achieves the best \gls{wf1} at 0.804,
-but emits 633\,mg CO\textsubscript{2}eq, nearly fifteen times XGBoost \gls{cpu}'s 43\,mg CO\textsubscript{2}eq,
-for a predictive gain of just 0.004 points. Its \gls{cf1} (7.87\,mg/F1\%) falls well
-above both XGBoost variants. The Credit ranking therefore illustrates two complementary
-efficiency failure modes: the severe algorithmic overhead of Random Forest at the top
-and the disproportionate cost of marginal neural-network gains in the middle.
+0.258\,mg/F1\%. Two results further down the ranking are also worth noting. Logistic
+Regression, despite posting the lowest predictive score on this dataset (\gls{wf1} of
+0.770), ranks second in \gls{cf1} at 0.269\,mg/F1\%: its trivially cheap training cost
+outweighs its predictive disadvantage. \gls{mlp}, conversely, achieves the best
+\gls{wf1} at 0.802, but emits 72\,mg CO\textsubscript{2}eq, about 3.5 times XGBoost
+\gls{cpu}'s 21\,mg CO\textsubscript{2}eq, for a predictive gain of just 0.004 points.
+It finishes last in \gls{cf1} at 0.899\,mg/F1\%, with Random Forest close behind at
+0.560\,mg/F1\%. The Credit ranking therefore illustrates two complementary efficiency
+failure modes: the structural overhead of tree-ensemble computation and the
+disproportionate carbon cost of marginal neural-network gains.
 The implication extends beyond this
 dataset. When algorithm families differ structurally in computational
 profile, choosing the right family is at least as consequential for
@@ -325,12 +317,11 @@ and \Cref{fig:vergleich_efficiency}, both dimensions of the comparison shift
 decisively at eleven million rows. Random Forest is excluded from this dataset
 for the reasons established in \Cref{sec:results_tuning}: the per-trial training
 cost made a full 40-trial HIGGS run ecologically unjustifiable.
-% TODO: update HIGGS LR WF1, MLP WF1, MLP CO2, XGBoost WF1 and GPU/CPU ratio after rerun
 Logistic Regression saturates at a
 \gls{wf1} of 0.637, a performance ceiling that additional data cannot raise,
 as the scaling analysis in \Cref{sec:results_scaling} confirms. Among
 non-linear models, \gls{mlp} achieves the highest \gls{wf1} in the entire
-benchmark at 0.787, but its training footprint of 145.9\,g
+benchmark at 0.785, but its training footprint of 58.5\,g
 CO\textsubscript{2} is the most expensive single run in the study. Most
 strikingly, XGBoost \gls{gpu} emits one seventh of what XGBoost \gls{cpu}
 does for an equivalent \gls{wf1} of 0.760. On Wine, the \gls{gpu} was a
@@ -350,19 +341,19 @@ of the compute invested. The \gls{mlp}, meanwhile, requires iterative
 backpropagation passes over eleven million samples, driving its energy
 consumption to the highest single-run cost in the entire benchmark.
 
-% TODO: update HIGGS CF1 values after rerun
 The \gls{cf1} ranking on HIGGS inverts relative to raw F1. XGBoost \gls{gpu}
-achieves the best \gls{cf1} at 27.7\,mg/F1\%, while \gls{mlp}, despite its predictive
-advantage, finishes last at 1852.8\,mg/F1\%. The \gls{mlp}'s training footprint dwarfs
-every other model on HIGGS and its predictive lead cannot compensate for it. Whether
-deployment-scale inference changes this assessment is the subject of \Cref{sec:results_lifecycle}.
+achieves the best \gls{cf1} at 5.17\,mg/F1\%, while \gls{mlp}, despite its predictive
+advantage, finishes last at 744.7\,mg/F1\% --- a 144-fold gap driven entirely by
+its far larger training footprint. The \gls{mlp}'s predictive lead of 0.025 \gls{wf1}
+points over XGBoost \gls{gpu} cannot compensate for the order-of-magnitude difference
+in carbon cost at this scale. Whether deployment-scale inference changes this assessment
+is the subject of \Cref{sec:results_lifecycle}.
 
 
 \FloatBarrier
 \paragraph{Synthesis: The Contingency of Ecological Efficiency}
 \label{sec:results_main_synthesis}
 
-% TODO: verify CF1 winners per dataset after rerun (qualitative conclusion expected to hold)
 No single model leads across all three datasets. Logistic Regression wins
 on Wine, where a linear boundary suffices and hardware overhead dominates.
 XGBoost \gls{cpu} wins on Credit, where the right algorithm family delivers
@@ -370,9 +361,14 @@ equivalent accuracy at a fraction of the cost of its nearest competitor.
 XGBoost \gls{gpu} wins on HIGGS, where dataset scale finally amortizes the
 fixed costs of \gls{gpu} execution.
 
-\todo[inline]{Figure vergleich\_cf1.pdf missing. Regenerate once final results are available.}
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{vergleich_cf1.pdf}
+\caption{\Gls{cf1} (mg CO\textsubscript{2}eq per \gls{wf1} percentage point) per model and dataset. Lower is better. The HIGGS panel uses a log scale; no single model leads across all three datasets.}
+\label{fig:vergleich_cf1}
+\end{figure}
 
-The \gls{cf1} rankings shift substantially between datasets,
+As shown in \Cref{fig:vergleich_cf1}, the \gls{cf1} rankings shift substantially between datasets,
 and in each case the shift is mechanistically traceable: to hardware
 initialization overhead at small scale, to algorithmic structure at medium
 scale and to \gls{simt} saturation at large scale. The composite metric
@@ -403,25 +399,22 @@ with dataset scale.
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
 
-% TODO: update Wine and Credit XGBoost GPU/CPU CO2, training times and percentage premiums after rerun
-On Wine and Credit, \gls{gpu} acceleration provides no emissions benefit, but rather an ecological liability. XGBoost \gls{gpu} emits 51.2\,mg
-CO\textsubscript{2} on Wine against the \gls{cpu}'s 20.5\,mg, a 2.5-fold
+On Wine and Credit, \gls{gpu} acceleration provides no emissions benefit, but rather an ecological liability. XGBoost \gls{gpu} emits 17.0\,mg
+CO\textsubscript{2} on Wine against the \gls{cpu}'s 13.0\,mg, a 1.3-fold
 increase at no predictive benefit. Training time mirrors this:
-2.35 seconds on \gls{gpu} versus 0.40 seconds on \gls{cpu}. This inversion
+0.31 seconds on \gls{gpu} versus 0.11 seconds on \gls{cpu}. This inversion
 occurs because the fixed overhead of device initialization and
 host-to-device memory transfer via the PCIe interface completely dominates
 the actual computation time, as analyzed in \Cref{sec:theoretical_cpu_vs_gpu}.
 The thousands of available cores remain starved of data, leaving the
-\gls{gpu}'s higher power draw unamortized. On Credit the gap narrows: 51.7\,mg (\gls{gpu}) against 43.3\,mg
-(\gls{cpu}), a 19 percent premium, but
+\gls{gpu}'s higher power draw unamortized. On Credit the gap narrows: 22.3\,mg (\gls{gpu}) against 20.6\,mg
+(\gls{cpu}), an 8 percent premium, but
 \gls{gpu} execution still fails to pay for itself.
 
-% TODO: update HIGGS XGBoost GPU/CPU CO2, training times, efficiency ratio and phone analogies after rerun
 The HIGGS result reverses the picture completely. XGBoost \gls{gpu} emits
-2.10\,g CO\textsubscript{2} and completes in 90.2 seconds. XGBoost
-\gls{cpu} emits 14.65\,g and takes 827.7 seconds. The \gls{gpu} variant is therefore seven times more
-emissions-efficient and nine times faster. To put the absolute scale in perspective: the \gls{gpu}'s 2.10\,g
-CO\textsubscript{2} is roughly equivalent to a third of a smartphone charge and the \gls{cpu}'s 14.65\,g to about two full charges. At eleven million rows the data
+0.393\,g CO\textsubscript{2} and completes in 16.4 seconds. XGBoost
+\gls{cpu} emits 2.763\,g and takes 155 seconds. The \gls{gpu} variant is therefore seven times more
+emissions-efficient and nine times faster. At eleven million rows the data
 volume finally saturates the \gls{gpu}'s \gls{simt} architecture
 \parencite{nickollsGPUComputingEra2010}. The histogram-based tree
 construction distributes efficiently across thousands of cores and the
@@ -695,66 +688,62 @@ costs for \gls{gpu}-trained models represent a lower bound.
 
 \begin{table}[htbp]
 \centering
-% TODO: update all values in tab:lifecycle after rerun
 \caption{Lifecycle break-even analysis. Training CO\textsubscript{2} is the one-time hardware-corrected footprint. CO\textsubscript{2} per prediction is derived from directly measured per-prediction \gls{cpu} energy (30-second inference window), scaled by the same grid intensity as training. Break-even is the number of predictions at which cumulative inference CO\textsubscript{2} equals training CO\textsubscript{2}. Random Forest was not run on HIGGS.}
 \label{tab:lifecycle}
 \small
 \begin{tabular}{@{} l l r r r @{}}
 \toprule
-Dataset & Model & Train CO\textsubscript{2} (µg) & CO\textsubscript{2}/pred.\ (ng) & Break-even \\
+Dataset & Model & Train CO\textsubscript{2} (mg) & CO\textsubscript{2}/pred.\ (µg) & Break-even \\
 \midrule
 \multirow{5}{*}{Wine}
-  & Logistic Regression &      13.7 &  4.2 &    3,298 \\
-  & Random Forest       &      28.8 & 274.6 &      105 \\
-  & XGBoost (CPU)       &      20.5 &  10.0 &   2,055 \\
-  & XGBoost (GPU)       &      51.2 &  25.9 &   1,981 \\
-  & MLP                 &      58.7 &   4.5 &  13,057 \\
+  & Logistic Regression &   12.6 &   3.65 &    3,449 \\
+  & Random Forest       &   15.6 & 235.9  &       66 \\
+  & XGBoost (CPU)       &   13.0 &  17.11 &      758 \\
+  & XGBoost (GPU)       &   17.0 &  30.27 &      563 \\
+  & MLP                 &   38.7 &   5.65 &    6,858 \\
 \midrule
 \multirow{5}{*}{Credit}
-  & Logistic Regression &      60.5 &   3.8 &  15,818 \\
-  & Random Forest       &     831.6 & 456.3 &   1,822 \\
-  & XGBoost (CPU)       &      43.3 &  32.9 &   1,317 \\
-  & XGBoost (GPU)       &      51.7 &  35.3 &   1,463 \\
-  & MLP                 &     633.0 &   7.5 &  84,728 \\
+  & Logistic Regression &   20.7 &   3.73 &    5,551 \\
+  & Random Forest       &   44.6 & 251.2  &      178 \\
+  & XGBoost (CPU)       &   20.6 &  33.20 &      620 \\
+  & XGBoost (GPU)       &   22.3 &  55.48 &      402 \\
+  & MLP                 &   72.2 &   8.16 &    8,851 \\
 \midrule
 \multirow{4}{*}{HIGGS}
-  & Logistic Regression &   5{,}148 &   8.9 &  581,595 \\
-  & XGBoost (CPU)       &  14{,}650 &  23.5 &  624,685 \\
-  & XGBoost (GPU)       &   2{,}104 &  30.3 &   69,467 \\
-  & MLP                 & 145{,}891 &   6.3 & 23{,}317{,}147 \\
+  & Logistic Regression &    961 &   3.55 &  270,538 \\
+  & XGBoost (CPU)       &  2{,}763 &  23.47 &  117,683 \\
+  & XGBoost (GPU)       &    393 &  40.71 &    9,643 \\
+  & MLP                 & 58{,}461 &   7.08 & 8{,}261{,}330 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-% TODO: update RF Wine break-even count, per-prediction cost and training footprint after rerun
-The lowest break-even point is Random Forest on Wine, at 105 predictions.
+The lowest break-even point is Random Forest on Wine, at 66 predictions.
 Random Forest inference is slow relative to other classifiers: each
 prediction requires sequential traversal of the learned tree ensemble,
-producing a per-prediction cost of approximately 275\,µg
-CO\textsubscript{2}. Against a training footprint of only 28.8\,mg, the
+producing a per-prediction cost of approximately 236\,µg
+CO\textsubscript{2}. Against a training footprint of only 15.6\,mg, the
 inference cost accumulates to parity within a few minutes of active
 serving. For any realistic Random Forest deployment on tabular data at this
 scale, inference is the dominant ecological cost by a wide margin.
 
-% TODO: update MLP HIGGS break-even count, per-prediction cost and training footprint after rerun
 The opposite extreme is \gls{mlp} on HIGGS, which does not reach break-even
-until approximately 23 million predictions. \gls{mlp} inference is fast:
+until approximately 8.3 million predictions. \gls{mlp} inference is fast:
 the forward pass through a fixed-depth network requires no tree traversal,
-producing a per-prediction cost of only 6.3\,µg CO\textsubscript{2}.
-Against a training footprint of 145.9\,g, that rate of accumulation
-reaches parity only after twenty-three million queries. A system serving this
+producing a per-prediction cost of only 7.1\,µg CO\textsubscript{2}.
+Against a training footprint of 58.5\,g, that rate of accumulation
+reaches parity only after roughly 8 million queries. A system serving this
 model on a low-traffic application would find that training represents the
 dominant ecological cost throughout its entire operational lifetime.
 
-% TODO: update LR Credit, XGBoost GPU HIGGS break-even counts and per-prediction costs after rerun
 Between these extremes, break-even points organize around two drivers:
 training scale and inference latency. Logistic Regression on Credit breaks
-even at 15{,}818 predictions because both costs are modest in absolute terms.
-XGBoost \gls{gpu} on HIGGS breaks even at 69{,}467 predictions: its
-training footprint is contained at 2.10\,g, but inference at 30.3\,µg per
-prediction accumulates faster than \gls{mlp}'s 6.3\,µg, so the budget is
+even at 5{,}551 predictions because both costs are modest in absolute terms.
+XGBoost \gls{gpu} on HIGGS breaks even at 9{,}643 predictions: its
+training footprint is contained at 0.393\,g, but inference at 40.7\,µg per
+prediction accumulates faster than \gls{mlp}'s 7.1\,µg, so the budget is
 recovered at a far lower deployment volume. The contrast between XGBoost
-\gls{gpu} (69{,}467) and \gls{mlp} (23 million) on the same dataset
+\gls{gpu} (9{,}643) and \gls{mlp} (8.3 million) on the same dataset
 illustrates a deeper trade-off in model design. \gls{mlp}'s fast inference
 pushes the break-even point to a scale that most low-traffic applications
 will never reach, concentrating the ecological cost at training time.
@@ -772,10 +761,9 @@ This creates a direct inversion of the training-only rankings for high-volume de
 \section{Chapter Summary}
 \label{sec:results_summary}
 
-Across the eight analyses in this chapter, the empirical answer to the core research question is conditional rather than absolute. % TODO: update CF1 values in chapter summary after rerun
+Across the eight analyses in this chapter, the empirical answer to the core research question is conditional rather than absolute.
 On the \gls{cf1} metric, Logistic Regression leads on Wine, XGBoost \gls{cpu} on Credit and XGBoost \gls{gpu} on HIGGS. No single model occupies all three positions because ecological efficiency depends entirely on the fit between model capacity, hardware utilization and task complexity. Logistic Regression is efficient where a linear decision boundary is sufficient. XGBoost \gls{gpu} is efficient where the massive parallelism of \gls{gpu}-accelerated tree construction finally outweighs its fixed overhead. The rankings are dataset-contingent by design, demonstrating empirically that any claim that one classifier is categorically more ecological than another must strictly specify the scale and hardware context in which that claim is meant to hold.
 
-More profoundly, the full accounting of the machine learning pipeline shifts this picture further in every dimension examined, exposing the severe ecological limitations of standard, training-only benchmarking. % TODO: update tuning/training cost multiplier for MLP HIGGS after rerun
-Hyperparameter search adds a one-time overhead that can exceed the training benchmark cost by more than an order of magnitude, as the \gls{mlp} tuning run on HIGGS cost roughly 15 times the benchmark run it enabled. Grid carbon intensity introduces a factor-of-two scaling on effective emissions that depends on temporal scheduling alone, entirely independent of any modelling decision. Finally, lifecycle analysis distributes the total cost across the deployment period in ways that vary by roughly five orders of magnitude across model-dataset combinations.
+More profoundly, the full accounting of the machine learning pipeline shifts this picture further in every dimension examined, exposing the severe ecological limitations of standard, training-only benchmarking. Hyperparameter search adds a one-time overhead that can exceed the training benchmark cost by more than an order of magnitude, as the \gls{mlp} tuning run on HIGGS cost roughly 54 times the benchmark run it enabled. Grid carbon intensity introduces a factor-of-two scaling on effective emissions that depends on temporal scheduling alone, entirely independent of any modelling decision. Finally, lifecycle analysis distributes the total cost across the deployment period in ways that vary by roughly five orders of magnitude across model-dataset combinations.
 
 A practitioner targeting ecological efficiency in tabular classification therefore cannot optimize training emissions in isolation. Model choice, hardware, tuning strategy, scheduling and deployment volume each contribute a distinct lever and they interact dynamically. The ultimate takeaway of this chapter is that true Green \gls{ai} requires abandoning the narrow evaluation of algorithms in a computational vacuum. \Cref{conclusion} draws on this combined, systemic picture to formulate actionable recommendations for each of these levers and to definitively answer the research questions stated in \Cref{sec:research_questions}.
