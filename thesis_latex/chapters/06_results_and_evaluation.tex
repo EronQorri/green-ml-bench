@@ -293,7 +293,7 @@ predictive capacity at a fraction of the compute. Crucially, this is the
 same structural property that inflated Random Forest's tuning cost in
 \Cref{sec:results_tuning}: the per-tree overhead that makes tuning expensive
 makes training expensive for identical reasons and no amount of
-hyperparameter optimisation removes it.
+hyperparameter optimization removes it.
 
 % TODO: update Credit CF1 values, LR WF1, MLP CO2, XGBoost CO2 and gain magnitude after rerun
 The \gls{cf1} metric captures this disproportionality directly. XGBoost \gls{cpu},
@@ -410,7 +410,7 @@ increase at no predictive benefit. Training time mirrors this:
 2.35 seconds on \gls{gpu} versus 0.40 seconds on \gls{cpu}. This inversion
 occurs because the fixed overhead of device initialization and
 host-to-device memory transfer via the PCIe interface completely dominates
-the actual computation time, as analysed in \Cref{sec:theoretical_cpu_vs_gpu}.
+the actual computation time, as analyzed in \Cref{sec:theoretical_cpu_vs_gpu}.
 The thousands of available cores remain starved of data, leaving the
 \gls{gpu}'s higher power draw unamortized. On Credit the gap narrows: 51.7\,mg (\gls{gpu}) against 43.3\,mg
 (\gls{cpu}), a 19 percent premium, but
@@ -443,7 +443,7 @@ The analysis identifies a hard break-even
 threshold at approximately 65{,}000 rows. Below this volume, the
 \gls{gpu}'s higher instantaneous power draw remains unamortized, transforming
 the accelerator into an ecological penalty.
-Above it, the compounding speedup of massive parallelisation outpaces the
+Above it, the compounding speedup of massive parallelization outpaces the
 wattage premium and the emissions gap widens favorably with each additional row.
 
 This finding provides a direct, empirical answer to the study's research question
@@ -456,7 +456,7 @@ fundamentally flawed. Blindly applying a \gls{gpu} to a dataset of ten thousand 
 does not accelerate learning. It merely burns energy to initialize a device and transfer
 data across a PCIe bus. True Green \gls{ai} requires practitioners to actively break
 this habit and align their hardware choices with the complexity of their workloads,
-treating accelerators not as an unconditional default, but as a specialised tool
+treating accelerators not as an unconditional default, but as a specialized tool
 justified only by sufficient scale.
 
 
@@ -747,7 +747,7 @@ model on a low-traffic application would find that training represents the
 dominant ecological cost throughout its entire operational lifetime.
 
 % TODO: update LR Credit, XGBoost GPU HIGGS break-even counts and per-prediction costs after rerun
-Between these extremes, break-even points organise around two drivers:
+Between these extremes, break-even points organize around two drivers:
 training scale and inference latency. Logistic Regression on Credit breaks
 even at 15{,}818 predictions because both costs are modest in absolute terms.
 XGBoost \gls{gpu} on HIGGS breaks even at 69{,}467 predictions: its
@@ -763,9 +763,9 @@ evenly across the deployment period. For practitioners concerned with total
 deployment footprint rather than single-phase training emissions, the
 break-even point is as informative as any figure in the benchmark table.
 
-The roughly five orders of magnitude separating these extremes reflect a structural divide rather than an accident of scale. Models with cheap training and slow inference front-load their ecological cost at the point of training, then spend that cost again with every subsequent prediction. Models with expensive training and fast inference invert this: the initial investment is large, but it is amortised across a large number of cheap queries. Which profile is ecologically preferable depends entirely on how many predictions the deployed system will serve, a figure that has nothing to do with accuracy or training efficiency \parencite{luccioniPowerHungryProcessing2024}.
+The roughly five orders of magnitude separating these extremes reflect a structural divide rather than an accident of scale. Models with cheap training and slow inference front-load their ecological cost at the point of training, then spend that cost again with every subsequent prediction. Models with expensive training and fast inference invert this: the initial investment is large, but it is amortized across a large number of cheap queries. Which profile is ecologically preferable depends entirely on how many predictions the deployed system will serve, a figure that has nothing to do with accuracy or training efficiency \parencite{luccioniPowerHungryProcessing2024}.
 
-This creates a direct inversion of the training-only rankings for high-volume deployments \parencite{desislavovTrendsAIInference2023}. Random Forest on Wine achieves a favourable \gls{cf1} precisely because it is cheap to train. Yet at ten thousand predictions it has already accumulated roughly 95 times its training budget in inference emissions, while \gls{mlp} at the same query count has barely touched its much larger training investment. For a practitioner deploying at scale, the \gls{cf1} ranking is not merely incomplete at this point. It points in the wrong direction. Ecological model selection therefore requires a deployment volume estimate as an explicit input. Below the break-even threshold, optimising training emissions is the right lever. Above it, inference latency per prediction governs the total lifecycle cost and no amount of training efficiency compensates for a slow prediction function at scale.
+This creates a direct inversion of the training-only rankings for high-volume deployments \parencite{desislavovTrendsAIInference2023}. Random Forest on Wine achieves a favorable \gls{cf1} precisely because it is cheap to train. Yet at ten thousand predictions it has already accumulated roughly 95 times its training budget in inference emissions, while \gls{mlp} at the same query count has barely touched its much larger training investment. For a practitioner deploying at scale, the \gls{cf1} ranking is not merely incomplete at this point. It points in the wrong direction. Ecological model selection therefore requires a deployment volume estimate as an explicit input. Below the break-even threshold, optimizing training emissions is the right lever. Above it, inference latency per prediction governs the total lifecycle cost and no amount of training efficiency compensates for a slow prediction function at scale.
 
 
 % ── Chapter Summary ────────────────────────────────────────────────────────────

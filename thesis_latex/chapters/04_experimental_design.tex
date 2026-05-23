@@ -41,7 +41,7 @@ The Default of Credit Card Clients (hereafter: Credit) dataset contains 30,000 i
 
 The HIGGS dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \cite{whitesonHIGGS2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
 
-These three datasets vary significantly in size, enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity. The jump from 30,000 to 11,000,000 instances is large, spanning nearly three orders of magnitude. This gap is addressed by the dataset scaling experiment described in \Cref{sec:experimental_protocol}, which trains models on seven intermediate HIGGS subset sizes ranging from 1,000 to 11,000,000 instances and thereby provides a continuous view of how performance and emissions evolve across the full size range.
+These three datasets vary significantly in size, enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity. The jump from 30,000 to 11,000,000 instances is large, spanning nearly three orders of magnitude. This gap is addressed by the dataset scaling experiment described in \Cref{sec:experimental_protocol}, which trains models on nine intermediate HIGGS subset sizes ranging from 1,000 to 11,000,000 instances and thereby provides a continuous view of how performance and emissions evolve across the full size range.
 
 \section{Models}
 \label{design_models}
@@ -87,7 +87,7 @@ Training time in seconds was included as a secondary resource metric, as it capt
 Furthermore, inference time was measured across all experimental setups to account for the operational footprint. In large-scale deployment scenarios, the cumulative energy demand of repeated predictions can often rival or even exceed the initial training costs \cite{desislavovTrendsAIInference2023}.
 Together, these metrics enable a direct assessment of whether gains in predictive performance justify the associated increase in resource consumption.
 
-Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020}, a custom composite metric was developed for this study, named \gls{cf1}. \Cref{eq:cf1} defines this metric as the ratio of training CO\textsubscript{2}eq emissions (in milligrams) to the \acrlong{wf1} expressed as a percentage:
+Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020} \cite{schwartzGreenAI2020}, a custom composite metric was developed for this study, named \gls{cf1}. \Cref{eq:cf1} defines this metric as the ratio of training CO\textsubscript{2}eq emissions (in milligrams) to the \acrlong{wf1} expressed as a percentage:
 \begin{equation}
 \text{\gls{cf1}} = \frac{c_{\mathrm{mg}}}{\gls{wf1} \cdot 100}
 \label{eq:cf1}
@@ -130,7 +130,7 @@ The \textbf{main cross-dataset benchmark} trains all five models on all three da
 
 The \textbf{dataset scaling experiment} holds everything constant except the number of training instances. All five models are included at subset sizes up to 500{,}000 instances; beyond that threshold Random Forest is excluded due to prohibitive runtimes, leaving four models for the larger subsets up to 11{,}000{,}000. Because all other variables are fixed, observed differences in performance and emissions can be attributed exclusively to dataset size. The gap between the 30{,}000-instance Credit dataset and the full 11-million-instance HIGGS dataset is bridged by the intermediate subset sizes in this experiment, which cover the range that is typical of many real-world tabular classification tasks. The experiment directly addresses RQ4 and, through the XGBoost \gls{cpu}/\gls{gpu} pairing, also feeds into RQ3.
 
-The \textbf{\gls{mlp} architecture variation} isolates the effect of network depth and width by training a grid of 12 architectures on HIGGS: three widths (128, 256, 512 neurons) crossed with four depths (1--4 hidden layers). Non-architectural hyperparameters are fixed to neutral defaults to prevent any single configuration from being inadvertently favoured by the tuning results. This directly addresses RQ2.
+The \textbf{\gls{mlp} architecture variation} isolates the effect of network depth and width by training a grid of 12 architectures on HIGGS: three widths (128, 256, 512 neurons) crossed with four depths (1--4 hidden layers). Non-architectural hyperparameters are fixed to neutral defaults to prevent any single configuration from being inadvertently favored by the tuning results. This directly addresses RQ2.
 
 The \textbf{temporal carbon intensity analysis} is purely retrospective: it re-weights the energy already recorded in the main benchmark against eight carbon intensity scenarios derived from one year of hourly \gls{api} data for the German grid. This quantifies the sensitivity of reported emissions to training time and location and bounds the uncertainty introduced by CodeCarbon's static intensity factor.
 
