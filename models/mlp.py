@@ -21,6 +21,14 @@ from config import BASE_DIR, config, RANDOM_STATE
 EPOCHS = 200  # the earlyStopping will be reached before the 200 anyway
 DATASET = sys.argv[1] if len(sys.argv) > 1 else "wine"
 
+import random
+random.seed(RANDOM_STATE)
+np.random.seed(RANDOM_STATE)
+torch.manual_seed(RANDOM_STATE)
+torch.cuda.manual_seed_all(RANDOM_STATE)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
+
 
 class MLPModule(nn.Module):
     # parameters won't be used anyway as they are overwritten by the neuralnet

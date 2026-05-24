@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).parent.parent
 MODELS_DIR = BASE_DIR / "models"
 NTFY_CHANNEL = "eron_thesis_higgs_run_123"
 
-NROWS_VALUES = [5_000, 50_000]
+NROWS_VALUES = [1_000, 5_000, 10_000, 50_000, 100_000, 500_000, 1_000_000, 5_000_000, 11_000_000]
 
 MODEL_SCRIPTS = [
     "log_regression.py",
@@ -107,5 +107,3 @@ _notify(
     f"Dauer: {total_min:.1f} min. Failures: {failures or 'keine'}",
     priority="high",
 )
-
-os.system("shutdown /s /t 60")

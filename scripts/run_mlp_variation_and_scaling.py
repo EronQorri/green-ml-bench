@@ -123,5 +123,3 @@ _notify(
     f"Gesamtdauer: {total_min:.1f} min. Failures: {failures or 'keine'}",
     priority="high",
 )
-
-subprocess.run(["shutdown", "/s", "/t", "60"], check=True)

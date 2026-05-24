@@ -8,28 +8,28 @@
 
 \begin{table}[htbp]
 \centering
-\caption{Weighted F1-score per model and HIGGS subset size. Dashes indicate runs that were not performed.}
+\caption{Weighted F1-score per model and HIGGS subset size. Values are means across three random seeds. Dashes indicate runs that were not performed.}
 \label{tab:app_scaling_wf1}
 \begin{tabular}{@{} r rrrrr @{}}
 \toprule
 \textbf{Rows} & \textbf{Log.\ Reg.} & \textbf{Random Forest} & \textbf{XGBoost (CPU)} & \textbf{XGBoost (GPU)} & \textbf{MLP} \\
 \midrule
-1{,}000       & 0.626 & 0.659 & 0.682 & 0.673 & 0.541 \\
-5{,}000       & 0.632 & 0.689 & 0.680 & 0.677 & 0.600 \\
-10{,}000      & 0.635 & 0.703 & 0.692 & 0.690 & 0.621 \\
-50{,}000      & 0.634 & 0.719 & 0.713 & 0.714 & 0.693 \\
-100{,}000     & 0.636 & 0.723 & 0.719 & 0.717 & 0.710 \\
-500{,}000     & 0.638 & 0.732 & 0.737 & 0.737 & 0.745 \\
-1{,}000{,}000 & 0.638 & ---   & 0.746 & 0.745 & 0.755 \\
-5{,}000{,}000 & 0.638 & ---   & 0.757 & 0.757 & 0.777 \\
-11{,}000{,}000 & 0.637 & ---  & 0.760 & 0.760 & 0.787 \\
+1{,}000       & 0.630 & 0.660 & 0.663 & 0.653 & 0.599 \\
+10{,}000      & 0.628 & 0.711 & 0.701 & 0.704 & 0.653 \\
+50{,}000      & 0.633 & 0.715 & 0.713 & 0.712 & 0.697 \\
+100{,}000     & 0.636 & 0.723 & 0.719 & 0.717 & 0.718 \\
+200{,}000     & 0.635 & 0.726 & 0.726 & 0.726 & 0.732 \\
+500{,}000     & 0.638 & 0.733 & 0.738 & 0.738 & 0.751 \\
+1{,}000{,}000 & 0.638 & ---   & 0.745 & 0.744 & 0.760 \\
+5{,}000{,}000 & 0.637 & ---   & 0.757 & 0.757 & 0.778 \\
+11{,}000{,}000 & 0.637 & ---  & 0.760 & 0.760 & 0.785 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{sidewaystable}[htbp]
 \centering
-\caption{Hardware-corrected CO\textsubscript{2} emissions (mg) and training time (s) per model and HIGGS subset size. Values below 0.1\,mg are shown to three significant figures. Random Forest at 500{,}000 rows (8{,}390\,mg\,=\,8.39\,g) is the study's highest single training cost behind the \gls{mlp} at 11M rows.}
+\caption{Hardware-corrected CO\textsubscript{2} emissions (mg) and training time (s) per model and HIGGS subset size. Values are means across three random seeds; the \gls{mlp} at 5M and 11M rows was run under a single seed. The \gls{mlp} at 11M rows (73{,}145\,mg\,=\,73.1\,g) is the study's highest single training cost.}
 \label{tab:app_scaling_co2}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{} r rr rr rr rr rr @{}}
@@ -38,15 +38,15 @@
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
 \textbf{Rows} & CO\textsubscript{2} (mg) & Time (s) & CO\textsubscript{2} (mg) & Time (s) & CO\textsubscript{2} (mg) & Time (s) & CO\textsubscript{2} (mg) & Time (s) & CO\textsubscript{2} (mg) & Time (s) \\
 \midrule
-1{,}000        & 0.011 & 0.05   & 0.046 & 2.6    & 0.027 & 0.9    & 0.051 & 2.7    & 0.038 & 2.1    \\
-5{,}000        & 0.012 & 0.11   & 0.074 & 3.7    & 0.047 & 1.8    & 0.080 & 4.3    & 0.048 & 2.8    \\
-10{,}000       & 0.014 & 0.18   & 0.116 & 5.7    & 0.061 & 2.5    & 0.090 & 4.9    & 0.067 & 4.2    \\
-50{,}000       & 0.021 & 0.80   & 0.503 & 25.0   & 0.117 & 5.2    & 0.123 & 6.9    & 0.302 & 23.1   \\
-100{,}000      & 0.030 & 1.6    & 1.089 & 54.7   & 0.159 & 7.4    & 0.143 & 7.9    & 0.711 & 42.6   \\
-500{,}000      & 0.146 & 12.0   & 8{,}390 & 445  & 0.496 & 25.1   & 0.216 & 11.5   & 2.75  & 199    \\
-1{,}000{,}000  & 0.331 & 28.6   & ---  & ---    & 0.970 & 50.0   & 0.303 & 15.0   & 5.22  & 405    \\
-5{,}000{,}000  & 2.050 & 184    & ---  & ---    & 5.942 & 333    & 0.978 & 43.9   & 36.2  & 2{,}917 \\
-11{,}000{,}000 & 5.148 & 436    & ---  & ---    & 14.65 & 828    & 2.104 & 90.2   & 145.9 & 11{,}175 \\
+1{,}000        & 12   & 0.0    & 18    & 0.5    & 16   & 0.2    & 24   & 0.7    & 20   & 0.8    \\
+10{,}000       & 12   & 0.0    & 29    & 1.0    & 22   & 0.5    & 33   & 1.2    & 30   & 1.3    \\
+50{,}000       & 16   & 0.2    & 105   & 5.4    & 39   & 1.4    & 46   & 1.9    & 100  & 5.7    \\
+100{,}000      & 19   & 0.4    & 217   & 11.9   & 44   & 1.8    & 47   & 2.0    & 207  & 12.4   \\
+200{,}000      & 22   & 0.9    & 492   & 28.2   & 66   & 3.0    & 51   & 2.2    & 328  & 22.5   \\
+500{,}000      & 47   & 3.0    & 1{,}708 & 102.8 & 123 & 6.5    & 64   & 2.7    & 910  & 67.2   \\
+1{,}000{,}000  & 92   & 7.0    & ---  & ---    & 226  & 12.7   & 87   & 3.6    & 2{,}038 & 154.7 \\
+5{,}000{,}000  & 441  & 39.3   & ---  & ---    & 1{,}243 & 77.4 & 220  & 9.2    & 15{,}588 & 1{,}629 \\
+11{,}000{,}000 & 1{,}005 & 92.1 & ---  & ---   & 2{,}703 & 170.6 & 432 & 18.0  & 73{,}145 & 7{,}659 \\
 \bottomrule
 \end{tabular}
 \end{sidewaystable}
@@ -60,26 +60,26 @@
 
 \begin{table}[htbp]
 \centering
-\caption{Complete results for the 12 \gls{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is total 5-fold \gls{cv} wall-clock time. \gls{cf1} is mg CO\textsubscript{2} per WF1 percentage point; lower is better. Bold marks the best value per column.}
+\caption{Complete results for the 12 \gls{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is single-run wall-clock time. \gls{cf1} is mg CO\textsubscript{2} per WF1 percentage point; lower is better. Bold marks the best value per column.}
 \label{tab:app_mlp_full}
 \begin{tabular}{@{} l r r r r r @{}}
 \toprule
 \textbf{Config} & \textbf{WF1} & \textbf{CO\textsubscript{2} (g)} & \textbf{Time (h)} & \textbf{CF1} \\
 \midrule
-$1\times 128$   & 0.729 & 0.129 & 3.04 & 0.587 \\
-$2\times 128$   & 0.757 & 0.097 & 2.28 & 0.682 \\
-$3\times 128$   & 0.757 & \textbf{0.071} & \textbf{1.65} & \textbf{0.757} \\
-$4\times 128$   & 0.756 & 0.074 & 1.72 & 0.746 \\
+$1\times 128$   & 0.728 & 25.6  & 0.75 & 352 \\
+$2\times 128$   & 0.756 & \textbf{13.5} & \textbf{0.39} & \textbf{179} \\
+$3\times 128$   & 0.757 & 18.1  & 0.54 & 239 \\
+$4\times 128$   & 0.756 & 16.1  & 0.48 & 213 \\
 \midrule
-$1\times 256$   & 0.737 & 0.113 & 2.65 & 0.627 \\
-$2\times 256$   & 0.767 & 0.134 & 3.09 & 0.607 \\
-$3\times 256$   & 0.771 & 0.170 & 3.85 & 0.545 \\
-$4\times 256$   & 0.771 & 0.169 & 3.81 & 0.547 \\
+$1\times 256$   & 0.736 & 30.3  & 0.95 & 412 \\
+$2\times 256$   & 0.768 & 30.5  & 0.93 & 397 \\
+$3\times 256$   & 0.771 & 42.6  & 1.26 & 553 \\
+$4\times 256$   & 0.772 & 43.5  & 1.28 & 564 \\
 \midrule
-$1\times 512$   & 0.743 & 0.144 & 3.35 & 0.569 \\
-$2\times 512$   & 0.776 & 0.181 & 4.04 & 0.531 \\
-$3\times 512$   & 0.781 & 0.261 & 5.65 & 0.435 \\
-$4\times 512$   & \textbf{0.782} & 0.310 & 6.45 & 0.391 \\
+$1\times 512$   & 0.744 & 48.1  & 1.33 & 647 \\
+$2\times 512$   & 0.776 & 54.6  & 1.39 & 704 \\
+$3\times 512$   & 0.781 & 80.5  & 2.16 & 1{,}031 \\
+$4\times 512$   & \textbf{0.783} & 92.7 & 2.17 & 1{,}184 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -91,7 +91,6 @@ $4\times 512$   & \textbf{0.782} & 0.310 & 6.45 & 0.391 \\
 
 The three figures below show per-dataset benchmark breakdowns for Wine, Credit, and HIGGS. The combined cross-dataset comparison is presented in \Cref{sec:results_main}; these figures provide a higher-resolution view of each dataset in isolation.
 
-\todo[inline]{Regenerate after run\_all: \texttt{python analysis/plots/plot\_per\_dataset.py}}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{wine_benchmark.pdf}
@@ -99,7 +98,6 @@ The three figures below show per-dataset benchmark breakdowns for Wine, Credit, 
 \label{fig:app_wine}
 \end{figure}
 
-\todo[inline]{Regenerate after run\_all: \texttt{python analysis/plots/plot\_per\_dataset.py}}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{credit_benchmark.pdf}
@@ -107,7 +105,6 @@ The three figures below show per-dataset benchmark breakdowns for Wine, Credit, 
 \label{fig:app_credit}
 \end{figure}
 
-\todo[inline]{Regenerate after run\_all: \texttt{python analysis/plots/plot\_per\_dataset.py}}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\linewidth]{higgs_benchmark.pdf}
@@ -190,16 +187,16 @@ fastparquet      & 2026.3.0 \\
 \textbf{Dataset} & \textbf{Variant} & \textbf{WF1} & \textbf{CO\textsubscript{2} (g)} & \textbf{Time (s)} & \textbf{Latency ($\mu$s)} \\
 \midrule
 \multirow{2}{*}{Wine}
-  & XGBoost (CPU) & 0.989 & \textbf{0.021} & \textbf{0.4}  & \textbf{1450} \\
-  & XGBoost (GPU) & 0.989 & 0.051          & 2.4           & 2328 \\
+  & XGBoost (CPU) & 0.972 & \textbf{0.013} & \textbf{0.1}  & \textbf{1464} \\
+  & XGBoost (GPU) & 0.972 & 0.017          & 0.3           & 2468 \\
 \midrule
 \multirow{2}{*}{Credit}
-  & XGBoost (CPU) & 0.800 & \textbf{0.043} & \textbf{1.5}  & \textbf{2743} \\
-  & XGBoost (GPU) & 0.801 & 0.052          & 2.4           & 3457 \\
+  & XGBoost (CPU) & 0.798 & \textbf{0.021} & \textbf{0.4}  & \textbf{2785} \\
+  & XGBoost (GPU) & 0.798 & 0.022          & 0.7           & 4688 \\
 \midrule
 \multirow{2}{*}{HIGGS}
-  & XGBoost (CPU) & 0.760 & 14.650         & 827.7         & \textbf{2012} \\
-  & XGBoost (GPU) & 0.760 & \textbf{2.104} & \textbf{90.2} & 2973 \\
+  & XGBoost (CPU) & 0.760 & 2.763          & 155.2         & \textbf{2021} \\
+  & XGBoost (GPU) & 0.760 & \textbf{0.393} & \textbf{16.4} & 3491 \\
 \bottomrule
 \end{tabular}
 \end{table}
