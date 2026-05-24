@@ -142,7 +142,7 @@ Focusing first on the low-data regime, the leftmost cluster in \Cref{fig:verglei
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.82\linewidth]{vergleich_performance.pdf}
+\includegraphics[width=\linewidth]{vergleich_performance.pdf}
 \caption{Predictive performance (accuracy and weighted F1-score) across all 14 model-dataset combinations. On Wine, four of five models converge on a \gls{wf1} of 0.989, making emissions the only meaningful dimension of comparison. On HIGGS, Logistic Regression saturates well below the non-linear models and \gls{mlp} achieves the highest single result in the study.}
 \label{fig:vergleich_performance}
 \end{figure}
@@ -161,7 +161,7 @@ Moving to the medium-scale Credit dataset (center cluster in \Cref{fig:vergleich
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.82\linewidth]{vergleich_efficiency.pdf}
+\includegraphics[width=\linewidth]{vergleich_efficiency.pdf}
 \caption{Hardware-corrected CO\textsubscript{2} emissions and training time (log scale) across all 14 model-dataset combinations.}
 \label{fig:vergleich_efficiency}
 \end{figure}
@@ -207,7 +207,7 @@ As established in the main benchmark, hardware acceleration is not unconditional
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.7\linewidth]{xgb_cpu_vs_gpu.pdf}
+\includegraphics[width=\linewidth]{xgb_cpu_vs_gpu.pdf}
 \caption{XGBoost \gls{cpu} vs.\ \gls{gpu} across datasets. Top row: CO\textsubscript{2} emissions and training time (log scale). Bottom row: accuracy and per-sample inference time. Accuracy is near-identical across variants on all three datasets. The ecological and speed differences are the operative comparison.}
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
@@ -218,7 +218,7 @@ The HIGGS result reverses the picture completely. XGBoost \gls{gpu} emits 0.393\
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=0.7\linewidth]{xgb_breakeven_higgs.pdf}
+    \includegraphics[width=\linewidth]{xgb_breakeven_higgs.pdf}
     \caption{XGBoost break-even point comparison between different subset sizes of the HIGGS dataset.}
     \label{fig:xgb_breakeven_higgs}
 \end{figure}
@@ -282,7 +282,7 @@ Taken together, these results highlight a structural mismatch between standard d
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.7\linewidth]{mlp_variation_cf1.pdf}
+\includegraphics[width=\linewidth]{mlp_variation_cf1.pdf}
 \caption{\Gls{mlp} architecture variation on HIGGS: \acrfull{cf1} for all depth-width combinations. Lighter cells indicate lower (better) values.}
 \label{fig:mlp_variation_cf1}
 \end{figure}
@@ -321,7 +321,7 @@ The first result is somewhat reassuring for the existing measurements: as shown 
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.7\linewidth]{scenario_intensities.pdf}
+\includegraphics[width=\linewidth]{scenario_intensities.pdf}
 \caption{Carbon intensity (\gls{gco2eq}/\gls{kwh}) for eight timing scenarios}
 \label{fig:scenario_intensities}
 \end{figure}
@@ -332,7 +332,7 @@ Because training energy is a fixed physical quantity for any given run, every pe
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.7\linewidth]{scenario_per_run.pdf}
+\includegraphics[width=\linewidth]{scenario_per_run.pdf}
 \caption{Counterfactual CO\textsubscript{2} relative to the static CodeCarbon baseline (= 100\,\%)}
 \label{fig:scenario_per_run}
 \end{figure}
@@ -343,7 +343,7 @@ To understand why the diurnal dimension matters as much as the seasonal one, con
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.7\linewidth]{carbon_intensity_july_day.pdf}
+\includegraphics[width=\linewidth]{carbon_intensity_july_day.pdf}
 \caption{Hourly carbon intensity on 24 July 2024 in Germany}
 \label{fig:carbon_intensity_july_day}
 \end{figure}
@@ -365,7 +365,7 @@ The year-long heatmap in \Cref{fig:diurnal_seasonal} brings both dimensions toge
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.5\linewidth]{diurnal_seasonal_2024.pdf}
+\includegraphics[width=\linewidth]{diurnal_seasonal_2024.pdf}
 \caption{Mean carbon intensity (\gls{gco2eq}/\gls{kwh}) by hour of day and calendar month for the German grid (2024), derived from 8{,}760 hourly observations.}
 \label{fig:diurnal_seasonal}
 \end{figure}
