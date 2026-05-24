@@ -74,12 +74,32 @@ Translating tuning costs into the \gls{cf1} framework extends this picture beyon
 \label{fig:tuning_cf1}
 \end{figure}
 
+\Cref{tab:tuned_vs_default} makes the value proposition of hyperparameter tuning concrete by comparing the full initialization cost (HPO plus one training run) against simply training with framework defaults, restricting the comparison to HIGGS where default-configuration results are available. For both XGBoost variants the HPO study absorbs more than 95\,\% of the total initialization budget: 54.3\,g out of a combined 57.1\,g for the \gls{cpu} variant. Against a default training cost of just 0.5\,g, the 0.019-point \gls{wf1} gain from tuning carries an additional 56.6\,g of CO\textsubscript{2}, roughly 30\,g per F1 percentage point gained. For the \gls{mlp} the structural picture differs in one direction. Poorly matched defaults extend convergence, so the untuned model requires more epochs before early stopping triggers and produces a higher training cost (84.8\,g) than the tuned variant (58.5\,g). Better hyperparameters therefore directly reduce training energy as a side effect. Despite this training-side advantage, the HPO study itself costs 3{,}182.5\,g, 54 times the tuned run and 37 times the default run, making the total initialization budget 3{,}241\,g against 85\,g: a factor of 38 for a \gls{wf1} gain of 0.016. In all three models the HPO study absorbs more than 95\,\% of the initialization budget, making the benchmark training figures a systematically small fraction of each model's true ecological cost to produce. Whether the performance premium justifies the cost is deployment-dependent: for a system serving millions of queries the additional F1 points may translate into a meaningful outcome improvement; for a low-volume application competitive performance is available at a fraction of the price by accepting library defaults.
+
+\begin{table}[htbp]
+\centering
+\caption{Tuned versus default hyperparameters on HIGGS (full 11\,M rows). Total tuned combines the 40-trial Optuna study with one final training run on the tuned configuration. Default uses scikit-learn and XGBoost library defaults with no tuning. The XGBoost HPO study ran once on \gls{gpu}; its cost applies to both variants. Logistic Regression uses fixed defaults in both settings and is excluded; Random Forest is excluded as it is not evaluated on HIGGS.}
+\label{tab:tuned_vs_default}
+\small
+\begin{tabular}{@{} l r r r r r r r @{}}
+\toprule
+ & \multicolumn{4}{c}{CO\textsubscript{2} (g)} & \multicolumn{3}{c}{Weighted F1} \\
+\cmidrule(lr){2-5}\cmidrule(lr){6-8}
+Model & HPO & Tuned train & Total tuned & Default & Tuned & Default & $\Delta$ \\
+\midrule
+XGBoost (\gls{cpu}) &    54.3 &  2.763 &    57.1 &  0.469 & 0.760 & 0.741 & $+$0.019 \\
+XGBoost (\gls{gpu}) &    54.3 &  0.393 &    54.7 &  0.123 & 0.760 & 0.741 & $+$0.019 \\
+\gls{mlp}           & 3{,}182.5 & 58.461 & 3{,}241.0 & 84.770 & 0.785 & 0.769 & $+$0.016 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 
 % ── Main Benchmark ─────────────────────────────────────────────────────────────
 \section{Main Cross-Dataset Benchmark}
 \label{sec:results_main}
 
-The benchmark spans 14 model-dataset combinations across three datasets that differ by three orders of magnitude in size. \Cref{fig:vergleich_performance,fig:vergleich_efficiency} lay out the two dimensions of the comparison. The \gls{cf1} ranking synthesizes central finding is that no model dominates across all three settings. Ecological efficiency is not a fixed property of an algorithm. It emerges from the alignment between a model's computational profile, the hardware it runs on and the scale of the task it faces. Each of the three datasets exposes a different axis of that contingency.
+The benchmark spans 14 model-dataset combinations across three datasets that differ by three orders of magnitude in size. \Cref{fig:vergleich_performance,fig:vergleich_efficiency} lay out the two dimensions of the comparison. The \gls{cf1} ranking synthesizes central finding is that no model dominates across all three settings. Ecological efficiency is not a fixed property of an algorithm. It emerges from the alignment between a model's computational profile, the hardware it runs on and the scale of the task it faces. Each of the three datasets exposes a different axis of that contingency. The CO\textsubscript{2} figures in \Cref{tab:main_results} reflect a single training run with already-optimized hyperparameters; the one-time initialization cost of producing those parameters and the \gls{wf1} premium they deliver over untuned defaults are quantified in \Cref{sec:results_tuning}.
 
 
 \begin{table}[htbp]
