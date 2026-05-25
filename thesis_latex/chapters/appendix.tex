@@ -20,9 +20,11 @@
 100{,}000     & 0.636 & 0.723 & 0.719 & 0.717 & 0.718 \\
 200{,}000     & 0.635 & 0.726 & 0.726 & 0.726 & 0.732 \\
 500{,}000     & 0.638 & 0.733 & 0.738 & 0.738 & 0.751 \\
+% LTeX: enabled=false
 1{,}000{,}000 & 0.638 & ---   & 0.745 & 0.744 & 0.760 \\
 5{,}000{,}000 & 0.637 & ---   & 0.757 & 0.757 & 0.778 \\
 11{,}000{,}000 & 0.637 & ---  & 0.760 & 0.760 & 0.785 \\
+% LTeX: enabled=true
 \bottomrule
 \end{tabular}
 \end{table}
@@ -108,7 +110,7 @@ The three figures below show per-dataset benchmark breakdowns for Wine, Credit, 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.8\linewidth]{higgs_benchmark.pdf}
-\caption{Detailed benchmark results for the HIGGS dataset. Random Forest is excluded due to prohibitive training times at 11M rows.}
+\caption{Benchmark results for the HIGGS dataset (per-dataset view). Random Forest is excluded due to prohibitive training times at 11M rows.}
 \label{fig:app_higgs}
 \end{figure}
 
@@ -120,7 +122,7 @@ The three figures below show per-dataset benchmark breakdowns for Wine, Credit, 
 \section{Dataset Characteristics}
 \label{app:datasets}
 
-\Cref{tab:app_datasets} summarises the key properties of the three datasets. The feature count excludes the target column; for Credit the identifier column (\texttt{ID}) is additionally dropped before training. Class distribution is measured on the full dataset before any train/test split.
+\Cref{tab:app_datasets} summarizes the key properties of the three datasets. The feature count excludes the target column; for Credit the identifier column (\texttt{ID}) is additionally dropped before training. Class distribution is measured on the full dataset before any train/test split.
 
 \begin{table}[htbp]
 \centering
@@ -128,7 +130,9 @@ The three figures below show per-dataset benchmark breakdowns for Wine, Credit, 
 \label{tab:app_datasets}
 \begin{tabular}{@{} l r r r l @{}}
 \toprule
+% LTeX: enabled=false
 \textbf{Dataset} & \textbf{Samples} & \textbf{Features} & \textbf{Classes} & \textbf{Class distribution} \\
+% LTeX: enabled=true
 \midrule
 Wine         &        178 & 13 & 3 & 33.1\,\% / 39.9\,\% / 27.0\,\% \\
 Credit       &     30{,}000 & 23 & 2 & 77.9\,\% (no default) / 22.1\,\% (default) \\
@@ -140,7 +144,7 @@ HIGGS        & 11{,}000{,}000 & 28 & 2 & 47.0\,\% (background) / 53.0\,\% (signa
 \section{Python Software Environment}
 \label{app:software}
 
-\Cref{tab:app_software} lists the versions of all core libraries used in this study. A complete \texttt{requirements.txt} is included in the accompanying code repository. All experiments were run on Python 3.13.0 on Windows~11.
+\Cref{tab:app_software} lists the versions of all core libraries used in this study. A complete \path{requirements.txt} is included in the accompanying code repository. All experiments were run on Python 3.13.0 on Windows~11.
 
 \begin{table}[htbp]
 \centering
@@ -175,7 +179,7 @@ fastparquet      & 2026.3.0 \\
 \section{XGBoost CPU vs.\ GPU}
 \label{app:xgb_cpugpu}
 
-\Cref{tab:app_xgb_cpugpu} gives exact values for the XGBoost \gls{cpu} vs.\ \gls{gpu} comparison discussed in \Cref{sec:results_xgb}; \Cref{fig:xgb_cpu_vs_gpu} visualises the same data. Both variants implement the same algorithm and produce equivalent predictive performance; any sub-0.001 difference in WF1 across runs is attributable to floating-point precision differences between \gls{cpu} (float64) and \gls{gpu} (float32) arithmetic and carries no practical meaning. The table therefore omits accuracy and WF1, focusing on the metrics that actually differ: CO\textsubscript{2} emissions, training time, and inference latency. Bold marks the better value within each dataset.
+\Cref{tab:app_xgb_cpugpu} gives exact values for the XGBoost \gls{cpu} vs.\ \gls{gpu} comparison discussed in \Cref{sec:results_xgb}; \Cref{fig:xgb_cpu_vs_gpu} visualizes the same data. Both variants implement the same algorithm and produce equivalent predictive performance; any sub-0.001 difference in WF1 across runs is attributable to floating-point precision differences between \gls{cpu} (float64) and \gls{gpu} (float32) arithmetic and carries no practical meaning. The table therefore omits accuracy and WF1, focusing on the metrics that actually differ: CO\textsubscript{2} emissions, training time, and inference latency. Bold marks the better value within each dataset.
 
 \begin{table}[htbp]
 \centering
@@ -205,7 +209,7 @@ fastparquet      & 2026.3.0 \\
 \section{Monthly Carbon Intensity Statistics: German Grid 2024}
 \label{app:carbon_monthly}
 
-\Cref{tab:app_carbon_monthly} summarises the carbon intensity of the German electricity grid for each calendar month of 2024, derived from 8{,}760 hourly observations obtained via the ElectricityMaps API. These values underpin the seasonal counterfactual analysis in \Cref{sec:results_carbon}. The winter months (October--January) consistently show higher mean intensity than the summer months, driven by reduced solar generation and higher gas and coal dispatch. November records the highest monthly mean; June records the single lowest hourly minimum.
+\Cref{tab:app_carbon_monthly} summarizes the carbon intensity of the German electricity grid for each calendar month of 2024, derived from 8{,}760 hourly observations obtained via the ElectricityMaps API. These values underpin the seasonal counterfactual analysis in \Cref{sec:results_carbon}. The winter months (October--January) consistently show higher mean intensity than the summer months, driven by reduced solar generation and higher gas and coal dispatch. November records the highest monthly mean; June records the single lowest hourly minimum.
 
 \begin{table}[htbp]
 \centering

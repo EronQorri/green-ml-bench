@@ -216,7 +216,7 @@ A dynamic architecture was chosen to ensure the network structure directly refle
 \label{tab:mlp_architecture}
 \vspace{10pt}
 
-\setlength{\tabcolsep}{5pt}
+\setlength{\tabcolsep}{4pt}
 
 \begin{minipage}[b]{0.28\linewidth}
 \centering
@@ -411,7 +411,7 @@ The placement of the tracker boundaries was a deliberate choice. Data loading, p
 
 \end{tikzpicture}%
 }
-\caption{Training and emissions tracking procedure per model-dataset combination.
+\caption[Training and emissions tracking procedure per model-dataset combination.]{Training and emissions tracking procedure per model-dataset combination.
 Dashed gray boxes indicate CodeCarbon \texttt{EmissionsTracker} calls and dashed blue boxes indicate \texttt{CPUPowerMonitor} calls (background thread, 0.25\,s sampling). Both run in parallel during training. After training, \texttt{compute\_corrected\_co2} replaces CodeCarbon's \gls{tdp}-based \gls{cpu} estimate with the hardware sensor value.}
 \label{fig:emissions_flow}
 \end{figure}
@@ -445,7 +445,7 @@ A fixed time window rather than a fixed repetition count was chosen deliberately
 
 The total \gls{cpu} energy accumulated over the 30-second window is divided by the number of predictions made during that interval to obtain \texttt{energy\_per\_inference\_wh}: the directly measured energy cost per single prediction. This is more principled than multiplying a separately recorded latency by a separately recorded power figure, as both quantities are derived from the same physical measurement window. Since training involves gradient computation, backward passes and tree-building whereas inference requires only a forward pass, inference-phase \gls{cpu} power is substantially lower than training-phase power. Using training power as a proxy would overestimate per-prediction energy and undercount the break-even threshold; the direct measurement avoids this distortion.
 
-The recorded latency and \texttt{energy\_per\_inference\_wh} values are subsequently used in a dedicated lifecycle analysis (\texttt{run\_lifecycle\_analysis.py}), which estimates the number of predictions at which the cumulative inference CO\textsubscript{2} footprint of each model surpasses its one-time training footprint. Per-prediction CO\textsubscript{2} is computed as $\texttt{energy\_per\_inference\_wh} / 1000 \times I_\text{carbon}$, where $I_\text{carbon}$ is the grid carbon intensity derived from the training measurements.
+The recorded latency and \path{energy_per_inference_wh} values are subsequently used in a dedicated lifecycle analysis (\path{run_lifecycle_analysis.py}), which estimates the number of predictions at which the cumulative inference CO\textsubscript{2} footprint of each model surpasses its one-time training footprint. Per-prediction CO\textsubscript{2} is computed as $e_{\text{infer}} / 1000 \times I_\text{carbon}$, where $e_{\text{infer}}$ is \path{energy_per_inference_wh} in Wh and $I_\text{carbon}$ is the grid carbon intensity derived from the training measurements.
 
 \section{Results Storage and Orchestration}
 \label{implementation_results}
@@ -487,7 +487,7 @@ Inference latency is stored separately in \texttt{results/inference\_time.csv}, 
 \small
 \caption{Column schema of \texttt{inference\_time.csv}.}
 \label{tab:inference_schema}
-\begin{tabular}{lll}
+\begin{tabularx}{\linewidth}{@{} l l X @{}}
 \toprule
 \textbf{Column} & \textbf{Format} & \textbf{Description} \\
 \midrule
@@ -501,7 +501,7 @@ Inference latency is stored separately in \texttt{results/inference\_time.csv}, 
 \texttt{energy\_per\_inference\_wh} & float             & Directly measured \gls{cpu} energy per prediction (Wh) \\
 \texttt{n\_inference\_reps}        & int                & Number of predictions made during the 30\,s window \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 Five core orchestration scripts coordinate the data collection and analysis phases of the experiment.
@@ -509,7 +509,7 @@ Each model script is launched sequentially as an isolated subprocess rather than
 
 \texttt{run\_all.py} is the main entry point for the full cross-dataset benchmark. It runs in two sequential phases. Phase 1 executes all tuning scripts for Random Forest, XGBoost and \gls{mlp} across their respective datasets, saving the best parameters to \texttt{best\_params.json}. Phase 2 then runs all five model scripts across all three datasets using those saved parameters (except Random Forest on the HIGGS dataset as mentioned earlier).
 
-The remaining four scripts handle specific experiments and post-processing. \path{run_scaling_multiseed.py} trains all models across eight HIGGS subset sizes under three independent random seeds (42, 123 and 999), with dataset size controlled via a stratified subsample drawn separately for each seed. The same runs cover both the scaling analysis and the \gls{cpu}/\gls{gpu} XGBoost comparison, so no separate breakeven script is needed. \texttt{run\_mlp\_variation.py} runs the \gls{mlp} architecture grid experiment. \texttt{run\_inference\_power.py} re-measures inference latency and \gls{cpu} package power for each model--dataset combination using a dedicated 30-second measurement window, keeping inference measurements separate from the training emissions tracker. Finally, \texttt{run\_lifecycle\_analysis.py} computes the lifecycle break-even analysis from the collected training and inference data, with the methodology described in \Cref{design_lifecycle}.
+The remaining four scripts handle specific experiments and post-processing. \path{run_scaling_multiseed.py} trains all models across eight HIGGS subset sizes under three independent random seeds (42, 123 and 999), with dataset size controlled via a stratified subsample drawn separately for each seed. The same runs cover both the scaling analysis and the \gls{cpu}/\gls{gpu} XGBoost comparison, so no separate breakeven script is needed. \path{run_mlp_variation.py} runs the \gls{mlp} architecture grid experiment. \path{run_inference_power.py} re-measures inference latency and \gls{cpu} package power for each model--dataset combination using a dedicated 30-second measurement window, keeping inference measurements separate from the training emissions tracker. Finally, \path{run_lifecycle_analysis.py} computes the lifecycle break-even analysis from the collected training and inference data, with the methodology described in \Cref{design_lifecycle}.
 
 % =============================================================
 \section{Experiments}
