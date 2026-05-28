@@ -10,7 +10,7 @@ The main research question that this study aims to answer is:
 How does the trade-off between energy consumption and predictive performance vary across Logistic Regression, Random Forest, XGBoost and \gls{mlp} models when the complexity of the models and the size of the dataset are systematically varied?
 \end{researchquestion}
 
-The following sub-questions will also be addressed in the course of this thesis:
+\noindent The following sub-questions will subsequently also be addressed in the course of this thesis:
 \begin{itemize}
     \item Under what conditions do the resource consumption of more complex models exceed the achievable accuracy gain over simpler baselines?
     \item How does energy consumption and CO\textsubscript{2} output scale with increasing neural network complexity (number of layers and neurons)?
@@ -92,7 +92,7 @@ Training time in seconds was included as a secondary resource metric, as it capt
 Furthermore, inference time was measured across all experimental setups to account for the operational footprint. In large-scale deployment scenarios, the cumulative energy demand of repeated predictions can often rival or even exceed the initial training costs \cite{desislavovTrendsAIInference2023}.
 Together, these metrics enable a direct assessment of whether gains in predictive performance justify the associated increase in resource consumption.
 
-Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020} \cite{schwartzGreenAI2020}, a custom composite metric was developed for this study, named \gls{cf1}. \Cref{eq:cf1} defines this metric as the ratio of training \gls{co2eq} emissions (in milligrams) to the \acrlong{wf1} expressed as a percentage:
+Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020} \cite{schwartzGreenAI2020}, a custom composite metric was developed for this study, named \acrfull{cf1}. \Cref{eq:cf1} defines this metric as the ratio of training \gls{co2eq} emissions (in milligrams) to the \acrlong{wf1} expressed as a percentage:
 \begin{equation}
 \text{\gls{cf1}} = \frac{c_{\mathrm{mg}}}{\gls{wf1} \cdot 100}
 \label{eq:cf1}
@@ -106,15 +106,15 @@ Emissions are tracked exclusively over the training run. Data loading and prepro
 \section{Validation Strategy}
 \label{design_validation}
 
-To obtain reliable and generalizable performance estimates while preventing data leakage between the tuning and evaluation phases, a stratified 80/20 train--test split is applied once before any tuning begins. All subsequent steps (hyperparameter optimization and final model training) operate exclusively on the training partition. The held-out test set is only accessed to compute the final reported metrics.
+To obtain an unbiased estimate of generalization performance, the evaluation methodology employs a strict separation between model development and final testing. A stratified 80/20 train--test split is applied to each dataset prior to any modeling steps. The resulting training partition is used exclusively for hyperparameter optimization and model fitting, while the held-out test set is reserved solely for the final evaluation.
 
-Within the hyperparameter optimization phase, \gls{cv} is used as the internal evaluation strategy. Specifically, Stratified K-Fold \gls{cv} with $k=5$ folds is applied over the training partition, a value chosen for its established balance between computational cost and estimation stability, as discussed in \Cref{sec:theoretical_kfold}. Stratified splitting ensures that each fold preserves the original class distribution, which is relevant because two of the three datasets exhibit class imbalance. This is directly coherent with the choice of \gls{wf1} as the primary metric, as described in \Cref{design_metrics}.
+Within the hyperparameter optimization phase, \gls{cv} is used as the internal evaluation strategy on the training partition. Specifically, Stratified K-Fold \gls{cv} with $k=5$ folds is applied, a value chosen for its established balance between computational cost and estimation stability, as discussed in \Cref{sec:theoretical_kfold}. Stratified splitting ensures that each fold preserves the original class distribution, which is particularly relevant because two of the three datasets exhibit class imbalance. This approach is directly coherent with the choice of \gls{wf1} as the primary metric, as described in \Cref{design_metrics}.
 
-Final model evaluation is performed by training a single model on the full training partition and scoring it on the held-out test set. This single-fit protocol eliminates the indirect data leakage that arises when tuning and evaluation share the same folds: the hyperparameters are selected on training-partition folds and the test set is never observed during any part of that process.
+Final model evaluation is performed by training a single model on the full training partition and scoring it on the unseen test set. By strictly withholding the test data from the \gls{cv} loop, this protocol ensures that the hyperparameters are not implicitly optimized for the test set, thereby preventing over-fitting during the model selection phase.
 
-To ensure reproducibility, a fixed random state was used for all splits, \gls{cv} folds, model initialization and data shuffling. The specific value and its technical implementation are described in \Cref{implementation_sw_env}.
+To ensure reproducibility, a fixed random state was used for all splits, \gls{cv} folds, model initialization, and data shuffling. The specific value and its technical implementation are described in \Cref{implementation_sw_env}.
 
-A practical limitation applies to the Wine dataset: an 80/20 split of its 178 instances leaves approximately 36 test samples, which yields a noisier point estimate than the thousands or millions of test instances available for Credit and HIGGS. This is a structural constraint of the dataset size rather than a methodological choice and the split is kept uniform across all datasets to preserve comparability.
+A practical limitation applies to the Wine dataset: an 80/20 split of its 178 instances leaves approximately 36 test samples, which yields a noisier point estimate than the thousands or millions of test instances available for Credit and HIGGS. This is a structural constraint of the dataset size rather than a methodological choice, and the split ratio is kept uniform across all datasets to preserve comparability.
 
 \section{Hyperparameter Tuning}
 \label{design_hyperparameter}
@@ -133,7 +133,7 @@ The research questions are operationalized through five experiments. Each isolat
 
 The \textbf{main cross-dataset benchmark} trains all five models on all three datasets, yielding 14 model--dataset combinations (Random Forest on HIGGS is excluded, as described in \Cref{design_models}). It forms the empirical backbone of the study and addresses the overall energy-performance trade-off across model complexity and dataset scale.
 
-The \textbf{dataset scaling experiment} holds everything constant except the number of training instances. All five models are included at subset sizes up to 500{,}000 instances; beyond that threshold Random Forest is excluded due to prohibitive runtimes, leaving four models for the larger subsets up to 11{,}000{,}000. To obtain stable, reproducible estimates at each subset size, every model--subset combination is trained independently under three different random seeds; reported values are means across the three runs. Because all other variables are fixed, observed differences in performance and emissions can be attributed exclusively to dataset size. The gap between the 30{,}000-instance Credit dataset and the full 11-million-instance HIGGS dataset is bridged by the intermediate subset sizes in this experiment, which cover the range that is typical of many real-world tabular classification tasks. The experiment directly addresses RQ4 and, through the XGBoost \gls{cpu}/\gls{gpu} pairing, also feeds into RQ3.
+The \textbf{dataset scaling experiment} holds everything constant except the number of training instances. All five models are included at subset sizes up to 500{,}000 instances. Beyond that threshold, Random Forest is excluded due to prohibitive runtimes, leaving four models for the larger subsets up to 11{,}000{,}000. To obtain stable, reproducible estimates at each subset size, every model--subset combination is trained independently under three different random seeds. Reported values are means across the three runs. Because all other variables are fixed, observed differences in performance and emissions can be attributed exclusively to dataset size. The gap between the 30{,}000-instance Credit dataset and the full 11-million-instance HIGGS dataset is bridged by the intermediate subset sizes in this experiment, which cover the range that is typical of many real-world tabular classification tasks. The experiment directly addresses RQ4 and, through the XGBoost \gls{cpu}/\gls{gpu} pairing, also feeds into RQ3.
 
 The \textbf{\gls{mlp} architecture variation} isolates the effect of network depth and width by training a grid of 12 architectures on HIGGS: three widths (128, 256, 512 neurons) crossed with four depths (1--4 hidden layers). Non-architectural hyperparameters are fixed to neutral defaults to prevent any single configuration from being inadvertently favored by the tuning results. This directly addresses RQ2.
 

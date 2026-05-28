@@ -45,18 +45,18 @@ Benchmark tables that compare training emissions report only a fraction of a mod
 \small
 \begin{tabular}{@{} l l r r r @{}}
 \toprule
-Model & Dataset & Duration (h) & CO\textsubscript{2} (g) & Best WF1 \\
+Dataset & Model & Duration (h) & CO\textsubscript{2} (g) & Best WF1 \\
 \midrule
-\multirow{2}{*}{Random Forest}     & Wine   & 0.02 &  0.88 & 0.979 \\
-                                    & Credit & 0.09 &  6.09 & 0.800 \\
+\multirow{3}{*}{Wine}   & Random Forest &          0.02 &          0.88 & 0.979 \\
+                         & XGBoost       &          0.02 &          1.12 & 0.979 \\
+                         & MLP           & \textbf{0.01} & \textbf{0.67} & \textbf{0.993} \\
 \midrule
-\multirow{3}{*}{XGBoost}           & Wine   & 0.02 &  1.12 & 0.979 \\
-                                    & Credit & 0.03 &  1.92 & 0.802 \\
-                                    & HIGGS  & 0.67 & 54.26 & 0.759 \\
+\multirow{3}{*}{Credit} & Random Forest &          0.09 &          6.09 & 0.800 \\
+                         & XGBoost       & \textbf{0.03} & \textbf{1.92} & 0.802 \\
+                         & MLP           &          0.19 &          8.64 & \textbf{0.803} \\
 \midrule
-\multirow{3}{*}{MLP}               & Wine   &  0.01 &     0.67 & 0.993 \\
-                                    & Credit &  0.19 &     8.64 & 0.803 \\
-                                    & HIGGS  & 72.33 & 3{,}182.5 & 0.782 \\
+\multirow{2}{*}{HIGGS}  & XGBoost       & \textbf{0.67} & \textbf{54.26} & 0.759 \\
+                         & MLP           &         72.33 & 3{,}182.5      & \textbf{0.782} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -114,11 +114,11 @@ The benchmark spans 14 model-dataset combinations across three datasets that dif
 Dataset & Model & Acc. & WF1 & CO\textsubscript{2} (g) & Time (s) & CF1 \\
 \midrule
 \multirow{5}{*}{Wine}
-  & Logistic Regression & \textbf{0.972} & \textbf{0.972} & \textbf{0.013} & \textbf{0.01} & \textbf{0.130} \\
-  & Random Forest       & \textbf{0.972} & \textbf{0.972} &          0.016 &          0.4  & 0.161 \\
-  & XGBoost (CPU)       & \textbf{0.972} & \textbf{0.972} & \textbf{0.013} &         0.11  & 0.133 \\
-  & XGBoost (GPU)       & \textbf{0.972} & \textbf{0.972} &          0.017 &         0.31  & 0.175 \\
-  & MLP                 & \textbf{0.972} & \textbf{0.972} &          0.039 &          2.3  & 0.399 \\
+  & Logistic Regression & 0.972 & 0.972 & \textbf{0.013} & \textbf{0.01} & \textbf{0.130} \\
+  & Random Forest       & 0.972 & 0.972 &          0.016 &          0.4  & 0.161 \\
+  & XGBoost (CPU)       & 0.972 & 0.972 & \textbf{0.013} &         0.11  & 0.133 \\
+  & XGBoost (GPU)       & 0.972 & 0.972 &          0.017 &         0.31  & 0.175 \\
+  & MLP                 & 0.972 & 0.972 &          0.039 &          2.3  & 0.399 \\
 \midrule
 \multirow{5}{*}{Credit}
   & Logistic Regression & 0.808          & 0.770          & \textbf{0.021} &         0.8   & 0.269 \\
@@ -226,7 +226,7 @@ The HIGGS result reverses the picture completely. XGBoost \gls{gpu} emits 0.393\
 \end{figure}
 
 % LTeX: enabled=false
-To pinpoint where this shift occurs, \Cref{fig:xgb_breakeven_higgs} maps the emissions crossover across intermediate HIGGS subsets (explored further in \Cref{sec:results_scaling}). The analysis identifies a hard break-even threshold at approximately 120{,}000 rows. Below this volume, the \gls{gpu}'s higher instantaneous power draw remains unamortized, transforming the accelerator into an ecological penalty. Above it, the compounding speedup of massive parallelization outpaces the wattage premium and the emissions gap widens favorably with each additional row.
+To pinpoint where this shift occurs, \Cref{fig:xgb_breakeven_higgs} maps the emissions crossover across intermediate HIGGS subsets (explored further in \Cref{sec:results_scaling}). The analysis identifies a hard break-even threshold at approximately \todo{Update break-even row count after rerun}120{,}000 rows. Below this volume, the \gls{gpu}'s higher instantaneous power draw remains unamortized, transforming the accelerator into an ecological penalty. Above it, the compounding speedup of massive parallelization outpaces the wattage premium and the emissions gap widens favorably with each additional row.
 % LTeX: enabled=true
 
 This finding provides a direct, empirical answer to the study's research question regarding hardware efficiency: the ecological viability of \gls{gpu} acceleration on tabular data is strictly bounded by dataset scale. More importantly, it challenges a pervasive assumption in modern machine learning. In practice, \gls{gpu} execution is frequently treated as a universal default: a switch flipped to ``accelerate'' computation regardless of the task. The evidence here demonstrates that for tabular data, this default is fundamentally flawed. Blindly applying a \gls{gpu} to a dataset of ten thousand rows does not accelerate learning. It merely burns energy to initialize a device and transfer data across a PCIe bus. True Green \gls{ai} requires practitioners to actively break this habit and align their hardware choices with the complexity of their workloads, treating accelerators not as an unconditional default, but as a specialized tool justified only by sufficient scale.
@@ -235,6 +235,7 @@ This finding provides a direct, empirical answer to the study's research questio
 % ── HIGGS Scaling ──────────────────────────────────────────────────────────────
 \section{HIGGS Dataset Scaling}
 \label{sec:results_scaling}
+\todo{Entire section needs to be rewritten once new scaling run results are in. All numbers (F1, CO\textsubscript{2}, training time, CF1 values, row counts for thresholds) are from the old run and will change.}
 
 \Cref{fig:scaling_higgs} tracks CO\textsubscript{2} emissions and predictive performance across nine HIGGS subsets ranging from 1{,}000 to 11{,}000{,}000 rows. Each data point is the mean across three independent random seeds; this replication averages out subsample-specific noise and yields monotonically well-behaved scaling curves. By holding the dataset complexity constant and isolating the volume of data, the scaling analysis exposes the exact thresholds at which the ecological cost of processing more data eclipses the predictive benefit.
 
@@ -444,6 +445,22 @@ The lowest break-even point is Random Forest on Wine, at 66 predictions. Random 
 The opposite extreme is \gls{mlp} on HIGGS, which does not reach break-even until approximately 8.3 million predictions. \gls{mlp} inference is fast: the forward pass through a fixed-depth network requires no tree traversal, producing a per-prediction cost of only 7.1\,µg CO\textsubscript{2}. Against a training footprint of 58.5\,g, that rate of accumulation reaches parity only after roughly 8 million queries. A system serving this model on a low-traffic application would find that training represents the dominant ecological cost throughout its entire operational lifetime.
 
 Between these extremes, break-even points organize around two drivers: training scale and inference latency. Logistic Regression on Credit breaks even at 5{,}551 predictions because both costs are modest in absolute terms. XGBoost \gls{gpu} on HIGGS breaks even at 9{,}643 predictions: its training footprint is contained at 0.393\,g, but inference at 40.7\,µg per prediction accumulates faster than \gls{mlp}'s 7.1\,µg, so the budget is recovered at a far lower deployment volume. The contrast between XGBoost \gls{gpu} (9{,}643) and \gls{mlp} (8.3 million) on the same dataset illustrates a deeper trade-off in model design. \gls{mlp}'s fast inference pushes the break-even point to a scale that most low-traffic applications will never reach, concentrating the ecological cost at training time. XGBoost \gls{gpu}'s slower inference distributes the lifecycle cost more evenly across the deployment period. For practitioners concerned with total deployment footprint rather than single-phase training emissions, the break-even point is as informative as any figure in the benchmark table.
+
+\FloatBarrier
+\paragraph{Cross-Model Lifecycle Comparison on HIGGS}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=\linewidth]{lifecycle_xgb_gpu_vs_mlp_higgs.pdf}
+\caption{Cumulative lifecycle CO\textsubscript{2} for all four HIGGS models (Logistic Regression, XGBoost \gls{cpu}, XGBoost \gls{gpu}, \gls{mlp}) as a function of prediction volume. Models with cheap training but slow inference (XGBoost \gls{gpu}, XGBoost \gls{cpu}) accumulate cost faster than models with expensive training but fast inference (Logistic Regression, \gls{mlp}).}
+\label{fig:lifecycle_xgb_gpu_vs_mlp_higgs}
+\end{figure}
+
+The individual break-even points quantify when each model's inference cost overtakes its own training investment. A complementary and more deployment-relevant question is which of two competing models accumulates less total lifecycle CO\textsubscript{2} at a given query volume. \Cref{fig:lifecycle_xgb_gpu_vs_mlp_higgs} addresses this directly for XGBoost \gls{gpu} and \gls{mlp} on HIGGS, the two models that dominate the HIGGS result in opposite directions of the efficiency-performance trade-off.
+
+XGBoost \gls{gpu} enters deployment with a training footprint of 0.393\,g CO\textsubscript{2}. \gls{mlp} carries a training debt of 58.5\,g, a factor of 149 larger. The two cumulative cost curves begin from these starting points and converge because inference accumulates at different rates: 40.7\,µg per prediction for XGBoost \gls{gpu} against 7.1\,µg for \gls{mlp}, a factor of 5.8 in the opposite direction. The cross-over occurs at approximately 1.73 million predictions, the query volume at which \gls{mlp}'s lower per-prediction cost has fully amortized its much larger training investment. Beyond that threshold, \gls{mlp} is the more ecologically efficient of the two for every additional prediction served.
+
+Whether that threshold is reached depends entirely on deployment context. A batch scoring job processing ten million records in a single run would cross the threshold within that run and favor \gls{mlp} on lifecycle grounds despite its 149-fold higher training cost. A low-traffic internal tool serving a few thousand queries per month would never approach the threshold, leaving XGBoost \gls{gpu} as the lifecycle-optimal choice throughout its operational lifetime. The cross-over point therefore acts as a deployment-scale decision boundary that is orthogonal to predictive performance and invisible in any training-only benchmark table.
 
 The roughly five orders of magnitude separating these extremes reflect a structural divide rather than an accident of scale. Models with cheap training and slow inference front-load their ecological cost at the point of training, then spend that cost again with every subsequent prediction. Models with expensive training and fast inference invert this: the initial investment is large, but it is amortized across many cheap queries. Which profile is ecologically preferable depends entirely on how many predictions the deployed system will serve, a figure that has nothing to do with accuracy or training efficiency \parencite{luccioniPowerHungryProcessing2024}.
 

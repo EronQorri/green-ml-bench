@@ -148,11 +148,8 @@ for ax, (col, ylabel, use_log) in zip(axes, [
     ax.set_xlabel("Dataset size (rows)")
     ax.set_ylabel(ylabel)
 
-    # readable x-axis tick labels
-    ticks = [1_000, 10_000, 50_000, 100_000, 500_000, 1_000_000, 5_000_000, 11_000_000]
-    labels = ["1K", "10K", "50K", "100K", "500K", "1M", "5M", "11M"]
-    ax.set_xticks(ticks)
-    ax.set_xticklabels(labels, rotation=30, ha="right")
+    ax.set_xticks([1e3, 1e4, 1e5, 1e6, 1e7])
+    ax.xaxis.set_major_formatter(mpl.ticker.LogFormatterMathtext())
 
 handles = [
     plt.Line2D([0], [0], color=MODEL_PALETTE[m], marker="o",

@@ -54,7 +54,7 @@ FIXED_SPLIT_SEED = 42
 SEEDS = [42, 123, 999]
 
 # Training sizes to evaluate. None = entire train pool (~8.8M rows for HIGGS).
-NROWS = [1_000, 5_000, 10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 2_000_000, 5_000_000, None]
+NROWS = [1_000, 10_000, 50_000, 100_000, 200_000, 500_000, 1_000_000, 5_000_000, None]
 
 DATASET  = "higgs"
 PARQUET  = BASE_DIR / "csv_files" / "higgs" / "higgs.parquet"
