@@ -82,11 +82,11 @@ for m in MODELS:
 N_max = 5_000_000
 N = np.linspace(0, N_max, 5000)
 
-fig, ax = plt.subplots(figsize=(5.5, 3.8))
+fig, ax = plt.subplots(figsize=(9, 5))
 
 for m in MODELS:
     total = (train_co2[m] + N * infer_co2[m]) * 1e3   # grams
-    ax.plot(N / 1e6, total, color=MODEL_PALETTE[m], linewidth=2, label=MODEL_LABELS[m])
+    ax.plot(N / 1e6, total, color=MODEL_PALETTE[m], linewidth=1.5, label=MODEL_LABELS[m])
 
 ax.set_xlabel("Number of predictions (millions)")
 ax.set_ylabel("Cumulative CO₂ (g)")
