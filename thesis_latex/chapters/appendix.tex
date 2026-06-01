@@ -6,6 +6,7 @@
 
 \Cref{tab:app_scaling_wf1,tab:app_scaling_co2} provide the complete numeric results for the HIGGS subset scaling experiment introduced in \Cref{design_scaling} and discussed in \Cref{sec:results_scaling}. \Cref{fig:scaling_higgs} in the main text shows these values as line charts; the tables below give exact figures for reproducibility. Random Forest is excluded from subset sizes above 500{,}000 due to prohibitive training times. All CO\textsubscript{2} values are hardware-corrected (see \Cref{implementation_emissions}).
 
+\todo[inline]{All WF1 values in this table need to be updated after the new scaling run.}
 \begin{table}[htbp]
 \centering
 \caption{Weighted F1-score per model and HIGGS subset size. Values are means across three random seeds. Dashes indicate runs that were not performed.}
@@ -29,7 +30,8 @@
 \end{tabular}
 \end{table}
 
-\begin{sidewaystable}[htbp]
+\todo[inline]{All CO\textsubscript{2} and training time values in this table need to be updated after the new scaling run. The MLP at 11M rows figure in the caption (currently 73{,}145\,mg = 73.1\,g) also needs updating.}
+\begin{sidewaystable}[p]
 \centering
 \caption{Hardware-corrected CO\textsubscript{2} emissions (mg) and training time (s) per model and HIGGS subset size. Values are means across three random seeds; the \gls{mlp} at 5M and 11M rows was run under a single seed. The \gls{mlp} at 11M rows (73{,}145\,mg\,=\,73.1\,g) is the study's highest single training cost.}
 \label{tab:app_scaling_co2}
