@@ -22,18 +22,18 @@ BASE_DIR   = Path(__file__).parent.parent.parent
 RESULTS_DIR = BASE_DIR / "results"
 PLOTS_DIR  = Path(__file__).parent
 
-MODEL_ORDER = ["LogisticRegression", "RandomForest", "XGBoost", "XGBoost_GPU", "MLP_PyTorch"]
+MODEL_ORDER = ["LogisticRegression", "RandomForest", "XGBoost_CPU", "XGBoost_GPU", "MLP_PyTorch"]
 MODEL_PALETTE = {
     "LogisticRegression": (123/255, 167/255, 188/255),
     "RandomForest":       (212/255, 149/255, 106/255),
-    "XGBoost":            (130/255, 185/255, 154/255),
+    "XGBoost_CPU":        (130/255, 185/255, 154/255),
     "XGBoost_GPU":        (192/255, 112/255, 112/255),
     "MLP_PyTorch":        (155/255, 135/255, 181/255),
 }
 MODEL_LABEL = {
     "LogisticRegression": "Logistic Regression",
     "RandomForest":       "Random Forest",
-    "XGBoost":            "XGBoost",
+    "XGBoost_CPU":        "XGBoost CPU",
     "XGBoost_GPU":        "XGBoost GPU",
     "MLP_PyTorch":        "MLP",
 }
@@ -54,8 +54,8 @@ df_all = ms_mean[["model", "nrows_int", "f1", "co2eq_kg"]].copy()
 
 # ── Plot 1: XGBoost CPU vs GPU — Break-Even ───────────────────────────────────
 
-df_be = df_all[df_all["model"].isin(["XGBoost", "XGBoost_GPU"])].dropna(subset=["co2eq_kg"]).copy()
-cpu_sub = df_be[df_be["model"] == "XGBoost"].set_index("nrows_int")["co2eq_kg"]
+df_be = df_all[df_all["model"].isin(["XGBoost_CPU", "XGBoost_GPU"])].dropna(subset=["co2eq_kg"]).copy()
+cpu_sub = df_be[df_be["model"] == "XGBoost_CPU"].set_index("nrows_int")["co2eq_kg"]
 gpu_sub = df_be[df_be["model"] == "XGBoost_GPU"].set_index("nrows_int")["co2eq_kg"]
 common  = sorted(set(cpu_sub.index) & set(gpu_sub.index))
 
@@ -83,10 +83,10 @@ if len(common) >= 3:
 
     x_line = np.logspace(log_x[0], log_x[-1], 400)
     ax.plot(x_line, 10 ** spl_cpu(np.log10(x_line)),
-            color=MODEL_PALETTE["XGBoost"], label="XGBoost CPU (spline)")
+            color=MODEL_PALETTE["XGBoost_CPU"], label="XGBoost CPU (spline)")
     ax.plot(x_line, 10 ** spl_gpu(np.log10(x_line)),
             color=MODEL_PALETTE["XGBoost_GPU"], label="XGBoost GPU (spline)")
-    ax.scatter(x, y_cpu, color=MODEL_PALETTE["XGBoost"], zorder=5, s=60)
+    ax.scatter(x, y_cpu, color=MODEL_PALETTE["XGBoost_CPU"], zorder=5, s=60)
     ax.scatter(x, y_gpu, color=MODEL_PALETTE["XGBoost_GPU"], zorder=5, s=60)
 
     if n_be:
