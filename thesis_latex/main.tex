@@ -42,7 +42,11 @@
 \usepackage[acronym, toc, nonumberlist, nogroupskip]{glossaries}
 \makeglossaries
 \usepackage{array}
+\usepackage{enumitem}
 
+% Shorthand for research-question and experiment cross-references
+\newcommand{\rqref}[1]{\hyperref[rq:#1]{RQ\,#1}}
+\newcommand{\expref}[1]{\hyperref[exp:#1]{Exp.\,#1}}
 
 %%| SETTINGS |%%
 \hypersetup{                                                                        
@@ -131,13 +135,19 @@
 \tableofcontents
 \newpage
 \printglossary[type=\acronymtype, title={List of Abbreviations}, toctitle={List of Abbreviations}]
+\newpage
+\listoffigures
+\addcontentsline{toc}{chapter}{List of Figures}
+\newpage
+\listoftables
+\addcontentsline{toc}{chapter}{List of Tables}
 
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-Green \acrshort{ai} research has established that the energy and carbon cost of machine learning is measurable and consequential, but its empirical scope has remained tied to large-scale deep learning on text and image data. The classical algorithms that dominate deployed tabular classification lack a comparable baseline. This thesis addresses that gap through a systematic benchmark of five classifiers, Logistic Regression, Random Forest, XGBoost on \acrshort{cpu} and \acrshort{gpu}, and a \acrlong{mlp}, on three tabular datasets spanning four orders of magnitude in size, from 178 to 11 million instances. The scope extends beyond the single training run to cover hyperparameter search, temporal variation in grid carbon intensity and the inference break-even point at which cumulative deployment cost overtakes the training footprint. To address the systematic undercounting of software-based estimators, all \acrshort{cpu} energy figures are derived from direct hardware-sensor readings. A composite metric, \acrlong{cf1}, is introduced to express \acrlong{co2eq} cost per unit of predictive performance.
+Green AI research has established that the energy consumption and emissions of machine learning are measurable, but its empirical scope has remained tied to large-scale deep learning on text and image data. The classical algorithms that dominate deployed tabular classification lack a comparable baseline. This thesis addresses that gap through a systematic benchmark of five classifiers, Logistic Regression, Random Forest, XGBoost on \acrshort{cpu} and \acrshort{gpu}, and a neural network, on three tabular datasets spanning four orders of magnitude in size, from 178 to 11 million instances. The scope extends beyond the single training run to cover hyperparameter search, temporal variation in electricity grid carbon intensity and the inference break-even point at which cumulative deployment cost overtakes the training carbon footprint. To address the systematic undercounting of software-based estimators, all \acrshort{cpu} energy figures are derived from direct hardware-sensor readings via CodeCarbon. A composite metric, \acrlong{cf1}, is introduced to express \acrlong{co2eq} cost per unit of predictive performance.
 
-The results show that ecological efficiency is not a property of an algorithm but emerges from the fit between its computational structure, the hardware it runs on and the volume of data it processes. No model leads across all three datasets. \acrshort{gpu} acceleration becomes the more efficient choice for XGBoost only above approximately 80{,}000 instances. Below that threshold device initialization overhead dominates and emissions exceed those of the \acrshort{cpu} variant. A constrained 40-trial Optuna search for the \acrshort{mlp} on HIGGS emitted roughly 54 times the carbon of the final training run it enabled. Direct hardware measurement exceeded raw CodeCarbon figures by a median factor of 1.92, and shifting training away from winter evenings towards summer midday reduced absolute emissions by up to 70 percent without altering a single line of code. The contribution of this work is not a ranked list of preferred classifiers but a corrected measurement methodology, a context-sensitive efficiency metric and a lifecycle accounting framework that together make ecological model selection answerable for a given deployment context rather than as a general question.
+The results show that ecological efficiency is not a property of an algorithm but emerges from the fit between its computational structure, the hardware it runs on and the volume of data it processes. No model leads across all three datasets. \acrshort{gpu} acceleration becomes the more efficient choice for XGBoost only above approximately 80{,}000 instances. Below that threshold device initialization overhead dominates and emissions exceed those of the \acrshort{cpu} variant. A constrained Optuna search for the \acrshort{mlp} on HIGGS emitted roughly 54 times the carbon emissions of the final training run it enabled. Further analysis reveals that direct hardware measurement exceeded raw CodeCarbon figures by a median factor of 1.92, and shifting training away from winter evenings towards summer midday reduced absolute emissions by up to 70 percent without altering a single line of code. The contribution of this work is not a ranked list of preferred classifiers but a corrected measurement methodology, a context-sensitive efficiency metric and a lifecycle accounting framework that together make ecological model selection answerable for a given deployment context rather than as a general question.
 
 \mainmatter
 
@@ -153,13 +163,39 @@ The results show that ecological efficiency is not a property of an algorithm bu
 \include{chapters/appendix}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage                                            
+\newpage
 \printbibliography[heading=bibintoc, title={Bibliography}]
+
 \newpage
-\listoffigures
-\addcontentsline{toc}{chapter}{List of Figures}
-\newpage
-\listoftables
-\addcontentsline{toc}{chapter}{List of Tables}
+\chapter*{Statutory Declaration}
+\thispagestyle{plain}
+
+I herewith declare that I have composed the present thesis myself and without use of any other than the cited sources and aids. Sentences or parts of sentences quoted literally are marked as such; other references with regard to the statement and scope are indicated by full details of the publications concerned. The thesis in the same or similar form has not been submitted to any examination body and has not been published. This thesis was not yet, even in part, used in another examination or as a course performance.
+
+\vspace{1.5cm}
+
+\noindent
+Karlsruhe, \today
+
+\vspace{1cm}
+
+\noindent
+\rule{7cm}{0.4pt}\\
+Eron Qorri
+
+\section*{Declaration on the Use of AI-Assisted Tools}
+
+In the preparation of this thesis, \textbf{Claude Code} (Anthropic, 2026) was used to support the development of implementation code, to paraphrase and refine passages of written text and to assist with translation between German and English.
+
+\vspace{1.5cm}
+
+\noindent
+Karlsruhe, \today
+
+\vspace{1cm}
+
+\noindent
+\rule{7cm}{0.4pt}\\
+Eron Qorri
 
 \end{document}

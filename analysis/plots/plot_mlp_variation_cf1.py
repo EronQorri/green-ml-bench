@@ -10,10 +10,10 @@ from pathlib import Path
 mpl.rcParams.update({
     "font.family":    "serif",
     "font.serif":     ["Palatino Linotype", "Palatino", "Book Antiqua", "DejaVu Serif"],
-    "axes.titlesize": 11,
-    "axes.labelsize": 10,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
+    "axes.titlesize": 13,
+    "axes.labelsize": 12,
+    "xtick.labelsize": 12,
+    "ytick.labelsize": 12,
 })
 
 BASE_DIR  = Path(__file__).parent.parent.parent
@@ -54,7 +54,7 @@ sns.heatmap(
     annot=True, fmt=".1f",
     cmap="YlGn_r",
     linewidths=0.5, linecolor="white",
-    annot_kws={"size": 9},
+    annot_kws={"size": 14},
     cbar_kws={"label": "CF1 (mg CO₂eq / F1%)"},
 )
 
@@ -66,7 +66,6 @@ ax.add_patch(plt.Rectangle(
     fill=False, edgecolor="black", linewidth=2.0, clip_on=False,
 ))
 
-ax.set_title("MLP Architecture Variation — CF1 (HIGGS)", pad=10)
 ax.set_xlabel("Width (units per layer)")
 ax.set_ylabel("Depth (hidden layers)")
 

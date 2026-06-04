@@ -90,7 +90,6 @@ for m in MODELS:
 
 ax.set_xlabel("Number of predictions (millions)")
 ax.set_ylabel("Cumulative CO₂ (g)")
-ax.set_title("Lifecycle CO₂: all models on HIGGS")
 ax.legend()
 ax.set_xlim(left=0)
 ax.set_ylim(bottom=0)

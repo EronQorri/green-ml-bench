@@ -5,22 +5,23 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.patches as mpatches
-from matplotlib.transforms import blended_transform_factory
+import seaborn as sns
 from pathlib import Path
 
 mpl.rcParams.update({
     "font.family":     "serif",
     "font.serif":      ["Palatino Linotype", "Palatino", "Book Antiqua", "DejaVu Serif"],
-    "axes.titlesize":  11,
-    "axes.labelsize":  10,
-    "xtick.labelsize":  9,
-    "ytick.labelsize":  9,
-    "legend.fontsize":  9,
+    "axes.titlesize":  16,
+    "axes.labelsize":  14,
+    "xtick.labelsize":  14,
+    "ytick.labelsize":  14,
+    "legend.fontsize":  13,
 })
 
 BASE_DIR  = Path(__file__).parent.parent.parent
 PLOTS_DIR = Path(__file__).parent
 
+TUNE_ORDER = ["tune_RFC", "tune_XGB", "tune_MLP"]
 MODEL_PALETTE = {
     "tune_RFC": (212/255, 149/255, 106/255),
     "tune_XGB": (130/255, 185/255, 154/255),
@@ -32,7 +33,6 @@ MODEL_LABELS = {
     "tune_MLP": "MLP",
 }
 DATASET_LABELS = {"wine": "Wine", "credit": "Credit", "higgs": "HIGGS"}
-SHADE_COLORS   = {"wine": "#f8f5f2", "credit": "#f2f6f2", "higgs": "#f2f2f8"}
 
 def fmt_time(s):
     if s >= 3600: return f"{s/3600:.1f} h"
@@ -40,92 +40,72 @@ def fmt_time(s):
     return f"{s:.0f} s"
 
 def fmt_co2(g):
-    if g >= 1000: return f"{g/1000:.2f} kg"
     if g >= 1:    return f"{g:.1f} g"
     return f"{g:.2f} g"
 
 df = pd.read_csv(BASE_DIR / "results" / "results.csv")
 df.columns = df.columns.str.strip()
-df = df[df["model"].str.startswith("tune_")].copy()
-df["co2_g"] = df["co2eq_kg"].astype(float) * 1000
+df["model"]   = df["model"].astype(str).str.strip()
+df["dataset"] = df["dataset"].astype(str).str.strip()
+df["nrows"]   = df["nrows"].astype(str).str.strip()
+df = df[df["model"].str.startswith("tune_") & (df["nrows"] == "all")].copy()
+df["co2_g"]  = df["co2eq_kg"].astype(float) * 1000
 df["time_s"] = df["training_time_s"].astype(float)
+df["model_label"]   = df["model"].map(MODEL_LABELS)
+df["dataset_label"] = df["dataset"].map(DATASET_LABELS)
 
-# HIGGS → Credit → Wine, within each group descending by CO2 (largest at top)
-rows = []
-for ds in ["higgs", "credit", "wine"]:
-    subset = df[df["dataset"] == ds].sort_values("co2_g", ascending=False)
-    for _, r in subset.iterrows():
-        rows.append({
-            "model":   r["model"],
-            "dataset": r["dataset"],
-            "co2_g":   r["co2_g"],
-            "time_s":  r["time_s"],
-        })
+LABEL_ORDER        = [MODEL_LABELS[m] for m in TUNE_ORDER]
+DATASET_LABEL_ORDER = [DATASET_LABELS[d] for d in ["wine", "credit", "higgs"]]
+palette = {MODEL_LABELS[m]: MODEL_PALETTE[m] for m in TUNE_ORDER}
 
-n     = len(rows)
-y_pos = np.arange(n)
+fig, (ax_co2, ax_time) = plt.subplots(1, 2, figsize=(12, 5))
 
-fig, ax = plt.subplots(figsize=(8, 4.0))
+bp_kwargs = dict(
+    x="dataset_label", hue="model_label",
+    hue_order=LABEL_ORDER, order=DATASET_LABEL_ORDER,
+    palette=palette, errorbar=None, dodge=True,
+)
 
-# Shaded dataset bands
-ds_groups = {}
-for i, r in enumerate(rows):
-    ds_groups.setdefault(r["dataset"], []).append(i)
+# CO2 subplot
+sns.barplot(data=df, y="co2_g", ax=ax_co2, **bp_kwargs)
+ax_co2.set_yscale("log")
+ax_co2.set_xlabel("")
+ax_co2.set_ylabel(r"Tuning Emissions (gCO₂eq, log scale)")
+ax_co2.set_title("Emissions")
+for container in ax_co2.containers:
+    labels = [fmt_co2(v) if not np.isnan(v) else "" for v in container.datavalues]
+    ax_co2.bar_label(container, labels=labels, padding=3, fontsize=12)
+if ax_co2.get_legend():
+    ax_co2.get_legend().remove()
+ylo, yhi = ax_co2.get_ylim()
+ax_co2.set_ylim(bottom=ylo, top=yhi * 4)
 
-for ds, indices in ds_groups.items():
-    ylo, yhi = min(indices) - 0.45, max(indices) + 0.45
-    ax.axhspan(ylo, yhi, color=SHADE_COLORS[ds], zorder=0, lw=0)
+# Duration subplot
+sns.barplot(data=df, y="time_s", ax=ax_time, **bp_kwargs)
+ax_time.set_yscale("log")
+ax_time.set_xlabel("")
+ax_time.set_ylabel("Tuning Duration (s, log scale)")
+ax_time.set_title("Tuning Duration")
+for container in ax_time.containers:
+    labels = [fmt_time(v) if not np.isnan(v) else "" for v in container.datavalues]
+    ax_time.bar_label(container, labels=labels, padding=3, fontsize=12)
+if ax_time.get_legend():
+    ax_time.get_legend().remove()
+ylo, yhi = ax_time.get_ylim()
+ax_time.set_ylim(bottom=ylo, top=yhi * 4)
 
-# Horizontal bars
-x_left = 0.15
-for i, r in enumerate(rows):
-    ax.barh(i, r["co2_g"], left=x_left, height=0.55,
-            color=MODEL_PALETTE[r["model"]], zorder=2,
-            edgecolor="white", linewidth=0.4)
-
-# CO2 value inside bar (near left edge), duration to the right with gap
-for i, r in enumerate(rows):
-    ax.text(x_left * 1.3, i, fmt_time(r["time_s"]),
-            ha="left", va="center", fontsize=7.5, color="white", fontweight="bold")
-    ax.text(r["co2_g"] * 1.5, i, fmt_co2(r["co2_g"]),
-            ha="left", va="center", fontsize=8.0, color="#333333")
-
-# y-axis: model names
-ax.set_yticks(y_pos)
-ax.set_yticklabels([MODEL_LABELS[r["model"]] for r in rows], fontsize=9)
-
-# Dataset group labels on the right margin
-trans = blended_transform_factory(ax.transAxes, ax.transData)
-for ds, indices in ds_groups.items():
-    mid = np.mean(indices)
-    ax.text(1.015, mid, DATASET_LABELS[ds], transform=trans,
-            ha="left", va="center", fontsize=8.5,
-            style="italic", color="#666666")
-
-# x-axis
-ax.set_xscale("log")
-ax.set_xlim(x_left * 0.5, max(r["co2_g"] for r in rows) * 14)
-ax.set_xlabel(r"Tuning CO$_2$ (g, log scale)", fontsize=10)
-ax.xaxis.grid(False)
-ax.yaxis.grid(False)
-ax.set_ylim(-0.6, n - 0.4)
-
-# Spines
-for spine in ["top", "right", "left"]:
-    ax.spines[spine].set_visible(False)
-
-# Legend
-patches = [mpatches.Patch(color=MODEL_PALETTE[m], label=MODEL_LABELS[m])
-           for m in ["tune_RFC", "tune_XGB", "tune_MLP"]]
-ax.legend(handles=patches, loc="upper right", frameon=True,
-          fontsize=8.5, framealpha=0.9)
+# Shared legend above
+patches = [mpatches.Patch(color=MODEL_PALETTE[m], label=MODEL_LABELS[m]) for m in TUNE_ORDER]
+fig.legend(handles=patches, loc="upper center", bbox_to_anchor=(0.5, 1.04),
+           ncol=3, fontsize=13, frameon=True, framealpha=0.9)
 
 # Footnote
-fig.text(0.5, -0.04,
-         "Random Forest was not tuned on HIGGS; literature defaults were used instead.",
-         ha="center", fontsize=7.5, color="#666666", style="italic")
+fig.text(0.5, -0.05,
+         "Random Forest was not tuned on HIGGS; literature defaults were used instead.\n"
+         "XGBoost was tuned on GPU only; resulting hyperparameters apply to both the CPU and GPU variants.",
+         ha="center", va="top", fontsize=10, color="#666666", style="italic", multialignment="center")
 
-plt.tight_layout()
+plt.tight_layout(rect=[0, 0, 1, 0.97])
 plt.savefig(PLOTS_DIR / "tuning_costs.pdf", bbox_inches="tight")
 print("Saved: analysis/plots/tuning_costs.pdf")
 plt.close()
