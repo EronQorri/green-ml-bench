@@ -59,18 +59,19 @@ fig, axes = plt.subplots(2, 3, figsize=(15, 8))
 for idx, (ax, year) in enumerate(zip(axes.ravel(), years)):
     im = ax.imshow(matrices[year], aspect="auto", cmap="RdYlGn_r",
                    origin="upper", vmin=vmin, vmax=vmax)
-    ax.set_title(str(year), fontsize=11)
-    ax.set_xticks(range(12))
-    ax.set_xticklabels(month_labels, fontsize=7)
+    ax.set_title(str(year), fontsize=15)
+    ax.set_xticks([0, 3, 6, 9])
+    ax.set_xticklabels(["Jan", "Apr", "Jul", "Oct"], fontsize=11)
     ax.set_yticks(range(0, 24, 4))
-    ax.set_yticklabels([f"{h:02d}:00" for h in range(0, 24, 4)], fontsize=7)
+    ax.set_yticklabels([f"{h:02d}" for h in range(0, 24, 4)], fontsize=11)
     if idx % 3 == 0:
-        ax.set_ylabel("Hour (UTC)", fontsize=8)
+        ax.set_ylabel("Hour (UTC)", fontsize=12)
 
-fig.suptitle("Mean Carbon Intensity (gCO₂/kWh) – Germany, 2020–2025", fontsize=12)
 fig.subplots_adjust(right=0.88, hspace=0.35, wspace=0.25)
 cax = fig.add_axes([0.91, 0.1, 0.02, 0.75])
-fig.colorbar(im, cax=cax, label="gCO₂eq/kWh")
+cb = fig.colorbar(im, cax=cax)
+cb.set_label("gCO₂eq/kWh", fontsize=14)
+cb.ax.tick_params(labelsize=12)
 
 out = os.path.join(base, "diurnal_seasonal_all_years.pdf")
 plt.savefig(out, dpi=300, bbox_inches="tight")

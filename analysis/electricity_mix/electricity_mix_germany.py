@@ -52,14 +52,14 @@ ax.stackplot(
     alpha=0.8
 )
 
-ax.set_xlabel("Time")
-ax.set_ylabel("Power Production (MW)")
-ax.set_title("Electricity Mix – Germany (DE) – January")
+ax.set_xlabel("Date", fontsize=15)
+ax.set_ylabel("Power Production (MW)", fontsize=15)
+
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%d.%m"))
 ax.xaxis.set_major_locator(mdates.DayLocator(interval=1))
+ax.tick_params(axis="both", labelsize=15)
 plt.xticks(rotation=45)
-ax.legend(loc="upper left", ncol=4)
 ax.grid(True, alpha=0.3)
 plt.tight_layout()
-plt.savefig(output_path, dpi=300)
+plt.savefig(output_path, dpi=300, bbox_inches="tight")
 print(f"Saved to {output_path}")

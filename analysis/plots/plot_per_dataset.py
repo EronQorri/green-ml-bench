@@ -10,11 +10,11 @@ from pathlib import Path
 mpl.rcParams.update({
     "font.family":    "serif",
     "font.serif":     ["Palatino Linotype", "Palatino", "Book Antiqua", "DejaVu Serif"],
-    "axes.titlesize": 11,
-    "axes.labelsize": 10,
-    "xtick.labelsize": 9,
-    "ytick.labelsize": 9,
-    "legend.fontsize": 9,
+    "axes.titlesize": 19,
+    "axes.labelsize": 18,
+    "xtick.labelsize": 17,
+    "ytick.labelsize": 17,
+    "legend.fontsize": 17,
 })
 
 BASE_DIR   = Path(__file__).parent.parent.parent
@@ -64,7 +64,9 @@ df_inf = df_inf.drop_duplicates(subset=["dataset", "model"], keep="last")
 df = pd.merge(df, df_inf[["model", "dataset", "nrows", "inference_time"]],
               on=["model", "dataset", "nrows"], how="left")
 
-df["cf1"] = (df["co2eq_kg"] * 1e6) / (df["f1"] * 100)
+df["cf1"]      = (df["co2eq_kg"] * 1e6) / (df["f1"] * 100)
+df["co2eq_g"]  = df["co2eq_kg"] * 1000
+df["f1_pct"]   = df["f1"] * 100
 
 
 def fmt(val):
@@ -75,7 +77,7 @@ def fmt(val):
         return "0"
     elif a < 0.01:
         return f"{val:.2e}"
-    elif a < 10:
+    elif a < 100:
         return f"{val:.3g}"
     else:
         return f"{val:,.0f}"
@@ -125,7 +127,7 @@ for ds, cfg in DATASET_CFG.items():
     palette      = [MODEL_PALETTE[m] for m in models_here]
 
     fig, axes = plt.subplots(2, 2, figsize=(10, 8))
-    fig.suptitle(DATASET_LABELS[ds], fontsize=14, fontweight="bold")
+    fig.suptitle(DATASET_LABELS[ds], fontsize=22, fontweight="bold")
     ax_wf1, ax_co2, ax_time, ax_cf1 = axes[0, 0], axes[0, 1], axes[1, 0], axes[1, 1]
 
     def bar(ax, col):
@@ -139,21 +141,21 @@ for ds, cfg in DATASET_CFG.items():
                 ax.text(bar_.get_x() + bar_.get_width() / 2,
                         bar_.get_height(),
                         fmt(v),
-                        ha="center", va="bottom", fontsize=8,
+                        ha="center", va="bottom", fontsize=16,
                         transform=ax.transData)
         return vals
 
     # ── WF1 ──────────────────────────────────────────────────────────────────
-    wf1_vals = bar(ax_wf1, "f1")
-    ax_wf1.set_title("Weighted F1")
-    ax_wf1.set_ylabel("Weighted F1")
+    wf1_vals = bar(ax_wf1, "f1_pct")
+    ax_wf1.set_title("WF1")
+    ax_wf1.set_ylabel("WF1 (%)")
     valid_wf1 = [v for v in wf1_vals if not np.isnan(v)]
     ax_wf1.set_ylim(0, max(valid_wf1) / 0.85)
 
-    # ── CO2 ──────────────────────────────────────────────────────────────────
-    co2_vals = bar(ax_co2, "co2eq_kg")
-    ax_co2.set_title(r"CO$_2$ (kg" + (", log)" if cfg["co2_log"] else ", linear)"))
-    ax_co2.set_ylabel(r"CO$_2$ (kg)")
+    # ── Emissions ────────────────────────────────────────────────────────────
+    co2_vals = bar(ax_co2, "co2eq_g")
+    ax_co2.set_title(r"Emissions (gCO$_2$eq" + (", log)" if cfg["co2_log"] else ", linear)"))
+    ax_co2.set_ylabel(r"Emissions (gCO$_2$eq)")
     valid_co2 = [v for v in co2_vals if not np.isnan(v) and v > 0]
     if cfg["co2_log"]:
         ax_co2.set_yscale("log")
@@ -178,8 +180,8 @@ for ds, cfg in DATASET_CFG.items():
 
     # ── CF1 ──────────────────────────────────────────────────────────────────
     cf1_vals = bar(ax_cf1, "cf1")
-    ax_cf1.set_title("CF1 (mg CO₂eq / F1%)")
-    ax_cf1.set_ylabel("CF1")
+    ax_cf1.set_title(r"CF1 (mgCO$_2$eq/WF1)")
+    ax_cf1.set_ylabel(r"CF1 (mgCO$_2$eq/WF1)")
     valid_cf1 = [v for v in cf1_vals if not np.isnan(v)]
     ax_cf1.set_ylim(0, max(valid_cf1) / 0.85)
 

@@ -82,27 +82,30 @@ if len(common) >= 3:
     fig, ax = plt.subplots(figsize=(9, 5))
 
     x_line = np.logspace(log_x[0], log_x[-1], 400)
-    ax.plot(x_line, 10 ** spl_cpu(np.log10(x_line)),
-            color=MODEL_PALETTE["XGBoost_CPU"], label="XGBoost CPU (spline)")
-    ax.plot(x_line, 10 ** spl_gpu(np.log10(x_line)),
-            color=MODEL_PALETTE["XGBoost_GPU"], label="XGBoost GPU (spline)")
-    ax.scatter(x, y_cpu, color=MODEL_PALETTE["XGBoost_CPU"], zorder=5, s=60)
-    ax.scatter(x, y_gpu, color=MODEL_PALETTE["XGBoost_GPU"], zorder=5, s=60)
+    ax.plot(x_line, 10 ** spl_cpu(np.log10(x_line)) * 1000,
+            color=MODEL_PALETTE["XGBoost_CPU"], label="CPU")
+    ax.plot(x_line, 10 ** spl_gpu(np.log10(x_line)) * 1000,
+            color=MODEL_PALETTE["XGBoost_GPU"], label="GPU")
+    ax.scatter(x, y_cpu * 1000, color=MODEL_PALETTE["XGBoost_CPU"], zorder=5, s=80)
+    ax.scatter(x, y_gpu * 1000, color=MODEL_PALETTE["XGBoost_GPU"], zorder=5, s=80)
 
     if n_be:
-        co2_be = 10 ** spl_cpu(np.log10(n_be))
+        co2_be = 10 ** spl_cpu(np.log10(n_be)) * 1000
         ax.axvline(n_be, color="gray", linestyle="--", linewidth=1.2)
         ax.annotate(
             f"Break-Even\n~{n_be:,.0f} rows",
             xy=(n_be, co2_be), xytext=(n_be * 1.5, co2_be * 5),
-            fontsize=9, arrowprops=dict(arrowstyle="->", color="gray"),
+            fontsize=13, arrowprops=dict(arrowstyle="->", color="gray"),
         )
 
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_xlabel("Dataset size (rows)")
-    ax.set_ylabel("CO₂ (kg)")
-    ax.legend(fontsize=9)
+    ax.set_xlabel("Dataset size (rows, log scale)", fontsize=15)
+    ax.set_ylabel("Emissions (gCO₂eq, log scale)", fontsize=15)
+    ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    ax.tick_params(axis="both", labelsize=13)
+    ax.xaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda v, _: f"{int(v):,}"))
+    ax.legend(fontsize=13)
     plt.tight_layout()
     plt.savefig(PLOTS_DIR / "xgb_breakeven_higgs.pdf", bbox_inches="tight")
     print("Saved: analysis/plots/xgb_breakeven_higgs.pdf")
@@ -113,52 +116,144 @@ else:
     print(f"Skipping break-even plot — need >=3 common nrows, got {len(common)}.")
 
 
-# ── Plot 2: Scaling — CO₂ and F1 across all models ────────────────────────────
+# ── Plot 2a / 2b / 2c: Scaling — two panel PDFs + shared legend PDF ──────────
 
 scaling_models = [m for m in MODEL_ORDER if m in df_all["model"].unique()]
 
-fig, axes = plt.subplots(1, 2, figsize=(11, 5))
+LABEL_SIZE  = 22
+TICK_SIZE   = 19
+LEGEND_SIZE = 17
 
-for ax, (col, ylabel, use_log) in zip(axes, [
-    ("co2eq_kg", "CO₂ (kg)",    True),
-    ("f1",       "Weighted F1", False),
-]):
+ACTUAL_TICKS  = [1_000, 10_000, 50_000, 100_000, 200_000, 500_000,
+                 1_000_000, 5_000_000, 8_800_000]
+TICK_LABELS   = ["1k", "10k", "50k", "100k", "200k", "500k", "1M", "5M", "8.8M"]
+
+SCALING_LABEL = {
+    "LogisticRegression": "LR",
+    "RandomForest":       "RF",
+    "XGBoost_CPU":        "XGB CPU",
+    "XGBoost_GPU":        "XGB GPU",
+    "MLP_PyTorch":        "MLP",
+}
+
+handles = [
+    plt.Line2D([0], [0], color=MODEL_PALETTE[m], marker="o", linewidth=2,
+               markersize=7, label=SCALING_LABEL.get(m, m))
+    for m in scaling_models
+]
+
+def _draw_scaling_panel(ax, col, ylabel, use_log):
     for model in scaling_models:
         color = MODEL_PALETTE[model]
-        label = MODEL_LABEL.get(model, model)
-
-        sub_all  = df_all[df_all["model"] == model].sort_values("nrows_int")
+        sub_all = df_all[df_all["model"] == model].sort_values("nrows_int")
         if sub_all.empty:
             continue
-
-        ax.plot(sub_all["nrows_int"], sub_all[col],
-                marker="o", color=color, label=label,
-                linewidth=1.5, markersize=4)
-
-        # shaded seed range only for the multiseed portion (1k–1M)
+        y = sub_all[col] * 1000 if col == "co2eq_kg" else (sub_all[col] * 100 if col == "f1" else sub_all[col])
+        ax.plot(sub_all["nrows_int"], y,
+                marker="o", color=color, linewidth=2.5, markersize=7)
         sub_lo = ms_lo[ms_lo["model"] == model].sort_values("nrows_int")
         sub_hi = ms_hi[ms_hi["model"] == model].sort_values("nrows_int")
         if not sub_lo.empty:
-            ax.fill_between(sub_lo["nrows_int"], sub_lo[col], sub_hi[col],
-                            alpha=0.15, color=color)
-
+            ylo = sub_lo[col] * 1000 if col == "co2eq_kg" else (sub_lo[col] * 100 if col == "f1" else sub_lo[col])
+            yhi = sub_hi[col] * 1000 if col == "co2eq_kg" else (sub_hi[col] * 100 if col == "f1" else sub_hi[col])
+            ax.fill_between(sub_lo["nrows_int"], ylo, yhi, alpha=0.15, color=color)
     ax.set_xscale("log")
     if use_log:
         ax.set_yscale("log")
-    ax.set_xlabel("Dataset size (rows)")
-    ax.set_ylabel(ylabel)
+    ax.set_xlabel("Dataset size (rows, log scale)", fontsize=LABEL_SIZE)
+    ax.set_ylabel(ylabel, fontsize=LABEL_SIZE)
+    ax.set_xticks(ACTUAL_TICKS)
+    ax.set_xticklabels(TICK_LABELS, rotation=35, ha="right")
+    if use_log:
+        ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    ax.tick_params(axis="both", labelsize=TICK_SIZE)
 
-    ax.set_xticks([1e3, 1e4, 1e5, 1e6, 1e7])
-    ax.xaxis.set_major_formatter(mpl.ticker.LogFormatterMathtext())
-
-handles = [
-    plt.Line2D([0], [0], color=MODEL_PALETTE[m], marker="o",
-               label=MODEL_LABEL.get(m, m))
-    for m in scaling_models
-]
-fig.legend(handles=handles, loc="lower center", ncol=min(len(scaling_models), 5),
-           bbox_to_anchor=(0.5, -0.08), fontsize=9)
+# ── 2a: Emissions ─────────────────────────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(11, 6))
+_draw_scaling_panel(ax, "co2eq_kg", "Emissions (gCO₂eq, log scale)", True)
 plt.tight_layout()
-plt.savefig(PLOTS_DIR / "scaling_higgs.pdf", bbox_inches="tight")
-print("Saved: analysis/plots/scaling_higgs.pdf")
+plt.savefig(PLOTS_DIR / "scaling_higgs_emissions.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/scaling_higgs_emissions.pdf")
+plt.close()
+
+# ── 2b: Weighted F1 ───────────────────────────────────────────────────────────
+fig, ax = plt.subplots(figsize=(11, 6))
+_draw_scaling_panel(ax, "f1", "WF1 (%)", False)
+plt.tight_layout()
+plt.savefig(PLOTS_DIR / "scaling_higgs_f1.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/scaling_higgs_f1.pdf")
+plt.close()
+
+# ── 2c: Shared legend strip ───────────────────────────────────────────────────
+fig_leg, ax_leg = plt.subplots(figsize=(10, 0.6))
+ax_leg.axis("off")
+ax_leg.legend(handles=handles, loc="center", ncol=len(scaling_models),
+              fontsize=LEGEND_SIZE, frameon=False)
+plt.tight_layout(pad=0.1)
+plt.savefig(PLOTS_DIR / "scaling_higgs_legend.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/scaling_higgs_legend.pdf")
+plt.close()
+
+
+# ── Plot 3: CF1 Heatmap across models × dataset sizes ────────────────────────
+
+import seaborn as sns
+
+df_cf1 = df_all.copy()
+df_cf1["cf1"] = (df_cf1["co2eq_kg"] * 1e6) / (df_cf1["f1"] * 100)
+df_cf1["model_label"] = df_cf1["model"].map(SCALING_LABEL)
+df_cf1["size_label"]  = df_cf1["nrows_int"].map(
+    dict(zip(ACTUAL_TICKS, TICK_LABELS))
+)
+
+# pivot: rows = models (fixed order), columns = dataset sizes
+row_order = [SCALING_LABEL[m] for m in MODEL_ORDER if m in df_cf1["model"].unique()]
+col_order  = [l for l in TICK_LABELS if l in df_cf1["size_label"].unique()]
+
+pivot = (df_cf1
+         .dropna(subset=["cf1"])
+         .pivot_table(index="model_label", columns="size_label",
+                      values="cf1", aggfunc="mean")
+         .reindex(index=row_order, columns=col_order))
+
+# log-scale the values for color mapping so large RF outliers don't wash out detail
+log_pivot = np.log10(pivot.where(pivot > 0))
+
+HM_LABEL  = 25
+HM_TICK   = 22
+HM_ANNOT  = 20
+
+fig, ax = plt.subplots(figsize=(13, 5))
+
+sns.heatmap(
+    log_pivot,
+    ax=ax,
+    cmap="YlOrRd",
+    annot=pivot.round(1),       # show raw CF1 values as annotation
+    fmt=".1f",
+    annot_kws={"size": HM_ANNOT},
+    linewidths=0.4,
+    linecolor="white",
+    cbar_kws={"label": "CF1 (mgCO₂eq / WF1), log scale"},
+)
+
+# grey out missing cells (RF above 500k)
+for (r, c), val in np.ndenumerate(pivot.values):
+    if np.isnan(val):
+        ax.add_patch(plt.Rectangle((c, r), 1, 1,
+                     fill=True, color="#cccccc", zorder=3))
+        ax.text(c + 0.5, r + 0.5, "—", ha="center", va="center",
+                fontsize=HM_ANNOT, color="#666666", zorder=4)
+
+ax.set_xlabel("Dataset size (rows)", fontsize=HM_LABEL)
+ax.set_ylabel("")
+ax.tick_params(axis="x", labelsize=HM_TICK, rotation=0)
+ax.tick_params(axis="y", labelsize=HM_TICK, rotation=0)
+ax.collections[0].colorbar.ax.tick_params(labelsize=HM_TICK - 2)
+ax.collections[0].colorbar.set_label("CF1 (mgCO₂eq / WF1), log scale",
+                                      fontsize=HM_LABEL - 2)
+
+plt.tight_layout()
+plt.savefig(PLOTS_DIR / "scaling_higgs_cf1_heatmap.pdf", bbox_inches="tight")
+print("Saved: analysis/plots/scaling_higgs_cf1_heatmap.pdf")
 plt.close()

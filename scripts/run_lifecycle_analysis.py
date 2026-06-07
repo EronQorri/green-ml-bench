@@ -31,10 +31,10 @@ PLOTS_DIR  = BASE_DIR / "analysis" / "plots"
 
 MODEL_ORDER   = ["LogisticRegression", "RandomForest", "XGBoost", "XGBoost_GPU", "MLP_PyTorch"]
 MODEL_LABELS  = {
-    "LogisticRegression": "Logistic Regression",
-    "RandomForest":       "Random Forest",
-    "XGBoost":            "XGBoost (CPU)",
-    "XGBoost_GPU":        "XGBoost (GPU)",
+    "LogisticRegression": "LR",
+    "RandomForest":       "RF",
+    "XGBoost":            "XGB CPU",
+    "XGBoost_GPU":        "XGB GPU",
     "MLP_PyTorch":        "MLP",
 }
 DATASET_ORDER = ["wine", "credit", "higgs"]
@@ -117,7 +117,7 @@ def plot_breakeven_bars(df):
         "XGBoost_GPU":        (192/255, 112/255, 112/255),
         "MLP_PyTorch":        (155/255, 135/255, 181/255),
     }
-    fs  = 9
+    fs  = 13
     GAP = 1  # blank-position gap between dataset groups
 
     # Build columns left-to-right: wine | credit | higgs

@@ -78,10 +78,15 @@ DATASET_LABELS = {"wine": "Wine", "credit": "Credit", "higgs": "HIGGS"}
 bp_perf = dict(hue="model", hue_order=MODEL_ORDER, palette=MODEL_PALETTE, errorbar=None,
                linewidth=0.8, edgecolor="white")
 
-def _save_perf_panel(metric, ylabel, filename):
+def _save_perf_panel(metric, ylabel, filename, pct=False):
+    plot_df = df.copy()
+    if pct:
+        plot_df[metric] = plot_df[metric] * 100
     fig, ax = plt.subplots(figsize=(12, 5))
-    sns.barplot(data=df, x="dataset", y=metric, ax=ax, **bp_perf)
-    ax.set_ylim(0, 1.2)
+    sns.barplot(data=plot_df, x="dataset", y=metric, ax=ax, **bp_perf)
+    ax.set_ylim(0, 109 if pct else 1.2)
+    if pct:
+        ax.set_yticks([0, 20, 40, 60, 80, 100])
     ax.set_xlabel("", fontsize=20)
     ax.set_ylabel(ylabel, fontsize=20)
     ax.tick_params(axis="both", labelsize=17)
@@ -97,8 +102,8 @@ def _save_perf_panel(metric, ylabel, filename):
     print(f"Saved: analysis/plots/{filename}")
     plt.close()
 
-_save_perf_panel("accuracy", "ACC", "vergleich_performance_accuracy.pdf")
-_save_perf_panel("f1",       "WF1", "vergleich_performance_f1.pdf")
+_save_perf_panel("accuracy", "ACC",      "vergleich_performance_accuracy.pdf")
+_save_perf_panel("f1",       "WF1 (%)", "vergleich_performance_f1.pdf", pct=True)
 
 
 # ── Plot 1c: Ecological Cost (CO₂ Emissions + Training Time) ─────────────────
@@ -180,16 +185,13 @@ for ds in ["wine", "credit", "higgs"]:
                 palette=MODEL_PALETTE, ax=ax_s, dodge=False, errorbar=None)
     if ds == "higgs":
         ax_s.set_yscale("log")
-        ax_s.set_title("HIGGS (log scale)", fontsize=17)
-    else:
-        ax_s.set_title(DATASET_LABELS.get(ds, ds), fontsize=17)
-    ax_s.set_xlabel("", fontsize=16)
-    ax_s.set_ylabel("CF1 (mg CO₂eq / WF1)", fontsize=16)
-    ax_s.tick_params(axis="x", rotation=45, labelsize=15)
-    ax_s.tick_params(axis="y", labelsize=15)
+    ax_s.set_xlabel("", fontsize=18)
+    ax_s.set_ylabel("CF1 (mg CO₂eq / WF1)", fontsize=18)
+    ax_s.tick_params(axis="x", rotation=45, labelsize=17)
+    ax_s.tick_params(axis="y", labelsize=17)
     for container in ax_s.containers:
         labels = [custom_format(v) for v in container.datavalues]
-        ax_s.bar_label(container, labels=labels, padding=4, fontsize=16)
+        ax_s.bar_label(container, labels=labels, padding=4, fontsize=18)
     if ax_s.get_legend():
         ax_s.get_legend().remove()
     vals = [v for c in ax_s.containers for v in c.datavalues if v and v == v]
@@ -298,9 +300,12 @@ axes["acc"].set_title("Accuracy")
 axes["acc"].set_ylim(0, 1.25)
 axes["acc"].set_xlabel("")
 
-sns.barplot(data=df, x="dataset", y="f1", ax=axes["f1"], **bp_kwargs)
-axes["f1"].set_title("F1-Score")
-axes["f1"].set_ylim(0, 1.25)
+_df_dash = df.copy()
+_df_dash["f1_pct"] = _df_dash["f1"] * 100
+sns.barplot(data=_df_dash, x="dataset", y="f1_pct", ax=axes["f1"], **bp_kwargs)
+axes["f1"].set_title("WF1 (%)")
+axes["f1"].set_ylim(0, 104)
+axes["f1"].set_yticks([0, 20, 40, 60, 80, 100])
 axes["f1"].set_xlabel("")
 
 for ds, key in zip(["wine", "credit", "higgs"], ["carb_wine", "carb_credit", "carb_higgs"]):
@@ -390,6 +395,8 @@ df_xgb = df[df["model"].isin(["XGBoost", "XGBoost_GPU"])].copy()
 
 if not df_xgb.empty:
     df_xgb["co2eq_g"] = df_xgb["co2eq_kg"] * 1000
+    df_xgb["inference_time_ms"] = df_xgb["inference_time"] * 1000
+    df_xgb["f1_pct"] = df_xgb["f1"] * 100
 
     XGB_PALETTE = {"XGBoost": MODEL_PALETTE["XGBoost"], "XGBoost_GPU": MODEL_PALETTE["XGBoost_GPU"]}
     
@@ -406,10 +413,10 @@ if not df_xgb.empty:
                               palette=label_palette, errorbar=None)
 
     metrics = [
-        ("co2eq_g",         "co2",  r"CO$_2$ (g, log scale)",      True),
+        ("co2eq_g",         "co2",  r"Emissions (gCO$_2$eq, log scale)", True),
         ("training_time_s", "time", "Training Time (s, log scale)", True),
-        ("f1",              "f1",   "WF1",                         False),
-        ("inference_time",  "inf",  "Inference Time (s)",          False),
+        ("f1_pct",          "f1",   "WF1 (%)",                     False),
+        ("inference_time_ms", "inf", "Inference Time (ms)",         False),
     ]
 
     for col, key, ylabel, log in metrics:
@@ -422,17 +429,22 @@ if not df_xgb.empty:
             ax.set_yscale("log")
         
         for container in ax.containers:
-            labels = [custom_format(v) for v in container.datavalues]
-            ax.bar_label(container, labels=labels, padding=4, fontsize=16)
-            
+            lbls_obj = ax.bar_label(container,
+                                    labels=[custom_format(v) for v in container.datavalues],
+                                    padding=4, fontsize=16)
+            if key == "f1":
+                for lbl in lbls_obj:
+                    lbl.set_clip_on(False)
+
         if ax.get_legend():
             ax.get_legend().remove()
-            
+
         ylo, yhi = ax.get_ylim()
         if ax.get_yscale() == "log":
             ax.set_ylim(bottom=ylo, top=yhi * 2)
         elif key == "f1":
-            ax.set_ylim(top=1.2)
+            ax.set_ylim(0, 109)
+            ax.set_yticks([0, 20, 40, 60, 80, 100])
         elif key == "inf":
             ax.set_ylim(top=yhi * 1.15)
 
@@ -448,38 +460,50 @@ else:
     
 # ── MLP architecture variation (depth × width grid on HIGGS) ─────────────────
 
-mlp_var = df_results[df_results["dataset"] == "higgs"].copy()
+_mlp_var_cols = ["timestamp", "model", "dataset", "nrows", "accuracy", "f1",
+                 "co2eq_kg", "co2eq_codecarbon_kg", "cpu_power_hw_w",
+                 "cpu_energy_hw_wh", "gpu_energy_wh", "ram_energy_wh", "training_time_s"]
+mlp_var_raw = pd.read_csv(RESULTS_DIR / "mlp_variation.csv", header=None, names=_mlp_var_cols)
+
+mlp_var = mlp_var_raw[mlp_var_raw["dataset"] == "higgs"].copy()
 mlp_var = mlp_var[mlp_var["model"].str.match(r"^MLP_\d+x\d+$", na=False)]
 
 if not mlp_var.empty:
     parsed = mlp_var["model"].str.extract(r"^MLP_(\d+)x(\d+)$")
-    mlp_var["depth"]    = pd.to_numeric(parsed[0])
-    mlp_var["width"]    = pd.to_numeric(parsed[1])
-    mlp_var["co2eq_kg"] = pd.to_numeric(mlp_var["co2eq_kg"], errors="coerce")
-    mlp_var["f1"]       = pd.to_numeric(mlp_var["f1"], errors="coerce")
-    mlp_var = mlp_var.dropna(subset=["depth", "width", "f1", "co2eq_kg"])
+    mlp_var["depth"]   = pd.to_numeric(parsed[0])
+    mlp_var["width"]   = pd.to_numeric(parsed[1])
+    mlp_var["co2eq_g"] = pd.to_numeric(mlp_var["co2eq_kg"], errors="coerce") * 1000
+    mlp_var["f1"]      = pd.to_numeric(mlp_var["f1"], errors="coerce")
+    mlp_var = mlp_var.dropna(subset=["depth", "width", "f1", "co2eq_g"])
 
-    piv_f1  = mlp_var.pivot_table(index="depth", columns="width", values="f1",       aggfunc="mean")
-    piv_co2 = mlp_var.pivot_table(index="depth", columns="width", values="co2eq_kg", aggfunc="mean")
+    piv_f1  = mlp_var.pivot_table(index="depth", columns="width", values="f1",      aggfunc="mean")
+    piv_co2 = mlp_var.pivot_table(index="depth", columns="width", values="co2eq_g", aggfunc="mean")
 
-    fig, axes = plt.subplots(1, 2, figsize=(10, 4))
-
-    sns.heatmap(piv_f1, ax=axes[0], annot=True, fmt=".3f", cmap="Blues",
-                linewidths=0.5, linecolor="white", annot_kws={"size": 9},
-                cbar_kws={"label": "Weighted F1"})
-    axes[0].set_xlabel("Width (units per layer)")
-    axes[0].set_ylabel("Depth (hidden layers)")
-
-    sns.heatmap(piv_co2, ax=axes[1], annot=True, fmt=".3f", cmap="Oranges",
-                linewidths=0.5, linecolor="white", annot_kws={"size": 9},
-                cbar_kws={"label": "CO₂ (kg)"})
-    axes[1].set_xlabel("Width (units per layer)")
-    axes[1].set_ylabel("Depth (hidden layers)")
-
+    fig, ax = plt.subplots(figsize=(6.5, 5.5))
+    sns.heatmap(piv_f1 * 100, ax=ax, annot=True, fmt=".1f", cmap="Blues",
+                linewidths=0.5, linecolor="white", annot_kws={"size": 19},
+                cbar_kws={})
+    ax.set_xlabel("Width (units per layer)", fontsize=19)
+    ax.set_ylabel("Depth (hidden layers)", fontsize=19)
+    ax.tick_params(axis="both", labelsize=18)
+    ax.collections[0].colorbar.ax.tick_params(labelsize=17)
     plt.tight_layout()
-    plt.savefig(PLOTS_DIR / "mlp_variation.pdf", bbox_inches="tight")
-    print("Saved: analysis/plots/mlp_variation.pdf")
+    plt.savefig(PLOTS_DIR / "mlp_variation_wf1.pdf", bbox_inches="tight")
+    print("Saved: analysis/plots/mlp_variation_wf1.pdf")
+    plt.close()
+
+    fig, ax = plt.subplots(figsize=(6.5, 5.5))
+    sns.heatmap(piv_co2, ax=ax, annot=True, fmt=".1f", cmap="Oranges",
+                linewidths=0.5, linecolor="white", annot_kws={"size": 19},
+                cbar_kws={})
+    ax.set_xlabel("Width (units per layer)", fontsize=19)
+    ax.set_ylabel("Depth (hidden layers)", fontsize=19)
+    ax.tick_params(axis="both", labelsize=18)
+    ax.collections[0].colorbar.ax.tick_params(labelsize=17)
+    plt.tight_layout()
+    plt.savefig(PLOTS_DIR / "mlp_variation_emissions.pdf", bbox_inches="tight")
+    print("Saved: analysis/plots/mlp_variation_emissions.pdf")
     plt.close()
 else:
-    print("Skipping MLP variation plot -- no MLP_DxW rows in results.csv.")
+    print("Skipping MLP variation plot -- no MLP_DxW rows in mlp_variation.csv.")
     print("  Run run_mlp_variation.py first.")

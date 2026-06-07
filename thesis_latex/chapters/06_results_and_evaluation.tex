@@ -132,20 +132,8 @@ Focusing first on the Wine dataset, the leftmost cluster in \Cref{fig:vergleich_
 
 \begin{figure}[htb]
 \centering
-\begin{subfigure}{0.8\linewidth}
-  \centering
-  \includegraphics[width=\linewidth]{vergleich_performance_accuracy.pdf}
-  \caption{\gls{acc} across all model-dataset combinations.}
-  \label{fig:vergleich_performance_accuracy}
-\end{subfigure}
-\vspace{0.5em}
-\begin{subfigure}{0.8\linewidth}
-  \centering
-  \includegraphics[width=\linewidth]{vergleich_performance_f1.pdf}
-  \caption{\Gls{wf1} across all model-dataset combinations.}
-  \label{fig:vergleich_performance_f1}
-\end{subfigure}
-\caption[Predictive performance across datasets.]{Predictive performance across all 14 model-dataset combinations. On Wine, four of five models converge on a \gls{wf1} of 97.2\,\%, making emissions the only meaningful dimension of comparison. On HIGGS, \gls{lr} saturates well below the non-linear models and \gls{mlp} achieves the highest single result in the study.}
+\includegraphics[width=0.9\linewidth]{vergleich_performance_f1.pdf}
+\caption[\Gls{wf1} across datasets.]{\Gls{wf1} across all 14 model-dataset combinations. On Wine, all five models converge on a \gls{wf1} of 97.2\,\%, making emissions the only meaningful dimension of comparison. On HIGGS, \gls{lr} saturates well below the non-linear models and \gls{mlp} achieves the highest single result in the study.}
 \label{fig:vergleich_performance}
 \end{figure}
 
@@ -159,16 +147,16 @@ The \gls{cf1} ranking (\Cref{tab:wine_results}) surfaces this disproportionality
 \caption{Wine benchmark results for all models.}
 \label{tab:wine_results}
 \small
-\begin{tabular}{@{} l l r r r r r @{}}
+\begin{tabular}{@{} l l r r r r @{}}
 \toprule
-Dataset & Model & \gls{acc} ($\%$) & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
+Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
 \midrule
 \multirow{5}{*}{Wine}
-  & \gls{lr}          & 97.2 & 97.2 & \textbf{0.013} & \textbf{0.01} & \textbf{0.130} \\
-  & \gls{rf}          & 97.2 & 97.2 &          0.016 &          0.4  & 0.161 \\
-  & \gls{xgb} (CPU)   & 97.2 & 97.2 & \textbf{0.013} &         0.11  & 0.133 \\
-  & \gls{xgb} (GPU)   & 97.2 & 97.2 &          0.017 &         0.31  & 0.175 \\
-  & \gls{mlp}         & 97.2 & 97.2 &          0.039 &          2.3  & 0.399 \\
+  & \gls{lr}          & 97.2 & \textbf{0.013} & \textbf{0.01} & \textbf{0.130} \\
+  & \gls{rf}          & 97.2 &          0.016 &          0.4  & 0.161 \\
+  & \gls{xgb} (CPU)   & 97.2 & \textbf{0.013} &         0.11  & 0.133 \\
+  & \gls{xgb} (GPU)   & 97.2 &          0.017 &         0.31  & 0.175 \\
+  & \gls{mlp}         & 97.2 &          0.039 &          2.3  & 0.399 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -207,16 +195,16 @@ The \gls{cf1} column in \Cref{tab:credit_results} captures this disproportionali
 \caption{Credit Card Default benchmark results for all models.}
 \label{tab:credit_results}
 \small
-\begin{tabular}{@{} l l r r r r r @{}}
+\begin{tabular}{@{} l l r r r r @{}}
 \toprule
-Dataset & Model & \gls{acc} ($\%$) & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
+Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
 \midrule
 \multirow{5}{*}{Credit}
-  & \gls{lr}          & 80.8          & 77.0          & \textbf{0.021} &          0.8  & 0.269 \\
-  & \gls{rf}          & \textbf{82.0} & 79.7          &          0.045 &          1.7  & 0.560 \\
-  & \gls{xgb} (CPU)   & 81.9          & 79.8          & \textbf{0.021} & \textbf{0.41} & \textbf{0.258} \\
-  & \gls{xgb} (GPU)   & 81.9          & 79.8          &          0.022 &          0.66 & 0.279 \\
-  & \gls{mlp}         & 81.8          & \textbf{80.2} &          0.072 &          5.0  & 0.899 \\
+  & \gls{lr}          & 77.0          & \textbf{0.021} &          0.8  & 0.269 \\
+  & \gls{rf}          & 79.7          &          0.045 &          1.7  & 0.560 \\
+  & \gls{xgb} (CPU)   & 79.8          & \textbf{0.021} & \textbf{0.41} & \textbf{0.258} \\
+  & \gls{xgb} (GPU)   & 79.8          &          0.022 &          0.66 & 0.279 \\
+  & \gls{mlp}         & \textbf{80.2} &          0.072 &          5.0  & 0.899 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -237,15 +225,15 @@ The \gls{cf1} column in \Cref{tab:higgs_results} inverts relative to raw \gls{wf
 \caption{HIGGS benchmark results for all models.}
 \label{tab:higgs_results}
 \small
-\begin{tabular}{@{} l l r r r r r @{}}
+\begin{tabular}{@{} l l r r r r @{}}
 \toprule
-Dataset & Model & \gls{acc} ($\%$) & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
+Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
 \midrule
 \multirow{4}{*}{HIGGS}
-  & \gls{lr}          & 64.1          & 63.7          &          0.961 &        84.7   & 15.09 \\
-  & \gls{xgb} (CPU)   & 76.0          & 76.0          &          2.763 &        155    & 36.38 \\
-  & \gls{xgb} (GPU)   & 76.0          & 76.0          & \textbf{0.393} & \textbf{16.4} & \textbf{5.17} \\
-  & \gls{mlp}         & \textbf{78.5} & \textbf{78.5} &         58.461 &    4{,}754    & 744.7 \\
+  & \gls{lr}          & 63.7          &          0.961 &        84.7   & 15.09 \\
+  & \gls{xgb} (CPU)   & 76.0          &          2.763 &        155    & 36.38 \\
+  & \gls{xgb} (GPU)   & 76.0          & \textbf{0.393} & \textbf{16.4} & \textbf{5.17} \\
+  & \gls{mlp}         & \textbf{78.5} &         58.461 &    4{,}754    & 744.7 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -275,8 +263,6 @@ No single model leads across all three datasets. \gls{lr} wins on Wine, where a 
 \label{fig:vergleich_cf1}
 \end{figure}
 
-\todo[inline]{hier weiter machen}
-
 As shown in \Cref{fig:vergleich_cf1}, the \gls{cf1} rankings shift substantially between datasets, and in each case the shift is mechanistically traceable: to hardware initialization overhead at small scale, to algorithmic structure at medium scale and to \gls{simt} saturation at large scale. At each scale, the metric responds to a different dominant cost factor, not just a reshuffled ranking. This is the empirical answer to the study's primary research question. Which model is ecologically efficient is always a function of computational profile, hardware and task scale, not a property of the algorithm in isolation \parencite{wuSustainableAIEnvironmental2022}.
 
 
@@ -290,13 +276,13 @@ As established in the main benchmark, hardware acceleration is not unconditional
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{xgb_cpu_vs_gpu.pdf}
-\caption[\gls{xgb} \gls{cpu} vs.\ \gls{gpu}.]{\gls{xgb} \gls{cpu} vs.\ \gls{gpu} across datasets. Top row: Emissions in \gls{gco2eq} and training time in seconds (log scale). Bottom row: \gls{acc} and per-sample inference time. \gls{acc} is near-identical across variants on all three datasets. The ecological and speed differences are the operative comparison.}
+\caption[\gls{xgb} \gls{cpu} vs.\ \gls{gpu}.]{\gls{xgb} \gls{cpu} vs.\ \gls{gpu} across datasets. Top row: Emissions in \gls{gco2eq} and training time in seconds (log scale). Bottom row: \gls{wf1} and per-sample inference time. \gls{wf1} is identical across variants on all three datasets. The ecological and speed differences are the operative comparison.}
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
 
-On Wine and Credit, \gls{gpu} acceleration provides no emissions benefit, but rather an ecological liability. \gls{xgb} \gls{gpu} emits 0.017\,\gls{gco2eq} on Wine against the \gls{cpu}'s 0.013\,\gls{gco2eq}, a 1.3-fold increase at no predictive benefit. Training time mirrors this: 0.31 seconds on \gls{gpu} versus 0.11 seconds on \gls{cpu}. This inversion occurs because the fixed overhead of device initialization and host-to-device memory transfer via the PCIe interface completely dominates the actual computation time, as analyzed in \Cref{sec:theoretical_cpu_vs_gpu}. The thousands of available cores remain starved of data, leaving the \gls{gpu}'s higher power draw unamortized. On Credit the gap narrows: 0.022\,\gls{gco2eq} (\gls{gpu}) against 0.021\,\gls{gco2eq} (\gls{cpu}), an 8 percent premium, but \gls{gpu} execution still fails to pay for itself.
+On Wine and Credit, \gls{gpu} acceleration provides no emissions benefit but rather an ecological liability. The \gls{gpu} consistently emits more and trains slower than the \gls{cpu} on both small datasets. This inversion occurs because the fixed overhead of device initialization and host-to-device memory transfer via the PCIe interface completely dominates actual computation time, as analyzed in \Cref{sec:theoretical_cpu_vs_gpu}. The thousands of available cores remain starved of data, leaving the \gls{gpu}'s higher power draw unamortized. On Credit the gap narrows to near parity, but \gls{gpu} execution still fails to pay for itself.
 
-The HIGGS result reverses the picture completely. \gls{xgb} \gls{gpu} emits 0.393\,\gls{gco2eq} and completes in 16.4 seconds. \gls{xgb} \gls{cpu} emits 2.763\,g and takes 155 seconds. The \gls{gpu} variant is therefore seven times more emissions-efficient and nine times faster. At eleven million rows the data volume finally saturates the \gls{gpu}'s \gls{simt} architecture \parencite{nickollsGPUComputingEra2010}. The histogram-based tree construction distributes efficiently across thousands of cores and the fixed memory transfer costs that dominated at small scale are now fully amortized by the parallelization gains.
+The HIGGS result reverses the picture completely. The \gls{gpu} variant is seven times more emissions-efficient and nine times faster, as roughly nine million training rows finally saturate the \gls{gpu}'s \gls{simt} architecture \parencite{nickollsGPUComputingEra2010}. The histogram-based tree construction distributes efficiently across thousands of cores, and the fixed memory transfer costs that dominated at small scale are now fully amortized by the parallelization gains.
 
 \begin{figure}[htb]
     \centering
@@ -316,19 +302,26 @@ This finding provides a direct, empirical answer to \rqref{3}: the ecological vi
 \section{HIGGS Dataset Scaling}
 \label{sec:results_scaling}
 
-\expref{2}, directly addressing \rqref{4}, tracks emissions and predictive performance across nine HIGGS subsets ranging from 1{,}000 to 8{,}800{,}000 rows (\Cref{fig:scaling_higgs}). Each data point is the mean across three independent random seeds; this replication averages out subsample-specific noise and yields monotonically well-behaved scaling curves. By holding the dataset complexity constant and isolating the volume of data, the scaling analysis exposes the exact thresholds at which the ecological cost of processing more data eclipses the predictive benefit.
-
-\begin{figure}[htb]
-\centering
-\includegraphics[width=\linewidth]{scaling_higgs.pdf}
-\caption[Scaling: Emissions and \gls{wf1} on HIGGS.]{Emissions (log scale) and \gls{wf1} across nine HIGGS subsets for all models. Each point is the mean of three independent random-seed runs. \gls{rf} excluded above 500{,}000 rows.}
-\label{fig:scaling_higgs}
-\end{figure}
-
+\expref{2}, directly addressing \rqref{4}, tracks emissions and predictive performance across nine HIGGS subsets ranging from 1{,}000 to 8{,}800{,}000 rows (\Cref{fig:scaling_higgs}). Each data point is the mean across three independent random seeds. This replication averages out subsample-specific noise and yields monotonically well-behaved scaling curves. By holding the dataset complexity constant and isolating the volume of data, the scaling analysis exposes the exact thresholds at which the ecological cost of processing more data eclipses the predictive benefit.
 
 \FloatBarrier
 \paragraph{Capacity Saturation in Simple Models}
 At the lower end of the scaling curve, the linear boundary of \gls{lr} hits a hard capacity ceiling remarkably early. The model's \gls{wf1} improves from 62.0\,\% at 1{,}000 rows to 63.7\,\% at 100{,}000 rows, but remains essentially flat across all subsequent, larger subsets. Because the model lacks the representational capacity to capture the non-linear intricacies of the HIGGS dataset, additional data yields virtually no predictive return. Consequently, any compute expended to train this model beyond 100{,}000 rows is ecologically wasted, demonstrating that data volume must always be matched to algorithmic capacity.
+
+
+\begin{figure}[htb]
+\centering
+\subcaptionbox{Emissions (gCO\textsubscript{2}eq, log scale)\label{fig:scaling_higgs_emissions}}{%
+    \includegraphics[width=0.8\linewidth]{scaling_higgs_emissions.pdf}}
+\par\medskip
+\subcaptionbox{\Gls{wf1}\label{fig:scaling_higgs_f1}}{%
+    \includegraphics[width=0.8\linewidth]{scaling_higgs_f1.pdf}}
+\par\smallskip
+\includegraphics[width=0.7\linewidth]{scaling_higgs_legend.pdf}
+\caption[Scaling: Emissions and \gls{wf1} on HIGGS.]{Emissions (log scale) and \gls{wf1} across nine HIGGS subsets for all models. Each point is the mean of three independent random-seed runs. \gls{rf} excluded above 500{,}000 rows.}
+\label{fig:scaling_higgs}
+\end{figure}
+
 
 \FloatBarrier
 \paragraph{The Architectural Bottleneck of Ensembles}
@@ -336,13 +329,20 @@ As the dataset scales to 500{,}000 rows, a striking reversal in the expected cos
 
 \FloatBarrier
 \paragraph{The Law of Diminishing Returns}
-In the high-data regime above 1{,}000{,}000 rows, all non-linear models face the fundamental tension of empirical learning curves (introduced in \Cref{sec:theoretical_learning_curves}): predictive performance scales sub-linearly, while energy consumption scales linearly or worse. The observed \gls{acc} curves across all models are qualitatively consistent with the concave power-law shape $P(n) \propto n^\alpha$ described there: gains are steep at small subset sizes and flatten progressively as the dataset approaches its full scale. The \gls{mlp} illustrates this trade-off most dramatically. Expanding its training data from 1 million to 8.8 million rows yields the largest absolute performance gain in this regime, improving the \gls{wf1} from 76.3\,\% to 78.6\,\%. However, this 2.2 percentage point improvement requires a 29-fold increase in emissions. Framed as a stopping decision, a practitioner who caps \gls{mlp} training at one million rows instead of 8.8 million reduces emissions by 97\,\% while accepting a 2.9\,\% relative loss in \gls{wf1}: a compelling case for treating dataset size as a tunable budget rather than a fixed input. Conversely, \gls{xgb} \gls{gpu} navigates this regime with extreme efficiency, reaching a \gls{wf1} of 76.0\,\% at 8.8 million rows while emitting only 0.37\,\gls{gco2eq}, roughly one sixth of its \gls{cpu} counterpart (2.32\,g).
+In the high-data regime above 1{,}000{,}000 rows, all non-linear models face the fundamental tension of empirical learning curves (introduced in \Cref{sec:theoretical_learning_curves}): predictive performance scales sub-linearly, while energy consumption scales linearly or worse. The observed \gls{wf1} curves across all models are qualitatively consistent with the concave power-law shape $P(n) \propto n^\alpha$ described there: gains are steep at small subset sizes and flatten progressively as the dataset approaches its full scale. The \gls{mlp} illustrates this trade-off most dramatically. Expanding its training data from 1 million to 8.8 million rows yields the largest absolute performance gain in this regime, improving the \gls{wf1} from 76.3\,\% to 78.6\,\%. However, this 2.2 percentage point improvement requires a 29-fold increase in emissions. Framed as a stopping decision, a practitioner who caps \gls{mlp} training at one million rows instead of 8.8 million reduces emissions by 97\,\% while accepting a 2.9\,\% relative loss in \gls{wf1}: a compelling case for treating dataset size as a tunable budget rather than a fixed input. Conversely, \gls{xgb} \gls{gpu} navigates this regime with extreme efficiency, reaching a \gls{wf1} of 76.0\,\% at 8.8 million rows while emitting only 0.37\,\gls{gco2eq}, roughly one sixth of its \gls{cpu} counterpart (2.32\,g).
 
 \FloatBarrier
 \paragraph{Synthesis: Rethinking the Big Data Dogma}
 Assessed through the \gls{cf1} lens, the diverse scaling patterns compress into a single, clarifying trend: as dataset size grows, the emissions gap between hardware-aligned models and inefficient algorithms drastically widens. \gls{xgb} \gls{gpu} sustains the lowest \gls{cf1} across every scale above its hardware break-even point, proving that large-scale learning is only ecologically viable when software is perfectly aligned with \gls{simt} acceleration. At five million rows it achieves a \gls{cf1} of 3.04 against \gls{xgb} \gls{cpu}'s 17.25 at the same \gls{wf1} of 75.8\,\%, a gap that widens further at the full 8.8 million row dataset.
 
 More profoundly, these scaling curves challenge the pervasive assumption that more data is unconditionally better, which drives modern machine learning. In the pursuit of state-of-the-art performance, the default industrial practice is to feed algorithms the largest dataset available \parencite{schwartzGreenAI2020}. The empirical evidence here proves that this practice is often an ecological liability. At the tail end of a learning curve, forcing a model to ingest ten million additional rows to extract a marginal gain in \gls{wf1} results in a disproportionate explosion of carbon emissions. True Green \gls{ai} requires practitioners to abandon the assumption that all available data must be used. Instead, as recent data-centric \gls{ai} studies argue, we must proactively identify the threshold where predictive returns diminish \parencite{verdecchiaDataCentricGreenAI2022a}, treating dataset size not as a fixed asset, but as a hyperparameter that must be aggressively tuned to halt training before the ecological cost eclipses the scientific value.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.9\linewidth]{scaling_higgs_cf1_heatmap.pdf}
+\caption[\Gls{cf1} heatmap across models and dataset sizes.]{\Gls{cf1} (\gls{mgco2eq} per \gls{wf1}) for all model-size combinations. Colour encodes log-scaled \gls{cf1}: yellow is most efficient, dark red is least. Cell annotations show raw \gls{cf1} values. Grey cells indicate runs not performed (\gls{rf} excluded above 500{,}000 rows).}
+\label{fig:scaling_cf1_heatmap}
+\end{figure}
 
 
 % ── MLP Architecture Variation ─────────────────────────────────────────────────
@@ -353,8 +353,16 @@ More profoundly, these scaling curves challenge the pervasive assumption that mo
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{mlp_variation.pdf}
-\caption[\Gls{mlp} architecture grid: \gls{wf1} and \gls{co2eq}.]{\Gls{mlp} architecture variation on HIGGS: \gls{wf1} (left) and emissions (right) for all depth-width combinations. Darker cells indicate higher values.}
+\begin{subfigure}[b]{0.48\linewidth}
+  \includegraphics[width=\linewidth]{mlp_variation_wf1.pdf}
+  \caption{\Gls{wf1} (\%)}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.48\linewidth}
+  \includegraphics[width=\linewidth]{mlp_variation_emissions.pdf}
+  \caption{Emissions (\gls{gco2eq})}
+\end{subfigure}
+\caption[\Gls{mlp} architecture grid: \gls{wf1} and emissions.]{\Gls{mlp} architecture variation on HIGGS for all depth-width combinations. Left: \gls{wf1}, where darker cells indicate higher \gls{wf1} (better). Right: training emissions in \gls{gco2eq}, where lighter cells indicate lower emissions (better).}
 \label{fig:mlp_variation}
 \end{figure}
 
@@ -366,8 +374,8 @@ Taken together, these results highlight a structural mismatch between standard d
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{mlp_variation_cf1.pdf}
-\caption[\Gls{mlp} architecture grid: \gls{cf1}.]{\Gls{mlp} architecture variation on HIGGS: \gls{cf1} for all depth-width combinations. Lighter cells indicate lower (better) values.}
+\includegraphics[width=0.7\linewidth]{mlp_variation_cf1.pdf}
+\caption[\Gls{mlp} architecture grid: \gls{cf1}.]{\Gls{mlp} architecture variation on HIGGS: \gls{cf1} for all depth-width combinations. Darker cells indicate lower (better) values.}
 \label{fig:mlp_variation_cf1}
 \end{figure}
 
@@ -382,16 +390,20 @@ The analyses conducted in the preceding sections treat emissions as a fixed func
 
 \begin{figure}[htb]
 \centering
-\begin{subfigure}[t]{0.49\linewidth}
+\begin{subfigure}[t]{0.9\linewidth}
     \includegraphics[width=\linewidth]{electricity_mix_germany.pdf}
     \caption{January 2025 (21--30 Jan). Gas, coal and nuclear dominate, with solar generation near zero.}
     \label{fig:electricity_mix_jan}
-\end{subfigure}\hspace{0.01\linewidth}\begin{subfigure}[t]{0.49\linewidth}
+\end{subfigure}
+
+\vspace{0.8em}
+
+\begin{subfigure}[t]{0.9\linewidth}
     \includegraphics[width=\linewidth]{electricity_mix_germany_july.pdf}
     \caption{July 2025 (1--10 Jul). Solar becomes the dominant midday source, sharply reducing the fossil fuel share during daylight hours.}
     \label{fig:electricity_mix_jul}
 \end{subfigure}
-\caption[Electricity mix in Germany: winter vs.\ summer.]{Electricity production mix in Germany for representative ten-day windows in winter and summer.}
+\caption[Electricity mix in Germany: winter vs.\ summer.]{Electricity production mix in Germany for representative ten-day windows in winter and summer. Each data point represents a one-hour average of power production in MW, sampled at hourly intervals and reported by ElectricityMaps. The legend shown in (b) applies to both panels.}
 \label{fig:electricity_mix_comparison}
 \end{figure}
 
@@ -401,12 +413,12 @@ If this temporal variation is large enough, then the timing of a training run is
 
 \FloatBarrier
 \paragraph{Annual Spread and Scenario Intensities}
-The first result is somewhat reassuring for the existing measurements: as shown in \Cref{fig:scenario_intensities}, the static CodeCarbon factor of $381\,\frac{\gls{gco2eq}}{\gls{kwh}}$ is a defensible approximation of the annual mean, which the empirical data places at $341\,\frac{\gls{gco2eq}}{\gls{kwh}}$. A workload executed at a uniformly random point during the year would therefore be assigned only a modest systematic error by CodeCarbon. The more important finding is the spread around that average. The best recorded hour of 2024 reaches $115\,\frac{\gls{gco2eq}}{\gls{kwh}}$ and the worst reaches $658\,\frac{\gls{gco2eq}}{\gls{kwh}}$, a factor of 5.7$\times$ between two hours. The absolute extremes are not practically exploitable, since no practitioner can guarantee their run coincides with the single cleanest or dirtiest hour of the year. The structurally informed seasonal-diurnal combinations are the actionable range: summer midday hours average $193\,\frac{\gls{gco2eq}}{\gls{kwh}}$ while winter evening hours average $389\,\frac{\gls{gco2eq}}{\gls{kwh}}$, a factor of two achievable through deliberate scheduling alone.
+The first result is somewhat reassuring for the existing measurements: as shown in \Cref{fig:scenario_intensities}, the static CodeCarbon factor of $381\,\frac{\gls{gco2eq}}{\gls{kwh}}$ is a defensible approximation of the annual mean of the year 2024, which the empirical data places at $341\,\frac{\gls{gco2eq}}{\gls{kwh}}$. A workload executed at a uniformly random point during the year would therefore be assigned only a modest systematic error by CodeCarbon. The more important finding is the spread around that average. The best recorded hour of 2024 reaches $115\,\frac{\gls{gco2eq}}{\gls{kwh}}$ and the worst reaches $658\,\frac{\gls{gco2eq}}{\gls{kwh}}$, a factor of 5.7$\times$ between two hours. The absolute extremes are not practically exploitable, since no practitioner can guarantee their run coincides with the single cleanest or dirtiest hour of the year. The structurally informed seasonal-diurnal combinations are the actionable range: summer midday hours average $193\,\frac{\gls{gco2eq}}{\gls{kwh}}$ while winter evening hours average $389\,\frac{\gls{gco2eq}}{\gls{kwh}}$, a factor of two achievable through deliberate scheduling alone.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{scenario_intensities.pdf}
-\caption[Carbon intensity for eight timing scenarios.]{Carbon intensity ($\frac{\gls{gco2eq}}{\gls{kwh}}$) for eight timing scenarios}
+\caption[Carbon intensity for eight timing scenarios.]{Mean grid carbon intensity in \gls{gco2eq}/\gls{kwh} for eight timing scenarios derived from one year of hourly ElectricityMaps data for Germany (2024). The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Summer midday hours are roughly half as carbon-intensive as winter evening hours, a factor of two achievable through deliberate scheduling alone.}
 \label{fig:scenario_intensities}
 \end{figure}
 
@@ -417,7 +429,7 @@ Because training energy is a fixed physical quantity for any given run, every pe
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{scenario_per_run.pdf}
-\caption[Counterfactual \gls{co2eq} relative to CodeCarbon baseline.]{Counterfactual emissions relative to the static CodeCarbon baseline (= 100\,\%)}
+\caption[Counterfactual \gls{co2eq} relative to CodeCarbon baseline.]{Counterfactual training emissions expressed as a percentage of the static CodeCarbon baseline (= 100\,\%). Because grid intensity scales uniformly across all runs, the bars are identical for every model and dataset. The dashed line marks the CodeCarbon reference; values below it represent emission reductions achievable through timing alone, without any change to code, hardware, or model architecture.}
 \label{fig:scenario_per_run}
 \end{figure}
 
@@ -428,7 +440,7 @@ To understand why the diurnal dimension matters as much as the seasonal one, con
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{carbon_intensity_july_day.pdf}
-\caption{Hourly carbon intensity on 24 July 2024 in Germany}
+\caption[Hourly \gls{ci} for Germany on 24 July 2024.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone on 24 July 2024, retrieved from the ElectricityMaps \gls{api} (\texttt{/v3/carbon-intensity/past-range}). Each data point represents the \gls{ci} for one clock hour as computed by ElectricityMaps from the hourly generation mix. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$.}
 \label{fig:carbon_intensity_july_day}
 \end{figure}
 
@@ -438,8 +450,30 @@ The seasonal dimension adds a second layer of variation on top of the diurnal on
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{carbon_intensity_seasonal.pdf}
-\caption{Hourly carbon intensity for representative ten-day windows per season, Germany 2025}
+\begin{subfigure}[t]{0.49\linewidth}
+    \includegraphics[width=\linewidth]{carbon_intensity_winter.pdf}
+    \caption{Winter (14--23 Jan 2024). Mean: $381\,\gls{gco2eq}/\gls{kwh}$.}
+    \label{fig:ci_winter}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}
+    \includegraphics[width=\linewidth]{carbon_intensity_spring.pdf}
+    \caption{Spring (9--18 Apr 2024). Mean: $281\,\gls{gco2eq}/\gls{kwh}$.}
+    \label{fig:ci_spring}
+\end{subfigure}
+
+\vspace{0.5em}
+
+\begin{subfigure}[t]{0.49\linewidth}
+    \includegraphics[width=\linewidth]{carbon_intensity_summer.pdf}
+    \caption{Summer (15--24 Jul 2024). Mean: $293\,\gls{gco2eq}/\gls{kwh}$.}
+    \label{fig:ci_summer}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.49\linewidth}
+    \includegraphics[width=\linewidth]{carbon_intensity_autumn.pdf}
+    \caption{Autumn (16--25 Oct 2024). Mean: $384\,\gls{gco2eq}/\gls{kwh}$.}
+    \label{fig:ci_autumn}
+\end{subfigure}
+\caption[Hourly \gls{ci} for Germany across four seasons.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone across representative ten-day windows per season (2024), retrieved from the ElectricityMaps \gls{api} (\texttt{/v3/carbon-intensity/past-range}). Each data point is the \gls{ci} for one clock hour. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Winter and autumn exceed the baseline on average; spring and summer fall below it.}
 \label{fig:carbon_intensity_seasonal}
 \end{figure}
 
@@ -449,7 +483,7 @@ The year-long heatmap in \Cref{fig:diurnal_seasonal} brings both dimensions toge
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{diurnal_seasonal_2024.pdf}
+\includegraphics[width=0.8\linewidth]{diurnal_seasonal_2024.pdf}
 \caption[Diurnal and seasonal carbon intensity for the German grid (2024).]{Mean carbon intensity ($\frac{\gls{gco2eq}}{\gls{kwh}}$) by hour of day and calendar month for the German grid (2024), derived from 8{,}760 hourly observations.}
 \label{fig:diurnal_seasonal}
 \end{figure}
@@ -480,51 +514,48 @@ Taken together, these findings introduce a dimension of ecological efficiency th
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{lifecycle_breakeven.pdf}
+\includegraphics[width=0.8\linewidth]{lifecycle_breakeven.pdf}
 \caption[Lifecycle break-even number of predictions per model.]{Break-even number of predictions at which cumulative inference emissions surpass the one-time training footprint (log scale).}
 \label{fig:lifecycle_breakeven}
 \end{figure}
 
-Training emissions are a fixed, one-time cost. Inference emissions accumulate with every prediction served. Whether training or inference dominates the total lifecycle footprint depends on deployment volume and that relationship differs markedly across the model-dataset combinations in this study. Break-even points are computed from the hardware-corrected training footprint and directly measured per-prediction \gls{cpu} energy, scaled by the grid \gls{ci} derived from the total training energy (\gls{cpu}, \gls{gpu} and \gls{ram} combined). Per-prediction energy was obtained by running each model in a 30-second inference loop and dividing the total \gls{cpu} package energy by the number of predictions completed, ensuring sufficient power-sensor samples for all model speeds. \Gls{gpu} idle draw during inference is not tracked, so inference costs for \gls{gpu}-trained models represent a lower bound.
-
 \begin{table}[htbp]
 \centering
-\caption{Lifecycle break-even analysis. Training emissions are the one-time hardware-corrected footprint. Inference emissions are derived from directly measured per-prediction \gls{cpu} energy (30-second inference window), scaled by the same grid intensity as training. Break-even is the number of predictions at which cumulative inference emissions equals training emissions. \gls{rf} was not run on HIGGS.}
+\caption{Lifecycle break-even analysis. TE = hardware-corrected training \gls{co2eq}; IE = per-prediction inference \gls{co2eq} (directly measured \gls{cpu} energy, same grid intensity). Pred./30\,s = throughput in a 30-second window. Break-even = predictions until cumulative IE equals TE. \gls{rf} not run on HIGGS. Bold = best per column per dataset.}
 \label{tab:lifecycle}
-\small
-\begin{tabular}{@{} l l r r r @{}}
+\footnotesize
+\begin{tabular}{@{} l l r r r r r @{}}
 \toprule
-Dataset & Model & Train emissions (\gls{gco2eq}) & Inf. emissions (\textmu\gls{gco2eq}) & Break-even \\
+Dataset & Model & \gls{wf1} (\%) & TE (\gls{gco2eq}) & IE (\textmu\gls{gco2eq}) & Pred./30\,s & Break-even \\
 \midrule
 \multirow{5}{*}{Wine}
-  & \gls{lr} &  0.01260 &   3.65 &    3,449 \\
-  & \gls{rf}       &  0.01564 & 235.9  &       66 \\
-  & \gls{xgb} (CPU)       &  0.01296 &  17.11 &      758 \\
-  & \gls{xgb} (GPU)       &  0.01703 &  30.27 &      563 \\
-  & MLP                 &  0.03874 &   5.65 &    6,858 \\
+  & \gls{lr}        & 97.2 & \textbf{0.0126} & \textbf{3.65} & \textbf{49{,}650} &    3{,}449 \\
+  & \gls{rf}        & 97.2 &          0.0156 &        235.9  &            768    &        66 \\
+  & \gls{xgb} (CPU) & 97.2 &          0.0130 &         17.11 &         20{,}113  &      758 \\
+  & \gls{xgb} (GPU) & 97.2 &          0.0170 &         30.27 &         11{,}333  &      563 \\
+  & MLP             & 97.2 &          0.0387 &          5.65 &         33{,}125  &    6{,}858 \\
 \midrule
 \multirow{5}{*}{Credit}
-  & \gls{lr} &  0.02068 &   3.73 &    5,551 \\
-  & \gls{rf}       &  0.04464 & 251.2  &      178 \\
-  & \gls{xgb} (CPU)       &  0.02059 &  33.20 &      620 \\
-  & \gls{xgb} (GPU)       &  0.02229 &  55.48 &      402 \\
-  & MLP                 &  0.07217 &   8.16 &    8,851 \\
+  & \gls{lr}        &          77.0 &          0.0207 & \textbf{3.73} & \textbf{46{,}870} &    5{,}551 \\
+  & \gls{rf}        &          79.7 &          0.0446 &        251.2  &            742    &      178 \\
+  & \gls{xgb} (CPU) &          79.8 & \textbf{0.0206} &         33.20 &         10{,}408  &      620 \\
+  & \gls{xgb} (GPU) &          79.8 &          0.0223 &         55.48 &          6{,}123  &      402 \\
+  & MLP             & \textbf{80.2} &          0.0722 &          8.16 &         24{,}327  &    8{,}851 \\
 \midrule
 \multirow{4}{*}{HIGGS}
-  & \gls{lr} &  0.96095 &   3.55 &  270,538 \\
-  & \gls{xgb} (CPU)       &  2.7630 &  23.47 &  117,683 \\
-  & \gls{xgb} (GPU)       &  0.39255 &  40.71 &    9,643 \\
-  & MLP                 & 58.461 &   7.08 & 8{,}261{,}330 \\
+  & \gls{lr}        &          63.7 &          0.9610 & \textbf{3.55} & \textbf{48{,}669} &  270{,}538 \\
+  & \gls{xgb} (CPU) &          76.0 &          2.7630 &         23.47 &         14{,}442  &  117{,}683 \\
+  & \gls{xgb} (GPU) &          76.0 & \textbf{0.3926} &         40.71 &          8{,}380  &    9{,}643 \\
+  & MLP             & \textbf{78.5} &         58.4610 &          7.08 &         29{,}011  & 8{,}261{,}330 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The lowest break-even point is \gls{rf} on Wine, at 66 predictions. \gls{rf} inference is slow relative to other classifiers: each prediction requires sequential traversal of the learned tree ensemble, producing a per-prediction cost of approximately 236\,\textmu\gls{gco2eq}. Against a training footprint of only 0.01564\,\gls{gco2eq}, the inference cost accumulates to parity within a few minutes of active serving. For any realistic \gls{rf} deployment on tabular data at this scale, inference is the dominant ecological cost by a wide margin.
+The lowest break-even point is \gls{rf} on Wine, at 66 predictions. \gls{rf} inference is slow relative to other classifiers: each prediction requires sequential traversal of the learned tree ensemble, producing a per-prediction cost of approximately 236\,\textmu\gls{gco2eq}. Against a training footprint of only 0.016\,\gls{gco2eq}, the inference cost accumulates to parity within a few minutes of active serving. For any realistic \gls{rf} deployment on tabular data at this scale, inference is the dominant ecological cost by a wide margin.
 
-The opposite extreme is \gls{mlp} on HIGGS, which does not reach break-even until approximately 8.3 million predictions. \gls{mlp} inference is fast: the forward pass through a fixed-depth network requires no tree traversal, producing a per-prediction cost of only 7.1\,\textmu\gls{gco2eq}. Against a training footprint of 58.461\,\gls{gco2eq}, that rate of accumulation reaches parity only after roughly 8 million queries. A system serving this model on a low-traffic application would find that training represents the dominant ecological cost throughout its entire operational lifetime.
+The opposite extreme is \gls{mlp} on HIGGS, which does not reach break-even until approximately 8.3 million predictions. \gls{mlp} inference is fast: the forward pass through a fixed-depth network requires no tree traversal, producing a per-prediction cost of only 7.1\,\textmu\gls{gco2eq}. Against a training footprint of 58.5\,\gls{gco2eq}, that rate of accumulation reaches parity only after roughly 8 million queries. A system serving this model on a low-traffic application would find that training represents the dominant ecological cost throughout its entire operational lifetime.
 
-Between these extremes, break-even points organize around two drivers: training scale and inference latency. \gls{lr} on Credit breaks even at 5{,}551 predictions because both costs are modest in absolute terms. \gls{xgb} \gls{gpu} on HIGGS breaks even at 9{,}643 predictions: its training footprint is contained at 0.393\,\gls{gco2eq}, but inference at 40.7\,\textmu\gls{gco2eq} per prediction accumulates faster than \gls{mlp}'s 7.1\,\textmu\gls{gco2eq}, so the budget is recovered at a far lower deployment volume. The contrast between \gls{xgb} \gls{gpu} (9{,}643) and \gls{mlp} (8.3 million) on the same dataset illustrates a deeper trade-off in model design. \gls{mlp}'s fast inference pushes the break-even point to a scale that most low-traffic applications will never reach, concentrating the ecological cost at training time. \gls{xgb} \gls{gpu}'s slower inference distributes the lifecycle cost more evenly across the deployment period. For practitioners concerned with total deployment footprint rather than single-phase training emissions, the break-even point is as informative as any figure in the benchmark table.
-
+Between these extremes, break-even points organize around two drivers: training scale and inference latency. \gls{lr} on Credit breaks even at 5{,}551 predictions because both costs are modest in absolute terms. \gls{xgb} \gls{gpu} on HIGGS breaks even at 9{,}643 predictions: its training footprint is contained at 0.39\,\gls{gco2eq}, but inference at 40.7\,\textmu\gls{gco2eq} per prediction accumulates faster than \gls{mlp}'s 7.1\,\textmu\gls{gco2eq}, so the budget is recovered at a far lower deployment volume. The contrast between \gls{xgb} \gls{gpu} (9{,}643) and \gls{mlp} (8.3 million) on the same dataset illustrates a deeper trade-off in model design. \gls{mlp}'s fast inference pushes the break-even point to a scale that most low-traffic applications will never reach, concentrating the ecological cost at training time. \gls{xgb} \gls{gpu}'s slower inference distributes the lifecycle cost more evenly across the deployment period.
 \FloatBarrier
 \paragraph{Cross-Model Lifecycle Comparison on HIGGS}
 
@@ -537,17 +568,10 @@ Between these extremes, break-even points organize around two drivers: training 
 
 The individual break-even points quantify when each model's inference cost overtakes its own training investment. A complementary and more deployment-relevant question is which of two competing models accumulates less total lifecycle emissions at a given query volume. \Cref{fig:lifecycle_xgb_gpu_vs_mlp_higgs} addresses this directly for \gls{xgb} \gls{gpu} and \gls{mlp} on HIGGS, the two models that dominate the HIGGS result in opposite directions of the efficiency-performance trade-off.
 
-\gls{xgb} \gls{gpu} enters deployment with a training footprint of 0.393\,\gls{gco2eq}. \gls{mlp} carries a training debt of 58.461\,\gls{gco2eq}, a factor of 149 larger. The two cumulative cost curves begin from these starting points and converge because inference accumulates at different rates: 40.7\,\textmu\gls{gco2eq} per prediction for \gls{xgb} \gls{gpu} against 7.1\,\textmu\gls{gco2eq} for \gls{mlp}, a factor of 5.8 in the opposite direction. The cross-over occurs at approximately 1.73 million predictions, the query volume at which \gls{mlp}'s lower per-prediction cost has fully amortized its much larger training investment. Beyond that threshold, \gls{mlp} is the more ecologically efficient of the two for every additional prediction served.
+\gls{xgb} \gls{gpu} enters deployment with a training footprint of 0.39\,\gls{gco2eq}. \gls{mlp} carries a training debt of 58.5\,\gls{gco2eq}, a factor of 149 larger. The two cumulative cost curves begin from these starting points and converge because inference accumulates at different rates: 40.7\,\textmu\gls{gco2eq} per prediction for \gls{xgb} \gls{gpu} against 7.1\,\textmu\gls{gco2eq} for \gls{mlp}, a factor of 5.8 in the opposite direction. The cross-over occurs at approximately 1.73 million predictions, the query volume at which \gls{mlp}'s lower per-prediction cost has fully amortized its much larger training investment. Beyond that threshold, \gls{mlp} is the more ecologically efficient of the two for every additional prediction served.
 
 Whether that threshold is reached depends entirely on deployment context. A batch scoring job processing ten million records in a single run would cross the threshold within that run and favor \gls{mlp} on lifecycle grounds despite its 149-fold higher training cost. A low-traffic internal tool serving a few thousand queries per month would never approach the threshold, leaving \gls{xgb} \gls{gpu} as the lifecycle-optimal choice throughout its operational lifetime. The cross-over point therefore acts as a deployment-scale decision boundary that is orthogonal to predictive performance and invisible in any training-only benchmark table.
 
 The roughly five orders of magnitude separating these extremes reflect a structural divide rather than an accident of scale. Models with cheap training and slow inference front-load their ecological cost at the point of training, then spend that cost again with every subsequent prediction. Models with expensive training and fast inference invert this: the initial investment is large, but it is amortized across many cheap queries. Which profile is ecologically preferable depends entirely on how many predictions the deployed system will serve, a figure that has nothing to do with performance or training efficiency \parencite{luccioniPowerHungryProcessing2024}.
 
 This creates a direct inversion of the training-only rankings for high-volume deployments \parencite{desislavovTrendsAIInference2023}. \gls{rf} on Wine achieves a favorable \gls{cf1} precisely because it is cheap to train. Yet at ten thousand predictions it has already accumulated roughly 95 times its training budget in inference emissions, while \gls{mlp} at the same query count has barely touched its much larger training investment. For a practitioner deploying at scale, the \gls{cf1} ranking is not merely incomplete at this point. It points in the wrong direction. Ecological model selection therefore requires a deployment volume estimate as an explicit input. Below the break-even threshold, optimizing training emissions is the right lever. Above it, inference latency per prediction governs the total lifecycle cost and no amount of training efficiency compensates for a slow prediction function at scale.
-
-
-% ── Chapter Summary ────────────────────────────────────────────────────────────
-\section{Chapter Summary}
-\label{sec:results_summary}
-
-The eight analyses in this chapter establish that ecological efficiency in tabular classification is a system property, not an algorithmic one. It emerges from the interaction of model choice, hardware, dataset scale, tuning strategy, scheduling and deployment volume, and no single lever can be optimized in isolation. \Cref{conclusion} draws on this combined picture to answer the research questions stated in \Cref{sec:intro_objectives} and to derive actionable recommendations for each of these levers.
