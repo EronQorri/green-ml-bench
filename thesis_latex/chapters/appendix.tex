@@ -9,7 +9,7 @@
 
 \begin{table}[htbp]
 \centering
-\caption[\gls{wf1} per model across HIGGS subset sizes.]{\gls{wf1} (\%) per model and HIGGS subset size. Values are means across three random seeds. Dashes indicate runs that were not performed.}
+\caption[\acrshort{wf1} per model across HIGGS subset sizes.]{\acrshort{wf1} (\%) per model and HIGGS subset size. Values are means across three random seeds. Dashes indicate runs that were not performed.}
 \label{tab:app_scaling_wf1}
 \begin{tabular}{@{} r rrrrr @{}}
 \toprule
@@ -33,7 +33,7 @@
 \begin{sidewaystable}[p]
 \centering
 \footnotesize
-\caption[Emissions and training time per model across HIGGS subset sizes.]{Emissions (\gls{gco2eq}) and training time (s) per model and HIGGS subset size. Values are means across three random seeds. The \gls{mlp} at 8.8M rows (58.5\,\gls{gco2eq}) is the study's highest single training cost.}
+\caption[Emissions and training time per model across HIGGS subset sizes.]{Emissions (\acrshort{gco2eq}) and training time (s) per model and HIGGS subset size. Values are means across three random seeds. The \acrshort{mlp} at 8.8M rows (58.5\,\acrshort{gco2eq}) is the study's highest single training cost.}
 \label{tab:app_scaling_co2}
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{} r rr rr rr rr rr @{}}
@@ -64,7 +64,7 @@
 
 \begin{table}[htbp]
 \centering
-\caption[\gls{mlp} architecture variation results on HIGGS.]{Complete results for the 12 \gls{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is single-run wall-clock time. \gls{cf1} is mg CO\textsubscript{2} per WF1 percentage point; lower is better. Bold marks the best value per column.}
+\caption[\acrshort{mlp} architecture variation results on HIGGS.]{Complete results for the 12 \acrshort{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is single-run wall-clock time. \acrshort{cf1} is mg CO\textsubscript{2} per WF1 percentage point; lower is better. Bold marks the best value per column.}
 \label{tab:app_mlp_full}
 \begin{tabular}{@{} l r r r r r @{}}
 \toprule
@@ -195,7 +195,7 @@ Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac
 
 \begin{table}[htbp]
 \centering
-\caption[\gls{xgb} \gls{cpu} vs.\ \gls{gpu}: efficiency comparison.]{Efficiency results for XGBoost \gls{cpu} and \gls{gpu} variants across all three datasets. Emissions are hardware-corrected; inference latency is mean per-sample wall-clock time. WF1 is included for completeness; differences are sub-0.001 and carry no practical meaning.}
+\caption[\acrshort{xgb} \acrshort{cpu} vs.\ \acrshort{gpu}: efficiency comparison.]{Efficiency results for XGBoost \acrshort{cpu} and \acrshort{gpu} variants across all three datasets. Emissions are hardware-corrected; inference latency is mean per-sample wall-clock time. WF1 is included for completeness; differences are sub-0.001 and carry no practical meaning.}
 \label{tab:app_xgb_cpugpu}
 \setlength{\tabcolsep}{7pt}
 \begin{tabular}{@{} l l r r r r @{}}
@@ -225,7 +225,7 @@ Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac
 
 \begin{table}[htbp]
 \centering
-\caption[Monthly carbon intensity statistics, German grid 2024.]{Descriptive statistics of hourly carbon intensity ($\frac{\gls{gco2eq}}{\gls{kwh}}$) for the German bidding zone, January--December 2024. All values are rounded to the nearest integer.}
+\caption[Monthly carbon intensity statistics, German grid 2024.]{Descriptive statistics of hourly carbon intensity ($\frac{\acrshort{gco2eq}}{\acrshort{kwh}}$) for the German bidding zone, January--December 2024. All values are rounded to the nearest integer.}
 \label{tab:app_carbon_monthly}
 \begin{tabular}{@{} l r r r r r @{}}
 \toprule
@@ -256,7 +256,7 @@ December  & 380 & 383 & 152 & 658 & 128 \\
 
 \begin{table}[htbp]
 \centering
-\caption[Counterfactual emissions for Wine under timing scenarios.]{Counterfactual emissions (\gls{gco2eq}) for the Wine dataset under eight carbon intensity scenarios.}
+\caption[Counterfactual emissions for Wine under timing scenarios.]{Counterfactual emissions (\acrshort{gco2eq}) for the Wine dataset under eight carbon intensity scenarios.}
 \label{tab:app_cf_wine}
 \begin{tabular}{@{} l r r r r r @{}}
 \toprule
@@ -276,7 +276,7 @@ Winter evening & 0.0140 & 0.0294 & 0.0209 & 0.0522 & 0.0599 \\
 
 \begin{table}[htbp]
 \centering
-\caption[Counterfactual emissions for Credit under timing scenarios.]{Counterfactual emissions (\gls{gco2eq}) for the Credit dataset under eight carbon intensity scenarios.}
+\caption[Counterfactual emissions for Credit under timing scenarios.]{Counterfactual emissions (\acrshort{gco2eq}) for the Credit dataset under eight carbon intensity scenarios.}
 \label{tab:app_cf_credit}
 \begin{tabular}{@{} l r r r r r @{}}
 \toprule
@@ -296,7 +296,7 @@ Winter evening & 0.062 & 0.848 & 0.044 & 0.053 & 0.646 \\
 
 \begin{table}[htbp]
 \centering
-\caption[Counterfactual emissions for HIGGS under timing scenarios.]{Counterfactual emissions (\gls{gco2eq}) for the HIGGS dataset under eight carbon intensity scenarios. \gls{rf} was not run on the full 8.8M-row dataset.}
+\caption[Counterfactual emissions for HIGGS under timing scenarios.]{Counterfactual emissions (\acrshort{gco2eq}) for the HIGGS dataset under eight carbon intensity scenarios. \acrshort{rf} was not run on the full 8.8M-row dataset.}
 \label{tab:app_cf_higgs}
 \begin{tabular}{@{} l r r r r @{}}
 \toprule

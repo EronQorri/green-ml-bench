@@ -77,7 +77,7 @@ Translating tuning costs into the \gls{cf1} framework extends this picture beyon
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{tuning_cf1.pdf}
-\caption[Tuning \gls{cf1} per model.]{Tuning \gls{cf1} ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) per tuning study, using the best \gls{wf1} across 40 trials as denominator. Lower is better. The HIGGS panel uses a log scale. \gls{rf} was not tuned on HIGGS; literature defaults were used instead.}
+\caption[Tuning \acrshort{cf1} per model.]{Tuning \gls{cf1} ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) per tuning study, using the best \gls{wf1} across 40 trials as denominator. Lower is better. The HIGGS panel uses a log scale. \gls{rf} was not tuned on HIGGS; literature defaults were used instead.}
 \label{fig:tuning_cf1}
 \end{figure}
 
@@ -133,7 +133,7 @@ Focusing first on the Wine dataset, the leftmost cluster in \Cref{fig:vergleich_
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.9\linewidth]{vergleich_performance_f1.pdf}
-\caption[\Gls{wf1} across datasets.]{\Gls{wf1} across all 14 model-dataset combinations. On Wine, all five models converge on a \gls{wf1} of 97.2\,\%, making emissions the only meaningful dimension of comparison. On HIGGS, \gls{lr} saturates well below the non-linear models and \gls{mlp} achieves the highest single result in the study.}
+\caption[\acrshort{wf1} across datasets.]{\Gls{wf1} across all 14 model-dataset combinations. On Wine, all five models converge on a \gls{wf1} of 97.2\,\%, making emissions the only meaningful dimension of comparison. On HIGGS, \gls{lr} saturates well below the non-linear models and \gls{mlp} achieves the highest single result in the study.}
 \label{fig:vergleich_performance}
 \end{figure}
 
@@ -259,7 +259,7 @@ No single model leads across all three datasets. \gls{lr} wins on Wine, where a 
     \includegraphics[width=\linewidth]{vergleich_cf1_higgs.pdf}
     \caption{HIGGS (log scale)}
 \end{subfigure}
-\caption[\Gls{cf1} per model.]{\Gls{cf1} (\gls{mgco2eq} per \gls{wf1} percentage point) per model and dataset. Lower is better. The HIGGS panel uses a log scale. No single model leads across all three datasets.}
+\caption[\acrshort{cf1} per model.]{\Gls{cf1} (\gls{mgco2eq} per \gls{wf1} percentage point) per model and dataset. Lower is better. The HIGGS panel uses a log scale. No single model leads across all three datasets.}
 \label{fig:vergleich_cf1}
 \end{figure}
 
@@ -276,7 +276,7 @@ As established in the main benchmark, hardware acceleration is not unconditional
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{xgb_cpu_vs_gpu.pdf}
-\caption[\gls{xgb} \gls{cpu} vs.\ \gls{gpu}.]{\gls{xgb} \gls{cpu} vs.\ \gls{gpu} across datasets. Top row: Emissions in \gls{gco2eq} and training time in seconds (log scale). Bottom row: \gls{wf1} and per-sample inference time. \gls{wf1} is identical across variants on all three datasets. The ecological and speed differences are the operative comparison.}
+\caption[\acrshort{xgb} \acrshort{cpu} vs.\ \acrshort{gpu}.]{\gls{xgb} \gls{cpu} vs.\ \gls{gpu} across datasets. Top row: Emissions in \gls{gco2eq} and training time in seconds (log scale). Bottom row: \gls{wf1} and per-sample inference time. \gls{wf1} is identical across variants on all three datasets. The ecological and speed differences are the operative comparison.}
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
 
@@ -287,7 +287,7 @@ The HIGGS result reverses the picture completely. The \gls{gpu} variant is seven
 \begin{figure}[htb]
     \centering
     \includegraphics[width=\linewidth]{xgb_breakeven_higgs.pdf}
-    \caption[\gls{xgb} \gls{cpu}/\gls{gpu} energy break-even on HIGGS.]{\gls{xgb} break-even point comparison between different subset sizes of the HIGGS dataset.}
+    \caption[\acrshort{xgb} \acrshort{cpu}/\acrshort{gpu} energy break-even on HIGGS.]{\gls{xgb} break-even point comparison between different subset sizes of the HIGGS dataset.}
     \label{fig:xgb_breakeven_higgs}
 \end{figure}
 
@@ -318,7 +318,7 @@ At the lower end of the scaling curve, the linear boundary of \gls{lr} hits a ha
     \includegraphics[width=0.8\linewidth]{scaling_higgs_f1.pdf}}
 \par\smallskip
 \includegraphics[width=0.7\linewidth]{scaling_higgs_legend.pdf}
-\caption[Scaling: Emissions and \gls{wf1} on HIGGS.]{Emissions (log scale) and \gls{wf1} across nine HIGGS subsets for all models. Each point is the mean of three independent random-seed runs. \gls{rf} excluded above 500{,}000 rows.}
+\caption[Scaling: Emissions and \acrshort{wf1} on HIGGS.]{Emissions (log scale) and \gls{wf1} across nine HIGGS subsets for all models. Each point is the mean of three independent random-seed runs. \gls{rf} excluded above 500{,}000 rows.}
 \label{fig:scaling_higgs}
 \end{figure}
 
@@ -338,7 +338,7 @@ Assessed through the \gls{cf1} lens, the diverse scaling patterns compress into 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.9\linewidth]{scaling_higgs_cf1_heatmap.pdf}
-\caption[\Gls{cf1} heatmap across models and dataset sizes.]{\Gls{cf1} (\gls{mgco2eq} per \gls{wf1}) for all model-size combinations. Colour encodes log-scaled \gls{cf1}: yellow is most efficient, dark red is least. Cell annotations show raw \gls{cf1} values. Grey cells indicate runs not performed (\gls{rf} excluded above 500{,}000 rows).}
+\caption[\acrshort{cf1} heatmap across models and dataset sizes.]{\Gls{cf1} (\gls{mgco2eq} per \gls{wf1}) for all model-size combinations. Colour encodes log-scaled \gls{cf1}: yellow is most efficient, dark red is least. Cell annotations show raw \gls{cf1} values. Grey cells indicate runs not performed (\gls{rf} excluded above 500{,}000 rows).}
 \label{fig:scaling_cf1_heatmap}
 \end{figure}
 
@@ -362,7 +362,7 @@ More profoundly, these scaling curves challenge the pervasive assumption that mo
   \includegraphics[width=\linewidth]{mlp_variation_emissions.pdf}
   \caption{Emissions (\gls{gco2eq})}
 \end{subfigure}
-\caption[\Gls{mlp} architecture grid: \gls{wf1} and emissions.]{\Gls{mlp} architecture variation on HIGGS for all depth-width combinations. Left: \gls{wf1}, where darker cells indicate higher \gls{wf1} (better). Right: training emissions in \gls{gco2eq}, where lighter cells indicate lower emissions (better).}
+\caption[\acrshort{mlp} architecture grid: \acrshort{wf1} and emissions.]{\Gls{mlp} architecture variation on HIGGS for all depth-width combinations. Left: \gls{wf1}, where darker cells indicate higher \gls{wf1} (better). Right: training emissions in \gls{gco2eq}, where lighter cells indicate lower emissions (better).}
 \label{fig:mlp_variation}
 \end{figure}
 
@@ -375,7 +375,7 @@ Taken together, these results highlight a structural mismatch between standard d
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.7\linewidth]{mlp_variation_cf1.pdf}
-\caption[\Gls{mlp} architecture grid: \gls{cf1}.]{\Gls{mlp} architecture variation on HIGGS: \gls{cf1} for all depth-width combinations. Darker cells indicate lower (better) values.}
+\caption[\acrshort{mlp} architecture grid: \acrshort{cf1}.]{\Gls{mlp} architecture variation on HIGGS: \gls{cf1} for all depth-width combinations. Darker cells indicate lower (better) values.}
 \label{fig:mlp_variation_cf1}
 \end{figure}
 
@@ -429,7 +429,7 @@ Because training energy is a fixed physical quantity for any given run, every pe
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{scenario_per_run.pdf}
-\caption[Counterfactual \gls{co2eq} relative to CodeCarbon baseline.]{Counterfactual training emissions expressed as a percentage of the static CodeCarbon baseline (= 100\,\%). Because grid intensity scales uniformly across all runs, the bars are identical for every model and dataset. The dashed line marks the CodeCarbon reference; values below it represent emission reductions achievable through timing alone, without any change to code, hardware, or model architecture.}
+\caption[Counterfactual \acrshort{co2eq} relative to CodeCarbon baseline.]{Counterfactual training emissions expressed as a percentage of the static CodeCarbon baseline (= 100\,\%). Because grid intensity scales uniformly across all runs, the bars are identical for every model and dataset. The dashed line marks the CodeCarbon reference; values below it represent emission reductions achievable through timing alone, without any change to code, hardware, or model architecture.}
 \label{fig:scenario_per_run}
 \end{figure}
 
@@ -440,7 +440,7 @@ To understand why the diurnal dimension matters as much as the seasonal one, con
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{carbon_intensity_july_day.pdf}
-\caption[Hourly \gls{ci} for Germany on 24 July 2024.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone on 24 July 2024, retrieved from the ElectricityMaps \gls{api} (\texttt{/v3/carbon-intensity/past-range}). Each data point represents the \gls{ci} for one clock hour as computed by ElectricityMaps from the hourly generation mix. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$.}
+\caption[Hourly \acrshort{ci} for Germany on 24 July 2024.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone on 24 July 2024, retrieved from the ElectricityMaps \gls{api} (\texttt{/v3/carbon-intensity/past-range}). Each data point represents the \gls{ci} for one clock hour as computed by ElectricityMaps from the hourly generation mix. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$.}
 \label{fig:carbon_intensity_july_day}
 \end{figure}
 
@@ -473,7 +473,7 @@ The seasonal dimension adds a second layer of variation on top of the diurnal on
     \caption{Autumn (16--25 Oct 2024). Mean: $384\,\gls{gco2eq}/\gls{kwh}$.}
     \label{fig:ci_autumn}
 \end{subfigure}
-\caption[Hourly \gls{ci} for Germany across four seasons.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone across representative ten-day windows per season (2024), retrieved from the ElectricityMaps \gls{api} (\texttt{/v3/carbon-intensity/past-range}). Each data point is the \gls{ci} for one clock hour. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Winter and autumn exceed the baseline on average; spring and summer fall below it.}
+\caption[Hourly \acrshort{ci} for Germany across four seasons.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone across representative ten-day windows per season (2024), retrieved from the ElectricityMaps \gls{api} (\texttt{/v3/carbon-intensity/past-range}). Each data point is the \gls{ci} for one clock hour. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Winter and autumn exceed the baseline on average; spring and summer fall below it.}
 \label{fig:carbon_intensity_seasonal}
 \end{figure}
 
@@ -521,7 +521,7 @@ Taken together, these findings introduce a dimension of ecological efficiency th
 
 \begin{table}[htbp]
 \centering
-\caption{Lifecycle break-even analysis. TE = hardware-corrected training \gls{co2eq}; IE = per-prediction inference \gls{co2eq} (directly measured \gls{cpu} energy, same grid intensity). Pred./30\,s = throughput in a 30-second window. Break-even = predictions until cumulative IE equals TE. \gls{rf} not run on HIGGS. Bold = best per column per dataset.}
+\caption[Lifecycle break-even analysis per model and dataset.]{Lifecycle break-even analysis. TE = hardware-corrected training \gls{co2eq}; IE = per-prediction inference \gls{co2eq} (directly measured \gls{cpu} energy, same grid intensity). Pred./30\,s = throughput in a 30-second window. Break-even = predictions until cumulative IE equals TE. \gls{rf} not run on HIGGS. Bold = best per column per dataset.}
 \label{tab:lifecycle}
 \footnotesize
 \begin{tabular}{@{} l l r r r r r @{}}
@@ -562,7 +562,7 @@ Between these extremes, break-even points organize around two drivers: training 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{lifecycle_xgb_gpu_vs_mlp_higgs.pdf}
-\caption[Cumulative lifecycle \gls{co2eq} on HIGGS as a function of prediction volume.]{Cumulative lifecycle emissions for all four HIGGS models (\gls{lr}, \gls{xgb} \gls{cpu}, \gls{xgb} \gls{gpu}, \gls{mlp}) as a function of prediction volume. Models with cheap training but slow inference (\gls{xgb} \gls{gpu}, \gls{xgb} \gls{cpu}) accumulate cost faster than models with expensive training but fast inference (\gls{lr}, \gls{mlp}).}
+\caption[Cumulative lifecycle \acrshort{co2eq} on HIGGS as a function of prediction volume.]{Cumulative lifecycle emissions for all four HIGGS models (\gls{lr}, \gls{xgb} \gls{cpu}, \gls{xgb} \gls{gpu}, \gls{mlp}) as a function of prediction volume. Models with cheap training but slow inference (\gls{xgb} \gls{gpu}, \gls{xgb} \gls{cpu}) accumulate cost faster than models with expensive training but fast inference (\gls{lr}, \gls{mlp}).}
 \label{fig:lifecycle_xgb_gpu_vs_mlp_higgs}
 \end{figure}
 

@@ -159,7 +159,7 @@ It is worth noting that scikit-learn's \texttt{LogisticRegression} is single-thr
 
 \begin{table}[htbp]
 \centering
-\caption[Optimized \gls{rf} hyperparameters.]{Optimized hyperparameters for the \gls{rf} classifier obtained via Optuna optimization.}
+\caption[Optimized \acrshort{rf} hyperparameters.]{Optimized hyperparameters for the \gls{rf} classifier obtained via Optuna optimization.}
 \label{tab:rf_params}
 \begin{tabular}{lcc}
 \toprule
@@ -192,7 +192,7 @@ The algorithm processes the unscaled feature matrix $X$ directly and uses the gl
 \begin{table}[htbp]
 \centering
 \small
-\caption[Optimized \gls{xgb} hyperparameters.]{Optimized hyperparameters for the \gls{xgb} classifier across all datasets.}
+\caption[Optimized \acrshort{xgb} hyperparameters.]{Optimized hyperparameters for the \gls{xgb} classifier across all datasets.}
 \label{tab:xgb_params}
 \begin{tabular}{lccc}
 \toprule
@@ -225,7 +225,7 @@ The implementation uses PyTorch as the primary \gls{dl} framework combined with 
 
 \begin{table}[htbp]
 \centering
-\caption[Tuned \gls{mlp} layer-wise architecture per dataset.]{Resolved layer-wise architecture of the tuned \gls{mlp} for each dataset. Each hidden block consists of a Linear layer, Batch Normalization, \gls{relu} and Dropout. Parameter counts include weights, biases and Batch Normalization scale and shift parameters.}
+\caption[Tuned \acrshort{mlp} layer-wise architecture per dataset.]{Resolved layer-wise architecture of the tuned \gls{mlp} for each dataset. Each hidden block consists of a Linear layer, Batch Normalization, \gls{relu} and Dropout. Parameter counts include weights, biases and Batch Normalization scale and shift parameters.}
 \label{tab:mlp_architecture}
 \vspace{10pt}
 
@@ -291,7 +291,7 @@ Input features are standardized using a \texttt{StandardScaler} embedded in the 
 
 \begin{table}[H]
 \centering
-\caption[Optimized \gls{mlp} hyperparameters.]{Optimized hyperparameters for the \gls{mlp} across all datasets.}
+\caption[Optimized \acrshort{mlp} hyperparameters.]{Optimized hyperparameters for the \gls{mlp} across all datasets.}
 \label{tab:mlp_params}
 \begin{tabular}{lccc}
 \toprule
@@ -660,7 +660,7 @@ For each combination, CO\textsubscript{2} emissions, training time and \gls{wf1}
 
 \begin{table}[htbp]
 \centering
-\caption[\gls{mlp} architecture variation: configurations and parameter counts.]{\gls{mlp} architectures evaluated in the variation experiment, with trainable parameter counts for HIGGS. Counts include linear layer weights and biases.}
+\caption[\acrshort{mlp} architecture variation: configurations and parameter counts.]{\gls{mlp} architectures evaluated in the variation experiment, with trainable parameter counts for HIGGS. Counts include linear layer weights and biases.}
 \label{tab:mlp_architectures}
 \begin{tabular}{lrrr}
 \toprule
