@@ -1,10 +1,10 @@
-\chapter{Methodology and Implementation}
-\label{experimental_design}
+\chapter{Implementation and Measurement}
 \label{implementation}
+
 
 This chapter documents both the design decisions and the concrete implementation of the experimental pipeline. It covers the hardware and software environment, the selected datasets and models, the evaluation metrics, the validation strategy and hyperparameter tuning approach, the emissions and inference measurement infrastructure including a custom \gls{cpu} power monitoring solution, and the results storage architecture. The final section defines the individual experiments that make up this study, directly preceding the results reported in \Cref{results}.
 
-% =============================================================
+% ─────────────────────────────────────────────
 \section{Experimental Setup}
 
 \subsection{Hardware Setup}
@@ -43,12 +43,9 @@ For the \gls{mlp}, PyTorch \cite{paszkePyTorchImperativeStyle2019} was used as t
 
 Carbon emissions and energy consumption were tracked using CodeCarbon, which is described in detail in \Cref{implementation_emissions}.
 
-% =============================================================
+
 \section{Datasets}
 \label{experimental_dataset}
-\label{implementation_datasets}
-\label{implementation_data_loading}
-
 Dataset size is a primary driver of both computational demand and energy consumption during model training \cite{rodriguezEvaluatingEnergyConsumption2024}. To evaluate how this relationship varies across different scales, three classification datasets were selected, varying significantly in size and enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity. The jump from 30,000 to 11,000,000 instances is large, spanning nearly three orders of magnitude. The datasets are summarized in Table~\ref{tab:datasets}.
 
 \begin{table}[htbp]
@@ -114,9 +111,8 @@ A central \texttt{config.py} stores all dataset-related settings as a single sou
 
 A thin wrapper around \texttt{load\_data}, called \texttt{load\_data\_split}, serves as the single entry point for all model and tuning scripts. It calls \texttt{load\_data} and immediately applies a stratified 80/20 train--test split using \texttt{train\_test\_split} with \texttt{RANDOM\_STATE} and \texttt{TEST\_SIZE = 0.2} from \texttt{config.py}, returning the four arrays \texttt{X\_train}, \texttt{X\_test}, \texttt{y\_train} and \texttt{y\_test}. Centralizing the split in one function ensures that tuning and training scripts see identical partitions; the rationale for this design is discussed in \Cref{design_validation}.
 
-% =============================================================
 \section{Models}
-\label{design_models}
+\label{implementation_models}
 
 Four classification algorithms were selected to span a range of model complexity, from a linear baseline to a deep \gls{nn}. The table below summarizes their roles and hardware assignments.
 
@@ -141,7 +137,9 @@ Four classification algorithms were selected to span a range of model complexity
 
 \gls{lr} serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive performance, making it well suited to quantifying whether the additional training cost of more complex models yields a meaningful gain in predictive performance. As a gradient-based model, it requires feature scaling, and a standard scaler is applied to normalize all input features to zero mean and unit variance before training.
 
-The algorithm is embedded in a scikit-learn pipeline with a \texttt{StandardScaler} as the first step. The solver is set to \texttt{sag}, chosen for its efficiency on large datasets as described in \Cref{sec:theoretical_lr}, and \texttt{max\_iter} is capped at 1000 to ensure convergence. No \gls{hpo} is applied, as established in \Cref{design_hyperparameter}. It is worth noting that scikit-learn's \texttt{LogisticRegression} is single-threaded for the core optimization step regardless of solver choice: none of the available solvers (\texttt{lbfgs}, \texttt{newton-cg}, \texttt{sag}, \texttt{saga}, \texttt{liblinear}) parallelize a single model fit. The \texttt{n\_jobs} parameter of \texttt{LogisticRegression} only applies to \gls{ovr} multiclass decomposition, which provides no benefit for the two binary-classification datasets in this study. As a result, training runs on a single \gls{cpu} core and produces roughly 10\% utilization on the eight-core system used here. The implications of this single-threaded constraint for energy comparability are discussed in \Cref{implementation_emissions}.
+The algorithm is embedded in a scikit-learn pipeline with a \texttt{StandardScaler} as the first step. The solver is set to \texttt{sag}, chosen for its efficiency on large datasets as described in \Cref{sec:theoretical_lr}, and \texttt{max\_iter} is capped at 1000 to ensure convergence. No \gls{hpo} is applied, as established in \Cref{design_hyperparameter}.
+
+It is worth noting that scikit-learn's \texttt{LogisticRegression} is single-threaded for the core optimization step regardless of solver choice: none of the available solvers (\texttt{lbfgs}, \texttt{newton-cg}, \texttt{sag}, \texttt{saga}, \texttt{liblinear}) parallelize a single model fit. The \texttt{n\_jobs} parameter of \texttt{LogisticRegression} only applies to \gls{ovr} multiclass decomposition, which provides no benefit for the two binary-classification datasets in this study. As a result, training runs on a single \gls{cpu} core and produces roughly 10\% utilization on the eight-core system used here. The implications of this single-threaded constraint for energy comparability are discussed in \Cref{implementation_emissions}.
 
 \subsection{Random Forest}
 \label{implementation_rf}
@@ -167,12 +165,17 @@ Parameter & Wine & Credit \\
 \end{tabular}
 \end{table}
 
+
 \subsection{XGBoost}
 \label{implementation_xgb}
 
-Building on the tree-based approach, \gls{xgb} was chosen as a second mid-complexity model, with the key distinction that it also supports \gls{gpu}-accelerated training. This makes it possible to directly compare the energy consumption and training time of \gls{cpu}- and \gls{gpu}-based tree ensemble methods under identical conditions, which is central to \rqref{3}. The suitability of \gls{gpu}-accelerated \gls{xgb} for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based \gls{gpu} implementation can process a dataset of 10 million instances with 28 features entirely within \gls{gpu} memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
+\paragraph{\gls{xgb}} was chosen as a second mid-complexity model, with the key distinction that it also supports \gls{gpu}-accelerated training. This makes it possible to directly compare the energy consumption and training time of \gls{cpu}- and \gls{gpu}-based tree ensemble methods under identical conditions, which is central to \rqref{3}. The suitability of \gls{gpu}-accelerated \gls{xgb} for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based \gls{gpu} implementation can process a dataset of 10 million instances with 28 features entirely within \gls{gpu} memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
 
-The classifier is evaluated in two variants: one restricted to the \gls{cpu} and one using \gls{gpu} acceleration. To isolate hardware as the sole variable, the configuration dictionaries are kept identical for both executions; the only difference is the device parameter, which is set to \gls{gpu} for the second variant. The resulting hyperparameters are applied to both variants without modification, which is valid because the histogram-based algorithm is identical on both devices and converges to the same optimal configuration regardless of which hardware executes the computation. \gls{xgb} has a specific technical requirement for handling target variables: while \gls{rf} natively adapts to different class structures, \gls{xgb} requires explicit instructions for its learning objective. As mentioned in \Cref{experimental_dataset}, the Wine dataset consists of three distinct categories, so the objective parameter is set to \texttt{multi:softmax}, paired with the \texttt{mlogloss} evaluation metric and a specified number of classes. The Credit and HIGGS datasets contain only two categories; their objective is configured as \texttt{binary:logistic} and evaluated using the standard \texttt{logloss} metric. The algorithm processes the unscaled feature matrix $X$ directly and uses the globally defined random state to guarantee deterministic execution. The \gls{cpu} versus \gls{gpu} comparison is derived in the plotting pipeline by reading all HIGGS subset rows from \texttt{results.csv} and fitting a log-log model separately for each device using \texttt{numpy.polyfit}, with the energy crossover point computed analytically from the intersection of the two fitted lines. The resulting configurations used for the final training phase are detailed in \Cref{tab:xgb_params}.
+
+The classifier is evaluated in two variants: one restricted to the \gls{cpu} and one using \gls{gpu} acceleration. To isolate hardware as the sole variable, the configuration dictionaries are kept identical for both executions; the only difference is the device parameter, which is set to \gls{gpu} for the second variant. The resulting hyperparameters are applied to both variants without modification, which is valid because the histogram-based algorithm is identical on both devices and converges to the same optimal configuration regardless of which hardware executes the computation. 
+
+\gls{xgb} has a specific technical requirement for handling target variables: while \gls{rf} natively adapts to different class structures, \gls{xgb} requires explicit instructions for its learning objective. As mentioned in \Cref{experimental_dataset}, the Wine dataset consists of three distinct categories, so the objective parameter is set to \texttt{multi:softmax}, paired with the \texttt{mlogloss} evaluation metric and a specified number of classes. The Credit and HIGGS datasets contain only two categories; their objective is configured as \texttt{binary:logistic} and evaluated using the standard \texttt{logloss} metric. The algorithm processes the unscaled feature matrix $X$ directly and uses the globally defined random state to guarantee deterministic execution. The \gls{cpu} versus \gls{gpu} comparison is derived in the plotting pipeline by reading all HIGGS subset rows from \texttt{results.csv} and fitting a log-log model separately for each device using \texttt{numpy.polyfit}, with the energy crossover point computed analytically from the intersection of the two fitted lines. The resulting configurations used for the final training phase are detailed in \Cref{tab:xgb_params}.
+
 
 \begin{table}[htbp]
 \centering
@@ -196,12 +199,13 @@ Parameter & Wine & Credit & HIGGS \\
 \end{tabular}
 \end{table}
 
+
 \subsection{Multilayer Perceptron}
 \label{implementation_mlp}
 
-The \gls{mlp} was selected as the most complex model, representing the \gls{nn} category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption. Like \gls{lr}, the \gls{mlp} also requires standard scaling, which is applied identically.
+The implementation uses PyTorch as the primary \gls{dl} framework combined with the Skorch library, which wraps the PyTorch model in a scikit-learn-compatible interface required by the pipeline and tuning infrastructure.
 
-The implementation uses PyTorch as the primary \gls{dl} framework combined with the Skorch library, which wraps the PyTorch model in a scikit-learn-compatible interface required by the pipeline and tuning infrastructure. A dynamic architecture was chosen to ensure the network structure directly reflects the optimal parameters found during the Optuna tuning process. At runtime, the script reads the best parameter set from a JSON file generated during the tuning phase. It extracts the number of hidden layers via \texttt{n\_layers} and the neuron count for each individual layer via \texttt{layer\_i}. These values are then assembled into a list called \texttt{layer\_sizes}. This list is subsequently passed to the \texttt{MLPModule} class. This class constructs the full network dynamically upon instantiation, making the architecture entirely data-driven. The resulting layer-wise architecture, including parameter counts, is shown in \Cref{tab:mlp_architecture}. The specific configurations resulting from this process for each dataset are detailed in \Cref{tab:mlp_params}.
+A dynamic architecture was chosen to ensure the network structure directly reflects the optimal parameters found during the Optuna tuning process. At runtime, the script reads the best parameter set from a JSON file generated during the tuning phase. It extracts the number of hidden layers via \texttt{n\_layers} and the neuron count for each individual layer via \texttt{layer\_i}. These values are then assembled into a list called \texttt{layer\_sizes}. This list is subsequently passed to the \texttt{MLPModule} class. This class constructs the full network dynamically upon instantiation, making the architecture entirely data-driven. The resulting layer-wise architecture, including parameter counts, is shown in \Cref{tab:mlp_architecture}. The specific configurations resulting from this process for each dataset are detailed in \Cref{tab:mlp_params}.
 
 \newcolumntype{R}{>{\raggedleft\arraybackslash}p{1.5em}}
 \newcolumntype{L}{>{\raggedright\arraybackslash}p{1.5em}}
@@ -289,55 +293,13 @@ Parameter & Wine & Credit & HIGGS \\
 
 The maximum number of training epochs is set to 200. This value acts as an upper boundary rather than a strict target. An early stopping callback (\path{skorch.callbacks.EarlyStopping}) monitors the validation loss after each individual epoch. It halts the training process immediately if no improvement is observed for 10 consecutive epochs. This mechanism prevents unnecessarily long training runs and provides an additional layer of protection against overfitting. Consequently, the upper limit of 200 epochs is rarely reached in practice.
 
-% =============================================================
-\section{Evaluation Metrics}
-\label{design_metrics}
 
-To answer the research questions of this study, two categories of metrics were employed: classification performance and ecological cost.
-\Gls{wf1} was selected to measure predictive performance, as it provides a standardized basis for comparing models across datasets of varying class distributions.
-Energy consumption in \gls{kwh} and \gls{co2eq} emissions in \gls{gco2eq} were chosen as the primary resource metrics, directly reflecting the ecological cost of model training.
 
-Training time in seconds was included as a secondary resource metric, as it captures computational demand independently of hardware-specific power draw.
-Furthermore, inference time was measured across all experimental setups to account for the operational footprint. In large-scale deployment scenarios, the cumulative energy demand of repeated predictions can often rival or even exceed the initial training costs \cite{desislavovTrendsAIInference2023}.
-Together, these metrics enable a direct assessment of whether gains in predictive performance justify the associated increase in training cost.
 
-Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020} \cite{schwartzGreenAI2020}, a custom composite metric was developed for this study, named \gls{cf1}. \Cref{eq:cf1} defines this metric as the ratio of training \gls{co2eq} emissions (in \gls{mgco2eq}) to the \gls{wf1} (in percent):
-\begin{equation}
-\text{\gls{cf1}} = \frac{C}{\gls{wf1}}
-\label{eq:cf1}
-\end{equation}
-where $C$ denotes \gls{co2eq} emissions in \gls{mgco2eq}. Milligrams are chosen as the unit because training emissions in this study range from roughly 0.01\,\gls{gco2eq} to 90\,\gls{gco2eq}, which divided by \gls{wf1} scores near 70--99\,\% yields \gls{cf1} values in the range of approximately 0.1 to 1{,}000, which are human-readable integers that would become unwieldy fractions in grams. Lower values indicate a more ecologically efficient model: less carbon expenditure per unit of predictive performance. Unlike normalization-based composite metrics, \gls{cf1} is an absolute measure: its value is independent of which other models appear in the same comparison, making it meaningful even when a single model is evaluated in isolation.
-
-It should be noted that $C$ is inherently location- and time-dependent, as \gls{co2eq} emissions are tied to the \gls{ci} of the local electricity grid, which varies both by region and over time~\cite{wrightEfficiencyNotEnough2025}. Consequently, \gls{cf1} scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures or time periods.
-
-Emissions are tracked separately for three distinct phases: hyperparameter tuning, model training and inference. In all three cases, data loading and preprocessing are deliberately excluded from the measurement interval, as their cost scales with dataset size rather than model architecture and would therefore introduce noise into cross-model comparisons. This ensures that reported emissions reflect only the algorithmic cost of each phase.
-
-% =============================================================
-\section{Validation Strategy}
-\label{design_validation}
-
-To obtain an unbiased estimate of generalization performance, the evaluation methodology employs a strict separation between model development and final testing. A shuffled, stratified 80/20 train--test split is applied to each dataset prior to any modeling steps. The resulting training partition is used exclusively for \gls{hpo} and model fitting, while the held-out test set is reserved solely for the final evaluation.
-
-Within the \gls{hpo} phase, \gls{cv} is used as the internal evaluation strategy on the training partition. Specifically, shuffled Stratified K-Fold \gls{cv} with $k=5$ folds is applied, a value chosen for its established balance between computational cost and estimation stability. Random shuffling is applied before fold construction to ensure that the order of instances in the original dataset does not influence fold composition. Stratified splitting then ensures that each fold preserves the original class distribution, which is particularly relevant because two of the three datasets exhibit class imbalance. This approach is directly coherent with the choice of \gls{wf1} as the primary metric and evaluation objective.
-
-Final model evaluation is performed by training a single model on the full training partition and scoring it on the unseen test set. By strictly withholding the test data from the \gls{cv} loop, this protocol ensures that the hyperparameters are not implicitly optimized for the test set, thereby preventing over-fitting during the model selection phase.
-
-To ensure reproducibility, a fixed random state was used for all splits, \gls{cv} folds, model initialization, and data shuffling. The specific value and its technical implementation are described in \Cref{implementation_sw_env}.
-
-A practical limitation applies to the Wine dataset: an 80/20 split of its 178 instances leaves approximately 36 test samples, which yields a noisier point estimate than the thousands or millions of test instances available for Credit and HIGGS. This is a structural constraint of the dataset size rather than a methodological choice, and the split ratio is kept uniform across all datasets to preserve comparability.
-
-% =============================================================
 \section{Hyperparameter Optimization}
-\label{design_hyperparameter}
 \label{implementation_tuning}
 
-Hyperparameter tuning was applied to all models except \gls{lr}. Without tuning, default parameters tend to favor certain model families over others, potentially skewing both performance and training cost comparisons \cite{bagnallUseDefaultParameter2017}. \gls{lr} is deliberately excluded: its role as a lightweight linear baseline depends on its simplicity and tuning it would undermine that function.
-
-\gls{bo}-based methods require substantially fewer evaluations than grid or random search to reach competitive configurations, which directly reduces the energy cost of the tuning process itself. Because of that, Optuna was selected as the optimization framework, using \gls{tpe} as its search strategy. Each run was configured to execute 40 trials per model--dataset combination, a budget chosen to balance search thoroughness against ecological overhead. All trials operate exclusively on the training partition and tuning was performed separately for each dataset. The optimization objective is \gls{wf1} in all cases.
-
-A limitation of the fixed 40-trial budget is that it does not account for differences in search space dimensionality across models. \gls{rf} exposes five hyperparameters and \gls{xgb} six, both in well-defined, low-dimensional spaces that \gls{tpe} can navigate reliably within 40 evaluations. The \gls{mlp} search space is larger and structurally more complex: it includes a discrete depth parameter (\texttt{n\_layers}, ranging from 1 to 4) that conditionally activates up to four additional layer-width dimensions, plus continuous parameters for dropout rate, learning rate and batch size, yielding an effective dimensionality of five to eight depending on the sampled depth. Conditional search spaces of this kind require more evaluations for \gls{tpe} to build an accurate surrogate model. In addition, each \gls{mlp} trial on HIGGS involves training a \gls{nn} and is substantially more expensive than a comparable tree-based trial, so the 40-trial budget represents a greater practical constraint for the \gls{mlp} than for \gls{rf} or \gls{xgb}. As a result, the \gls{mlp} may not have reached the same degree of optimization as the tree-based models and the reported \gls{mlp} performance figures should be interpreted as a lower bound on what a more exhaustive search might achieve. Increasing the trial budget selectively for the \gls{mlp} would, however, break the comparability constraint: allocating more search effort to one model than to others would confound any observed performance difference with tuning thoroughness rather than isolating it as a property of the algorithm itself. The uniform budget is therefore a deliberate design choice to keep the search effort symmetric across all models.
-
-The tuning logic is encapsulated in three dedicated scripts (\texttt{tune\_xgb.py}, \texttt{tune\_rfc.py} and \texttt{tune\_mlp.py}), one per tunable model. All three follow the same structural pattern and differ only in the model instantiated and the search space queried from the trial object. The configuration shared across all three scripts is summarized in \Cref{tab:tuning_config}; the per-model search spaces are listed in \Cref{tab:search_spaces}.
+Building on the design outlined in \Cref{design_hyperparameter}, this section describes how Optuna was integrated into the evaluation pipeline and which search spaces were defined for each model. The tuning logic is encapsulated in three dedicated scripts (\texttt{tune\_xgb.py}, \texttt{tune\_rfc.py} and \texttt{tune\_mlp.py}), one per tunable model. All three follow the same structural pattern and differ only in the model instantiated and the search space queried from the trial object. The configuration shared across all three scripts is summarized in \Cref{tab:tuning_config}; the per-model search spaces are listed in \Cref{tab:search_spaces}.
 
 \begin{table}[htbp]
 \centering
@@ -398,9 +360,11 @@ Each study is created via \texttt{optuna.create\_study(direction="maximize")} an
 
 To capture the energy footprint of the tuning process itself, the entire \path{study.optimize} call is wrapped in a CodeCarbon \texttt{EmissionsTracker} with a script-specific \texttt{project\_name} (e.g.\ \texttt{tune\_mlp\_higgs}), so that tuning runs are clearly distinguishable from training runs in the \texttt{emissions/} directory. The same tracker is used across all three scripts and is configured identically to the trackers used during training, as described in \Cref{implementation_emissions}.
 
-Once a study completes, the best score, the corresponding hyperparameter dictionary, the duration, the emissions reported by the tracker and the trial count are written to a shared \texttt{best\_params.json} file via the \texttt{save\_best\_params()} utility. The function performs an upsert keyed by model and dataset, so that re-running a single tuning configuration overwrites only its own entry and leaves the other results untouched. The model scripts introduced in \Cref{design_models} consume this file through the corresponding \texttt{load\_best\_params()} helper, which decouples tuning from training entirely: the final training pipeline never instantiates Optuna, it merely reads the previously persisted hyperparameter dictionary and passes it to the classifier constructor.
+Once a study completes, the best score, the corresponding hyperparameter dictionary, the duration, the emissions reported by the tracker and the trial count are written to a shared \texttt{best\_params.json} file via the \texttt{save\_best\_params()} utility. The function performs an upsert keyed by model and dataset, so that re-running a single tuning configuration overwrites only its own entry and leaves the other results untouched. The model scripts introduced in \Cref{implementation_models} consume this file through the corresponding \texttt{load\_best\_params()} helper, which decouples tuning from training entirely: the final training pipeline never instantiates Optuna, it merely reads the previously persisted hyperparameter dictionary and passes it to the classifier constructor.
 
-% =============================================================
+
+
+
 \section{Emissions Measurement}
 \label{implementation_emissions}
 
@@ -480,7 +444,6 @@ This difference has a direct consequence for the comparability of emissions figu
 
 The practical consequence is that \gls{lr}'s reported emissions likely overstate its true algorithmic energy cost relative to the multi-threaded models. Any direct comparison of absolute emission figures between \gls{lr} and tree-based models therefore carries a methodological caveat: the measured difference partially reflects parallelization architecture and system idle power, not purely the intrinsic computational demands of the respective algorithms. This limitation is acknowledged in the cross-model comparisons in \Cref{results}.
 
-% =============================================================
 \section{Inference Latency Measurement}
 \label{implementation_inference}
 
@@ -509,7 +472,6 @@ The break-even prediction count follows directly as
 \end{equation}
 The full methodology is discussed in \Cref{design_lifecycle}.
 
-% =============================================================
 \section{Results Storage and Orchestration}
 \label{implementation_results}
 
@@ -606,6 +568,7 @@ The hyperparameters used at every subset size are those obtained from tuning on 
 
 \paragraph{Measurement.}
 For each combination, CO\textsubscript{2} emissions, training time and \gls{wf1} are recorded using the same measurement pipeline as the main benchmark. Because \gls{xgb} is the only model present in both a \gls{cpu} and a \gls{gpu} variant, the scaling data also directly supports the \gls{cpu} versus \gls{gpu} comparison: it shows at which dataset size the \gls{gpu}'s higher power draw starts to be offset by its faster training time, making the energy crossover visible as part of the broader scaling picture rather than as an isolated finding. \expref{2} thus directly addresses \rqref{4} and feeds into \rqref{3}.
+
 
 \subsection{MLP Architecture Variation}
 \label{design_mlp_variation}\label{exp:3}

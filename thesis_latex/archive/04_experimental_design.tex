@@ -4,56 +4,16 @@ This chapter outlines the design decisions underlying the empirical evaluation o
 
 % =============================================================
 \section{Datasets}
-\label{experimental_dataset}
-Dataset size is a primary driver of both computational demand and energy consumption during model training \cite{rodriguezEvaluatingEnergyConsumption2024}. To evaluate how this relationship varies across different scales, three classification datasets were selected, varying significantly in size and enabling a systematic evaluation of how model performance and energy consumption scale across different levels of data complexity. The jump from 30,000 to 11,000,000 instances is large, spanning nearly three orders of magnitude. The datasets are summarized in Table~\ref{tab:datasets}.
-
-\begin{table}[htbp]
-\centering
-\caption{Overview of datasets used in this analysis}
-\label{tab:datasets}
-\begin{tabular}{lrrrl}
-\toprule
-\textbf{Dataset} & \textbf{Instances} & \textbf{Features} & \textbf{Classes} & \textbf{Scale} \\
-\midrule
-Wine \cite{stefanaeberhardWine1992} & 178 & 13 & 3 & Small \\
-Default of Credit Card Clients \cite{i-chengyehDefaultCreditCard2009} & 30,000 & 23 & 2 & Medium \\
-HIGGS \cite{whitesonHIGGS2014} & 11,000,000 & 28 & 2 & Large \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The Wine \parencite{stefanaeberhardWine1992} dataset contains 178 instances across 13 features, where each feature describes a chemical property of wines from the same region in Italy, derived from three different cultivars.
-
-The Default of Credit Card Clients \parencite{i-chengyehDefaultCreditCard2009} (hereafter: Credit) dataset contains 30,000 instances across 23 features and focuses on predicting payment default among credit card clients in Taiwan.
-
-The HIGGS \parencite{whitesonHIGGS2014} dataset is the largest dataset used in this study, comprising 11,000,000 instances across 28 features, seven of which are high-level features derived by physicists to help discriminate between the two classes \cite{baldiSearchingExoticParticles2014}. The classification goal is to distinguish between signal events produced by Higgs bosons and background noise processes.
 
 \section{Models}
 \label{design_models}
 
-\gls{lr} serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive performance, making it well suited to quantifying whether the additional training cost of more complex models yields a meaningful gain in predictive performance. As a gradient-based model, it requires feature scaling, and a standard scaler is applied to normalize all input features to zero mean and unit variance before training.
-
-\gls{rf} was selected as a mid-complexity representative of tree-based ensemble methods. Relevant to this study, \gls{rf} does not support \gls{gpu}-accelerated training and is therefore run exclusively on the \gls{cpu}.
 
 Building on the tree-based approach, \gls{xgb} was chosen as a second mid-complexity model, with the key distinction that it also supports \gls{gpu}-accelerated training. This makes it possible to directly compare the energy consumption and training time of \gls{cpu}- and \gls{gpu}-based tree ensemble methods under identical conditions, which is central to \rqref{3}. The suitability of \gls{gpu}-accelerated \gls{xgb} for datasets at this scale has been demonstrated by Mitchell and Frank, who show that the histogram-based \gls{gpu} implementation can process a dataset of 10 million instances with 28 features entirely within \gls{gpu} memory \cite{mitchellAcceleratingXGBoostAlgorithm2017}.
 
 The \gls{mlp} was selected as the most complex model, representing the \gls{nn} category. Its highly configurable architecture, particularly the number of hidden layers and neurons per layer, makes it well suited for the architectural complexity experiments conducted in this study, where these parameters are systematically varied to assess their impact on predictive performance and energy consumption. Like \gls{lr}, the \gls{mlp} also requires standard scaling, which is applied identically.
 
-\begin{table}[htbp]
-\centering
-\caption{Overview of classification models used in this study}
-\label{tab:models}
-\begin{tabular}{llll}
-\toprule
-\textbf{Model} & \textbf{Type} & \textbf{Device} & \textbf{Role} \\
-\midrule
-\gls{lr} & Linear & \gls{cpu} & Baseline \\
-\gls{rf}  & Ensemble & \gls{cpu} & Mid-complexity \\
-\gls{xgb} & Gradient Boosting & \gls{cpu} \& \gls{gpu} & Mid-complexity \\
-\gls{mlp} & \gls{nn} & \gls{gpu} & High-complexity \\
-\bottomrule
-\end{tabular}
-\end{table}
+
 
 
 \gls{rf} is the only model excluded from one dataset combination: due to prohibitive training runtimes at 11 million instances, it is not evaluated on HIGGS in the main benchmark. It is, however, included in the dataset scaling experiment for subset sizes up to 500{,}000 instances, where runtimes remain manageable. This provides data on the point at which \gls{rf} becomes computationally impractical relative to the other models. All other model--dataset combinations are included in the main benchmark.
@@ -76,7 +36,7 @@ Inspired by the efficiency framing proposed in \citeauthor{schwartzGreenAI2020} 
 \end{equation}
 where $C$ denotes \gls{co2eq} emissions in \gls{mgco2eq}. Milligrams are chosen as the unit because training emissions in this study range from roughly 0.01\,\gls{gco2eq} to 90\,\gls{gco2eq}, which divided by \gls{wf1} scores near 70--99\,\% yields \gls{cf1} values in the range of approximately 0.1 to 1{,}000, which are human-readable integers that would become unwieldy fractions in grams. Lower values indicate a more ecologically efficient model: less carbon expenditure per unit of predictive performance. Unlike normalization-based composite metrics, \gls{cf1} is an absolute measure: its value is independent of which other models appear in the same comparison, making it meaningful even when a single model is evaluated in isolation.
 
-It should be noted that $C$ is inherently location- and time-dependent, as \gls{co2eq} emissions are tied to the \gls{ci} of the local electricity grid, which varies both by region and over time~\cite{wrightEfficiencyNotEnough2025}. Consequently, \gls{cf1} scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures or time periods.
+It should be noted that $C$ is inherently location- and time-dependent, as \gls{co2eq} emissions are tied to the carbon intensity of the local electricity grid, which varies both by region and over time~\cite{wrightEfficiencyNotEnough2025}. Consequently, \gls{cf1} scores reflect the ecological efficiency of the specific experimental setup used in this study and may not generalize directly to other energy infrastructures or time periods.
 
 Emissions are tracked separately for three distinct phases: hyperparameter tuning, model training and inference. In all three cases, data loading and preprocessing are deliberately excluded from the measurement interval, as their cost scales with dataset size rather than model architecture and would therefore introduce noise into cross-model comparisons. This ensures that reported emissions reflect only the algorithmic cost of each phase.
 

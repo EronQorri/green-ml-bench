@@ -22,6 +22,13 @@ RESULTS_DIR = BASE_DIR / "results"
 PLOTS_DIR = Path(__file__).parent
 
 MODEL_ORDER = ["LogisticRegression", "RandomForest", "XGBoost", "XGBoost_GPU", "MLP_PyTorch"]
+MODEL_SHORT_LABELS = {
+    "LogisticRegression": "LR",
+    "RandomForest":       "RF",
+    "XGBoost":            "XGB CPU",
+    "XGBoost_GPU":        "XGB GPU",
+    "MLP_PyTorch":        "MLP",
+}
 MODEL_PALETTE = {
     "LogisticRegression": (123/255, 167/255, 188/255),
     "RandomForest":       (212/255, 149/255, 106/255),
@@ -180,9 +187,13 @@ for ds in ["wine", "credit", "higgs"]:
         continue
     fig_s, ax_s = plt.subplots(figsize=(5, 5.5))
     models_in_ds = [m for m in MODEL_ORDER if m in subset["model"].values]
-    sns.barplot(data=subset, x="model", y="cf1",
-                order=models_in_ds, hue="model", hue_order=models_in_ds,
-                palette=MODEL_PALETTE, ax=ax_s, dodge=False, errorbar=None)
+    subset = subset.copy()
+    subset["model_label"] = subset["model"].map(MODEL_SHORT_LABELS)
+    short_order = [MODEL_SHORT_LABELS[m] for m in models_in_ds]
+    short_palette = {MODEL_SHORT_LABELS[m]: MODEL_PALETTE[m] for m in models_in_ds}
+    sns.barplot(data=subset, x="model_label", y="cf1",
+                order=short_order, hue="model_label", hue_order=short_order,
+                palette=short_palette, ax=ax_s, dodge=False, errorbar=None)
     if ds == "higgs":
         ax_s.set_yscale("log")
     ax_s.set_xlabel("", fontsize=18)
@@ -215,7 +226,7 @@ TUNE_PALETTE = {
     "tune_XGB": (130/255, 185/255, 154/255),
     "tune_MLP": (155/255, 135/255, 181/255),
 }
-TUNE_LABELS = {"tune_RFC": "Random Forest", "tune_XGB": "XGBoost", "tune_MLP": "MLP"}
+TUNE_LABELS = {"tune_RFC": "RF", "tune_XGB": "XGB", "tune_MLP": "MLP"}
 
 _df_raw = pd.read_csv(RESULTS_DIR / "results.csv")
 _df_raw.columns = _df_raw.columns.str.strip()
@@ -375,13 +386,14 @@ if all(c in df.columns for c in cc_cols):
                color=MODEL_PALETTE[model])
 
     ax.set_xticks(x)
-    ax.set_xticklabels([d.capitalize() for d in datasets_order], fontsize=11)
-    ax.set_ylabel("Underestimation Factor (HW / CC)", fontsize=10)
+    ax.set_xticklabels([d.capitalize() for d in datasets_order], fontsize=15)
+    ax.tick_params(axis="y", labelsize=13)
+    ax.set_ylabel("Underestimation Factor (HW / CC)", fontsize=14)
     ax.set_ylim(1.0, 2.85)
     ax.axhline(1.0, color="red", linewidth=0.8, linestyle="--", alpha=0.6)
     ax.yaxis.grid(True, linestyle="--", alpha=0.4)
     ax.set_axisbelow(True)
-    ax.legend(fontsize=9, ncol=2)
+    ax.legend(fontsize=13, ncol=2)
     plt.tight_layout()
     plt.savefig(PLOTS_DIR / "codecarbon_vs_hw.pdf", bbox_inches="tight")
     print("Saved: analysis/plots/codecarbon_vs_hw.pdf")

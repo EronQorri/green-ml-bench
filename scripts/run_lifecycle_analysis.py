@@ -117,7 +117,7 @@ def plot_breakeven_bars(df):
         "XGBoost_GPU":        (192/255, 112/255, 112/255),
         "MLP_PyTorch":        (155/255, 135/255, 181/255),
     }
-    fs  = 13
+    fs  = 15
     GAP = 1  # blank-position gap between dataset groups
 
     # Build columns left-to-right: wine | credit | higgs
@@ -155,7 +155,8 @@ def plot_breakeven_bars(df):
     ax.set_xticks(positions)
     ax.set_xticklabels(labels, fontsize=fs - 1, rotation=45, ha="right")
     ax.set_yscale("log")
-    ax.set_ylabel("Break-even (# predictions)", fontsize=fs - 1)
+    ax.set_ylabel("Break-even (# predictions, log scale)", fontsize=fs - 1)
+    ax.tick_params(axis="y", labelsize=fs - 1)
     ax.grid(True, axis="y", which="major", alpha=0.25, linestyle="--", zorder=1)
     ax.set_axisbelow(True)
     ax.set_ylim(top=values.max() * 8)

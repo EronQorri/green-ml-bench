@@ -9,11 +9,11 @@ from pathlib import Path
 mpl.rcParams.update({
     "font.family":       "serif",
     "font.serif":        ["Palatino Linotype", "Palatino", "Book Antiqua", "DejaVu Serif"],
-    "axes.titlesize":    11,
-    "axes.labelsize":    10,
-    "xtick.labelsize":    9,
-    "ytick.labelsize":    9,
-    "legend.fontsize":    9,
+    "axes.titlesize":    16,
+    "axes.labelsize":    15,
+    "xtick.labelsize":   14,
+    "ytick.labelsize":   14,
+    "legend.fontsize":   14,
 })
 
 BASE_DIR = Path(__file__).parent.parent.parent
