@@ -65,7 +65,7 @@ Despite the higher peak power draw of \glspl{gpu}, their throughput on suitable 
 
 \subsection{Measurement Approaches}
 \label{sec:theoretical_measurement}
-\todo{taxonomien}
+
 \paragraph{Physical measurement.} Accurately evaluating the energy consumption of \gls{ml} models relies on a spectrum of methodologies, broadly categorized into physical measurements, estimation models and on-chip sensors \parencite{rodriguezEvaluatingEnergyConsumption2024}. The baseline for ground-truth measurement is the \gls{epm}, which tracks power directly at the wall outlet or motherboard. While \glspl{epm} capture the true consumption of the entire system, they are often costly to deploy at scale and cannot provide fine-grained decomposition to isolate the energy used by specific software processes or individual hardware components \parencite{rodriguezEvaluatingEnergyConsumption2024}.
 
 \paragraph{Estimation models.} To achieve component-level granularity without external hardware, many approaches utilize estimation models. These models calculate energy based on abstract hardware specifications, such as multiplying execution time by the \gls{tdp} or counting \glspl{flop}, or by leveraging \glspl{pmc} to track utilization rates \parencite{rodriguezEvaluatingEnergyConsumption2024}. However, as established in \Cref{sec:theoretical_energy}, relying solely on abstract analytical models or \gls{tdp} often leads to severe inaccuracies under dynamic workloads, failing to capture the true, fluctuating real-time power draw of the hardware \parencite{hendersonSystematicReportingEnergy2020}.

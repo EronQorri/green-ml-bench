@@ -1,55 +1,85 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%| BACHELOR THESIS - GREEN AI |%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\documentclass[11pt,a4paper,twoside]{book}
+% ── VERSION TOGGLE ───────────────────────────────────────────────────────────
+% Print version: twoside, mirrored margins, blank verso pages before chapters.
+% Screen version: oneside, symmetric margins, no blank pages.
+% To build the screen PDF: comment out \printtrue below.
+\newif\ifprint
+\printtrue
 
-%%| INCLUDE PACKAGES |%%
+\ifprint
+  \PassOptionsToClass{twoside,openright}{book}
+\else
+  \PassOptionsToClass{oneside,openany}{book}
+\fi
+% ─────────────────────────────────────────────────────────────────────────────
+
+\documentclass[11pt,a4paper]{book}
+
+%%| PACKAGES |%%
+
+% Core typography and layout
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[sc]{mathpazo}
-\usepackage[a4paper, inner=30mm, outer=25mm, top=25mm, bottom=25mm]{geometry}
-\raggedbottom
+\ifprint
+  \usepackage[a4paper, inner=30mm, outer=25mm, top=25mm, bottom=25mm]{geometry}
+\else
+  \usepackage[a4paper, margin=25mm]{geometry}
+\fi
 \usepackage[english]{babel}
+\usepackage{setspace}
+\usepackage[nopatch=footnote]{microtype}
+
+% Math
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Graphics, colour, diagrams
+\usepackage[dvipsnames]{xcolor}
 \usepackage{graphicx}
 \usepackage{subcaption}
 \usepackage[font=small,labelfont=bf,format=plain,justification=raggedright,singlelinecheck=false]{caption}
-\graphicspath{{../analysis/plots/}{../analysis/carbon_intensity/}{../analysis/electricity_mix/}}
-
-
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage[autostyle=true]{csquotes}
-\usepackage[backend=biber, style=ieee]{biblatex}
-\usepackage[nopatch=footnote]{microtype}
-\usepackage{hyperref}
-\usepackage{setspace}
-\usepackage{pdfpages}
-\setlength{\marginparwidth}{2cm}
-\usepackage{todonotes}
-\usepackage{booktabs}
-\usepackage{tabularx}
-\usepackage{multirow}
-\usepackage{cleveref}
-\usepackage[dvipsnames]{xcolor}
-\usepackage{tikz}
-\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
 \usepackage{float}
 \usepackage[section]{placeins}
 \usepackage{rotating}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc}
+
+% Tables
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{array}
+
+% Bibliography
+\usepackage[autostyle=true]{csquotes}
+\usepackage[backend=biber, style=ieee]{biblatex}
+\addbibresource{Document/Bibliography/ref.bib}
+
+% Cross-referencing and PDF
+\usepackage{hyperref}
+\usepackage{xurl}
+\usepackage{cleveref}
+
+% Glossaries and abbreviations
+\usepackage[acronym, toc, nonumberlist, nogroupskip]{glossaries}
+
+% Layout utilities
 \usepackage{titlesec}
 \usepackage{fancyhdr}
 \usepackage{tocloft}
-\usepackage[acronym, toc, nonumberlist, nogroupskip]{glossaries}
-\makeglossaries
-\usepackage{array}
 \usepackage{enumitem}
-
-% Shorthand for research-question and experiment cross-references
-\newcommand{\rqref}[1]{\hyperref[rq:#1]{RQ\,#1}}
-\newcommand{\expref}[1]{\hyperref[exp:#1]{Exp.\,#1}}
+\usepackage{pdfpages}
+\usepackage{todonotes}
 
 %%| SETTINGS |%%
-\hypersetup{                                                                        
+
+\graphicspath{{../analysis/plots/}{../analysis/carbon_intensity/}{../analysis/electricity_mix/}}
+\makeglossaries
+\raggedbottom
+\onehalfspacing
+\setlength{\marginparwidth}{2cm}
+
+\hypersetup{
     colorlinks,
     citecolor   = black,
     filecolor   = black,
@@ -58,11 +88,15 @@
     pdftitle    = {Efficiency vs. Performance in Green AI},
     pdfsubject  = {Bachelor Thesis},
     pdfauthor   = {Eron Qorri},
-    pdfcreator  = {pdflatex},           
+    pdfcreator  = {pdflatex},
     pdfproducer = {LaTeX with hyperref}
 }
 
-\onehalfspacing
+\DeclareFieldFormat{howpublished}{\url{#1}}
+
+% Shorthand for research-question and experiment cross-references
+\newcommand{\rqref}[1]{\hyperref[rq:#1]{RQ\,#1}}
+\newcommand{\expref}[1]{\hyperref[exp:#1]{Exp.\,#1}}
 
 % Chapter headings: large grey number, rule, title
 \titleformat{\chapter}[display]
@@ -79,10 +113,16 @@
 \titlespacing*{\paragraph}{0pt}{6pt plus 2pt}{0.5em}
 
 % Running headers
+\setlength{\headheight}{14pt}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[LE]{\small\thepage\quad\textit{\leftmark}}
-\fancyhead[RO]{\textit{\rightmark}\quad\small\thepage}
+\ifprint
+  \fancyhead[LE]{\small\thepage\quad\textit{\leftmark}}
+  \fancyhead[RO]{\textit{\rightmark}\quad\small\thepage}
+\else
+  \fancyhead[L]{\textit{\leftmark}}
+  \fancyhead[R]{\small\thepage}
+\fi
 \renewcommand{\headrulewidth}{0.4pt}
 \fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
 % ltex: enabled=false
@@ -90,17 +130,20 @@
 % ltex: enabled=true
 \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
 
-% Truly blank verso pages (suppress header on auto-inserted blanks before chapter openings)
-\let\origdoublepage\cleardoublepage
-\renewcommand{\cleardoublepage}{%
-  \clearpage{\pagestyle{empty}\origdoublepage}}
+% Blank pages before chapters: suppress header in print, skip entirely in screen
+\ifprint
+  \let\origdoublepage\cleardoublepage
+  \renewcommand{\cleardoublepage}{%
+    \clearpage{\pagestyle{empty}\origdoublepage}}
+\else
+  \renewcommand{\cleardoublepage}{\clearpage}
+\fi
 
-% Avoid widows (single last line at top of page) and orphans (single first line at bottom)
+% Avoid widows and orphans
 \widowpenalty=10000
 \clubpenalty=10000
 
-% Custom environment for the research question (used in ch.1 and ch.4)
-% Italic, indented, with a thin gray rule on the left.
+% Research question environment: italic, indented, with a thin gray rule on the left
 \newenvironment{researchquestion}{%
   \par\vspace{0.4\baselineskip}%
   \begin{list}{}{%
@@ -116,16 +159,15 @@
   \par\vspace{0.4\baselineskip}%
 }
 
-% Table of contents
+% Table of contents formatting
 \setlength{\cftbeforechapskip}{6pt}
 \renewcommand{\cftchapfont}{\bfseries}
 \renewcommand{\cftchappagefont}{\bfseries}
 \renewcommand{\cftchapleader}{\bfseries\cftdotfill{\cftdotsep}}
 
-\addbibresource{Document/Bibliography/ref.bib}
 \input{chapters/abbreviations}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%| DOCUMENT |%%
 \begin{document}
 
 \addtocontents{lof}{\protect\renewcommand{\protect\addvspace}[1]{}}
@@ -145,57 +187,20 @@
 \listoftables
 \addcontentsline{toc}{chapter}{List of Tables}
 
-\chapter*{Abstract}
-\addcontentsline{toc}{chapter}{Abstract}
-
-Green AI research has established that the energy consumption and emissions of machine learning are measurable, but its empirical scope has remained tied to large-scale deep learning on text and image data. The classical algorithms that dominate deployed tabular classification lack a comparable baseline. This thesis addresses that gap through a systematic benchmark of five classifiers, Logistic Regression, Random Forest, XGBoost on \acrshort{cpu} and \acrshort{gpu}, and a neural network, on three tabular datasets spanning four orders of magnitude in size, from 178 to 11 million instances. The scope extends beyond the single training run to cover hyperparameter search, temporal variation in electricity grid carbon intensity and the inference break-even point at which cumulative deployment cost overtakes the training carbon footprint. To address the systematic undercounting of software-based estimators, all \acrshort{cpu} energy figures are derived from direct hardware-sensor readings via CodeCarbon. A composite metric, \acrlong{cf1}, is introduced to express \acrlong{co2eq} cost per unit of predictive performance.
-
-The results show that ecological efficiency is not a property of an algorithm but emerges from the fit between its computational structure, the hardware it runs on and the volume of data it processes. No model leads across all three datasets. \acrshort{gpu} acceleration becomes the more efficient choice for XGBoost only above approximately 80{,}000 instances. Below that threshold device initialization overhead dominates and emissions exceed those of the \acrshort{cpu} variant. A constrained Optuna search for the \acrshort{mlp} on HIGGS emitted roughly 54 times the carbon emissions of the final training run it enabled. Further analysis reveals that direct hardware measurement exceeded raw CodeCarbon figures by a median factor of 1.92, and shifting training away from winter evenings towards summer midday reduced absolute emissions by up to 70 percent without altering a single line of code. The contribution of this work is not a ranked list of preferred classifiers but a corrected measurement methodology, a context-sensitive efficiency metric and a lifecycle accounting framework that together make ecological model selection answerable for a given deployment context rather than as a general question.
+\include{chapters/abstract}
 
 \mainmatter
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%| CHAPTERS |%%
 \include{chapters/01_introduction}
 \include{chapters/02_theoretical_background}
 \include{chapters/03_related_work}
-\include{chapters/04_methodology_and_implementation.tex}
+\include{chapters/04_methodology_and_implementation}
 \include{chapters/05_results_and_evaluation}
 \include{chapters/06_conclusion_and_outlook}
 \include{chapters/appendix}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\newpage
-\chapter*{Statutory Declaration}
-\thispagestyle{plain}
-
-I herewith declare that I have composed the present thesis myself and without use of any other than the cited sources and aids. Sentences or parts of sentences quoted literally are marked as such; other references with regard to the statement and scope are indicated by full details of the publications concerned. The thesis in the same or similar form has not been submitted to any examination body and has not been published. This thesis was not yet, even in part, used in another examination or as a course performance.
-
-\vspace{1.5cm}
-
-\noindent
-Karlsruhe, \today
-
-\vspace{1cm}
-
-\noindent
-\rule{7cm}{0.4pt}\\
-Eron Qorri
-
-\section*{Declaration on the Use of AI-Assisted Tools}
-
-In the preparation of this thesis, \textbf{Claude Code} (Anthropic, 2026) was used to support the development of implementation code, to paraphrase and refine passages of written text and to assist with translation between German and English.
-
-\vspace{1.5cm}
-
-\noindent
-Karlsruhe, \today
-
-\vspace{1cm}
-
-\noindent
-\rule{7cm}{0.4pt}\\
-Eron Qorri
+\include{chapters/declarations}
 
 \newpage
 \printbibliography[heading=bibintoc, title={References}]
