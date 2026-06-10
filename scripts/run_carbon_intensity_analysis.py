@@ -209,7 +209,7 @@ def plot_scenario_intensities(scenarios):
         ax.text(bar.get_x() + bar.get_width() / 2, v + 5, f"{v:.0f}",
                 ha="center", va="bottom", fontsize=12)
     ax.set_ylim(top=max(values) * 1.18)
-    ax.set_ylabel("Carbon intensity (gCO₂/kWh)", fontsize=14)
+    ax.set_ylabel("Carbon intensity (gCO₂eq/kWh)", fontsize=14)
     ax.tick_params(axis="x", labelsize=13, rotation=20)
     ax.tick_params(axis="y", labelsize=12)
     plt.tight_layout()
