@@ -5,7 +5,7 @@
 \chapter{Full HIGGS Scaling Experiment Results}
 \label{app:scaling}
 
-\Cref{tab:app_scaling_wf1,tab:app_scaling_co2} provide the complete numeric results for the HIGGS subset scaling experiment introduced in \Cref{design_scaling} and discussed in \Cref{sec:results_scaling}. \Cref{fig:scaling_higgs} in the main text shows these values as line charts; the tables below give exact figures for reproducibility. \gls{rf} is excluded from subset sizes above 500{,}000 due to prohibitive training times. All CO\textsubscript{2} values are hardware-corrected (see \Cref{implementation_emissions}).
+\Cref{tab:app_scaling_wf1,tab:app_scaling_co2} provide the complete numeric results for the HIGGS subset scaling experiment introduced in \Cref{design_scaling} and discussed in \Cref{sec:results_scaling}. \Cref{fig:scaling_higgs} in the main text shows these values as line charts; the tables below give exact figures for reproducibility. \gls{rf} is excluded from subset sizes above 500{,}000 due to prohibitive training times. All carbon emissions are hardware-corrected (see \Cref{implementation_emissions}).
 
 \begin{table}[htbp]
 \centering
@@ -64,7 +64,7 @@
 
 \begin{table}[htbp]
 \centering
-\caption[\acrshort{mlp} architecture variation results on HIGGS.]{Complete results for the 12 \acrshort{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is single-run wall-clock time. \acrshort{cf1} is mg CO\textsubscript{2} per WF1 percentage point; lower is better. Bold marks the best value per column.}
+\caption[\acrshort{mlp} architecture variation results on HIGGS.]{Complete results for the 12 \acrshort{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is single-run wall-clock time. \acrshort{cf1} is \gls{mgco2eq} per \gls{wf1} percentage point; lower is better. Bold marks the best value per column.}
 \label{tab:app_mlp_full}
 \begin{tabular}{@{} l r r r r r @{}}
 \toprule
@@ -252,7 +252,7 @@ December  & 380 & 383 & 152 & 658 & 128 \\
 \chapter{Full Counterfactual CO\texorpdfstring{\textsubscript{2}}{2} Scenario Results}
 \label{app:counterfactual}
 
-\Cref{tab:app_cf_wine,tab:app_cf_credit,tab:app_cf_higgs} give exact CO\textsubscript{2} values for all models under the eight carbon intensity scenarios introduced in \Cref{sec:results_carbon}. The \emph{Static (CC)} row is the hardware-corrected energy multiplied by CodeCarbon's built-in static intensity for Germany; the remaining seven rows use scenario intensities derived from the 2024 ElectricityMaps data. All values are in \gls{gco2eq}.
+\Cref{tab:app_cf_wine,tab:app_cf_credit,tab:app_cf_higgs} give exact \gls{co2eq} values for all models under the eight carbon intensity scenarios introduced in \Cref{sec:results_carbon}. The \emph{Static (CC)} row is the hardware-corrected energy multiplied by CodeCarbon's built-in static intensity for Germany; the remaining seven rows use scenario intensities derived from the 2024 ElectricityMaps data. All values are in \gls{gco2eq}.
 
 \begin{table}[htbp]
 \centering
