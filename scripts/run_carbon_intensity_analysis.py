@@ -246,7 +246,7 @@ def plot_scenario_per_run(cf, scenarios):
         values.append(scenarios[k] / static_intensity * 100)
         bar_colors.append(c)
 
-    fig, ax = plt.subplots(figsize=(9, 5))
+    fig, ax = plt.subplots(figsize=(10, 5))
     bars = ax.bar(labels, values, color=bar_colors, width=0.55)
     ax.axhline(100, color="#888888", linestyle="--", linewidth=1)
 
@@ -255,12 +255,12 @@ def plot_scenario_per_run(cf, scenarios):
         pct_diff = val - 100
         annotation = "baseline" if pct_diff == 0 else f"{sign}{pct_diff:.0f}%"
         ax.text(bar.get_x() + bar.get_width() / 2, val + 1.5, annotation,
-                ha="center", va="bottom", fontsize=13)
+                ha="center", va="bottom", fontsize=12)
 
     ax.set_ylabel("CO₂ relative to static CodeCarbon factor (%)", fontsize=14)
     ax.set_ylim(0, max(values) * 1.2)
-    ax.tick_params(axis="x", labelsize=14)
-    ax.tick_params(axis="y", labelsize=13)
+    ax.tick_params(axis="x", labelsize=13)
+    ax.tick_params(axis="y", labelsize=12)
     plt.tight_layout()
     plt.savefig(SCENARIO_PER_RUN_PLOT, bbox_inches="tight")
     plt.close()

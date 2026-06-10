@@ -59,19 +59,19 @@ fig, axes = plt.subplots(2, 3, figsize=(15, 8))
 for idx, (ax, year) in enumerate(zip(axes.ravel(), years)):
     im = ax.imshow(matrices[year], aspect="auto", cmap="RdYlGn_r",
                    origin="upper", vmin=vmin, vmax=vmax)
-    ax.set_title(str(year), fontsize=15)
+    ax.set_title(str(year), fontsize=18)
     ax.set_xticks([0, 3, 6, 9])
-    ax.set_xticklabels(["Jan", "Apr", "Jul", "Oct"], fontsize=11)
+    ax.set_xticklabels(["Jan", "Apr", "Jul", "Oct"], fontsize=14)
     ax.set_yticks(range(0, 24, 4))
-    ax.set_yticklabels([f"{h:02d}" for h in range(0, 24, 4)], fontsize=11)
+    ax.set_yticklabels([f"{h:02d}" for h in range(0, 24, 4)], fontsize=14)
     if idx % 3 == 0:
-        ax.set_ylabel("Hour (UTC)", fontsize=12)
+        ax.set_ylabel("Hour (UTC)", fontsize=15)
 
 fig.subplots_adjust(right=0.88, hspace=0.35, wspace=0.25)
 cax = fig.add_axes([0.91, 0.1, 0.02, 0.75])
 cb = fig.colorbar(im, cax=cax)
-cb.set_label("gCO₂eq/kWh", fontsize=14)
-cb.ax.tick_params(labelsize=12)
+cb.set_label("gCO₂eq/kWh", fontsize=17)
+cb.ax.tick_params(labelsize=15)
 
 out = os.path.join(base, "diurnal_seasonal_all_years.pdf")
 plt.savefig(out, dpi=300, bbox_inches="tight")
