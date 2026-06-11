@@ -15,7 +15,7 @@ The empirical literature on tabular data took a different path entirely. A serie
 
 Only recently have some studies begun to bridge these two strands. \citeauthor{rodriguezEvaluatingEnergyConsumption2024} \cite{rodriguezEvaluatingEnergyConsumption2024} evaluated software-based energy trackers against physical hardware meters, measuring classical \gls{ml} models alongside \gls{dl} models as part of their methodology. \citeauthor{verdecchiaDataCentricGreenAI2022a} \cite{verdecchiaDataCentricGreenAI2022a} took a data-centric approach, empirically measuring how reducing data points and features affects the training energy of six \gls{ai} models and finding that data-centric dataset modifications can substantially reduce training energy, though the performance cost varies depending on whether data points or features are reduced. These contributions are important, but they remain limited to datasets of a few thousand instances and do not examine how energy and predictive performance co-evolve across the orders-of-magnitude variation in dataset size that characterizes real-world applications.
 
-\paragraph{Research Gap.}
+\paragraph{Research Gap}
 The existing literature therefore reveals a clear gap at the intersection of two well-developed but isolated fields. Where Green \gls{ai} benchmarks have established energy as a measurable, consequential quantity, they have done so exclusively for \gls{dl} on unstructured data \parencite{strubellEnergyPolicyConsiderations2019a, dodgeMeasuringCarbonIntensity2022}. Where experimental benchmarks have rigorously evaluated classical models on tabular data, they have focused entirely on predictive performance \parencite{grinsztajnWhyTreebasedModels2022a, gorishniyRevisitingDeepLearning2021a}. A systematic analysis of how energy consumption, carbon emissions and predictive performance jointly scale with dataset size for classical classification models remains absent.
 
 % =============================================================
@@ -26,7 +26,7 @@ The tension between data volume and model quality has a specific shape. \citeaut
 
 The energy implications of dataset reduction have been directly and concretely measured by \citeauthor{verdecchiaDataCentricGreenAI2022a} \cite{verdecchiaDataCentricGreenAI2022a}, who trained six \gls{ai} models while systematically reducing both data points and features in 10\% increments. Two distinct patterns emerge from their results. Reducing the number of features yields energy savings of up to 76\% while largely preserving predictive performance, making it a near-cost-free optimization. Reducing the number of data points produces larger savings, up to 92.16\% for \gls{rf}, but at a meaningful performance cost that must be weighed explicitly. The effect is also model-specific: \gls{knn} achieves a maximum reduction of only 61.72\% from fewer rows, while ensemble methods such as \gls{rf} are considerably more sensitive to training set size. Beyond dataset modifications, the study finds that switching to a less complex model can alone yield energy savings of up to two orders of magnitude, establishing model selection as one of the most powerful levers for ecological efficiency.
 
-\paragraph{Research Gap.}
+\paragraph{Research Gap}
 These findings rest, however, on a single dataset of 5{,}574 instances, run exclusively on a standard quad-core \gls{cpu} and without \gls{gpu}-accelerated or \gls{dl} baselines. Whether the same energy-performance patterns hold at the scale of millions of instances and whether they generalize across fundamentally different model families, remains empirically unexplored.
 
 % =============================================================
@@ -39,7 +39,7 @@ The power side of this equation is well established empirically. \citeauthor{dod
 
 Classical \gls{ml} models on tabular data present a different picture. \citeauthor{mitchellAcceleratingXGBoostAlgorithm2017} \cite{mitchellAcceleratingXGBoostAlgorithm2017} measured \gls{gpu} acceleration for \gls{xgb} specifically, finding speedups of 3$\times$ to 6$\times$ over a four-core desktop \gls{cpu} and 1.2$\times$ over a dual-socket server with 24 \gls{cpu} cores combined. These gains are real but considerably smaller than those achieved for \glspl{nn}. Given the \gls{gpu}'s substantially higher power draw, a 3$\times$ to 6$\times$ speedup may not be enough to recover the additional energy cost and Mitchell and Frank measured only execution time, not energy consumption.
 
-\paragraph{Research Gap.}
+\paragraph{Research Gap}
 The question of where the break-even point lies for models like \gls{xgb} therefore remains open. A dataset may exist below which the \gls{cpu} is the ecologically preferable device and above which the \gls{gpu}'s speedup compensates for its power draw, but this has not been empirically established for gradient boosting on tabular data.
 
 % =============================================================
@@ -64,7 +64,7 @@ The geographic component of this variability has been measured at scale. \citeau
 
 Temporal variation tells a more nuanced story. \citeauthor{dodgeMeasuringCarbonIntensity2022} \cite{dodgeMeasuringCarbonIntensity2022} find that diurnal variation is meaningful: starting a training run at midnight rather than during peak solar generation hours can increase emissions by up to 8\% in certain regions and they propose time-shifting or dynamically pausing workloads based on real-time grid data. Seasonal variation, however, proves negligible across their 12-month tracking of globally distributed cloud instances, leading them to conclude that month-to-month emissions differences within a single cloud region are small.
 
-\paragraph{Research Gap.}
+\paragraph{Research Gap}
 This conclusion may not transfer to local electricity grids with a high share of seasonally dependent renewables, which can exhibit considerably stronger swings than global cloud averages suggest. 
 
 % =============================================================
@@ -77,7 +77,7 @@ The Red \gls{ai} paradigm has normalized evaluating only the final, best-perform
 
 To reduce these impacts, researchers must move away from exhaustive methods like grid search. \citeauthor{lacosteQuantifyingCarbonEmissions2019} \cite{lacosteQuantifyingCarbonEmissions2019} explicitly state that grid search is highly inefficient in terms of both model performance and environmental impact and that replacing it with random or model-based search strategies can accelerate convergence and directly reduce carbon emissions. Experimental benchmarks support this: \citeauthor{bergstraRandomSearchHyperParameter2012} \cite{bergstraRandomSearchHyperParameter2012} show that as few as 8 to 32 random trials can consistently match or outperform exhaustive grid search depending on the size of the search space. Going further, \citeauthor{bergstraAlgorithmsHyperParameterOptimization2011} \cite{bergstraAlgorithmsHyperParameterOptimization2011} illustrate the practical scale of this problem on a Deep Belief Network with 32 hyperparameters: evaluating only two values per parameter under grid search yields over four billion combinations, which at roughly one hour of training each would require nearly half a million years of compute. By distributing asynchronous \gls{tpe} proposals across five \glspl{gpu}, they evaluated only 200 configurations in 24 hours of wall time and identified a result that outperformed expert-tuned baselines \cite{bergstraAlgorithmsHyperParameterOptimization2011}.
 
-\paragraph{Research Gap.}
+\paragraph{Research Gap}
 While the literature clearly documents the empirical tuning costs for \gls{dl} models in \gls{nlp} and Computer Vision \cite{strubellEnergyPolicyConsiderations2019a}, there is a lack of equivalent benchmarks for classical \gls{ml} on tabular data. How much energy and carbon emissions can be saved by reducing the number of tuning trials for models like \gls{rf} or \gls{xgb} and at what trial count the marginal performance gain ceases to justify the ecological cost, remains unquantified.
 
 % =============================================================
@@ -90,7 +90,7 @@ Industry-scale empirical studies demonstrate that the inference phase is often t
 
 Consequently, recent research has begun explicitly measuring the inference footprint of pre-trained models at deployment scale. By systematically benchmarking energy consumption across diverse model architectures, \citeauthor{luccioniPowerHungryProcessing2024} \cite{luccioniPowerHungryProcessing2024} found that multipurpose generative models require orders of magnitude more energy per inference than task-specific systems, even when controlling for the number of model parameters. They also formalize the concept of a cost parity point: the number of predictions at which cumulative inference emissions surpass the initial training footprint, providing a concrete metric for lifecycle analysis. Accurately evaluating this break-even requires accounting for hardware specializations, as \citeauthor{desislavovTrendsAIInference2023} \cite{desislavovTrendsAIInference2023} note that inference efficiency depends heavily on whether a model can fully exploit the underlying accelerator's optimizations.
 
-\paragraph{Research Gap.}
+\paragraph{Research Gap}
 Despite the growing acknowledgment of inference costs, the current literature exhibits a significant blind spot. The lifecycle analyses and inference benchmarks provided by these studies rely almost exclusively on complex \gls{dl} architectures applied to unstructured data: \citeauthor{luccioniPowerHungryProcessing2024} \cite{luccioniPowerHungryProcessing2024} evaluate only text and image modalities, \citeauthor{desislavovTrendsAIInference2023} \cite{desislavovTrendsAIInference2023} focus on ImageNet and GLUE benchmarks, \citeauthor{pattersonCarbonEmissionsLarge2021} \cite{pattersonCarbonEmissionsLarge2021} restrict their analysis to large \gls{nlp} models and \citeauthor{wuSustainableAIEnvironmental2022} \cite{wuSustainableAIEnvironmental2022} examine \gls{dl} recommendation and language models. For classical \gls{ml} models operating on tabular data, direct experimental evidence on lifecycle emissions is near-absent. It therefore remains unquantified at what number of predictions the cumulative inference carbon footprint of a model such as \gls{lr} or \gls{rf} surpasses its training footprint and how this lifecycle scaling compares across models of varying complexity.
 
 % =============================================================
@@ -105,5 +105,5 @@ In practice, the \gls{ml} community has already recognized the necessity of such
 
 While these benchmarks validate the use of composite metrics, their efficiency components rely exclusively on execution time or financial cost \parencite{colemanAnalysisDAWNBenchTimetoAccuracy2019, mattsonMLPerfTrainingBenchmark2020}. As established in previous sections, neither time nor cost necessarily correlates with the actual carbon footprint, particularly when hardware power draw and regional grid carbon intensities vary \cite{wrightEfficiencyNotEnough2025}. Recent theoretical frameworks have begun to recognize this shortcoming by proposing conceptual metrics, such as the Job Quality per Cost Rate (JQCR) \cite{eilamMethodologyFrameworkAI2023}, which aims to balance the quality of a computing job against its sustainability costs \cite{eilamMethodologyFrameworkAI2023}. However, this approach remains strictly conceptual and lacks a defined mathematical formula linking specific performance measurements to carbon emissions \cite{eilamMethodologyFrameworkAI2023}. 
 
-\paragraph{Research Gap.}
+\paragraph{Research Gap}
 To date, no established, mathematically operationalized composite metric explicitly incorporates a direct ecological component alongside predictive performance.

@@ -125,13 +125,14 @@ def _save_eff_panel(metric, ylabel, filename, scale=1.0):
     ax.set_yscale("log")
     ax.set_xlabel("", fontsize=20)
     ax.set_ylabel(ylabel, fontsize=20)
-    ax.tick_params(axis="both", labelsize=17)
+    ax.tick_params(axis="both", labelsize=19)
     for container in ax.containers:
         labels = [custom_format(v) for v in container.datavalues]
-        ax.bar_label(container, labels=labels, padding=4, fontsize=15)
+        ax.bar_label(container, labels=labels, padding=4, fontsize=17)
     ylo, yhi = ax.get_ylim()
     ax.set_ylim(bottom=ylo, top=yhi * 2)
     handles, lbls = ax.get_legend_handles_labels()
+    lbls = [MODEL_SHORT_LABELS.get(l, l) for l in lbls]
     ax.get_legend().remove()
     fig.legend(handles, lbls, loc="upper center", bbox_to_anchor=(0.5, 1.01),
                ncol=5, fontsize=17)

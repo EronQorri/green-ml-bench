@@ -36,6 +36,7 @@ The measurement error is largest for the runs that correspond to the models Gree
 \section{Hyperparameter Tuning Overhead}
 \label{sec:results_tuning}
 
+\paragraph{The Cost of Finding a Configuration}
 Benchmark tables that compare training emissions report only a fraction of a model's true ecological initialization cost. Before a single benchmark run is executed, each model must be brought to a competitive configuration through hyperparameter search and the footprint of that search is never reflected in the training figure. For computationally inexpensive models on small datasets this omission is negligible. For the \gls{mlp} on HIGGS it is not: as shown in \Cref{fig:tuning_costs}, a deliberately constrained 40-trial \gls{tpe} search required 72.3 hours and emitted 3{,}180\,\gls{gco2eq}, equivalent to approximately 27\,km of car travel \parencite{europeanenvironmentagencyMonitoringCO2Emissions2025} or roughly 418 full smartphone charges on the German electricity grid, a figure that exceeds the combined training emissions of all Wine and Credit runs in this study. This is not the outcome of an exhaustive search of the kind documented by \citeauthor{strubellEnergyPolicyConsiderations2019a} \parencite{strubellEnergyPolicyConsiderations2019a}, who found that large \gls{nlp} development pipelines required hundreds of thousands of \gls{gpu} hours to converge. It is the cost of the minimum credible search budget, chosen specifically to limit overhead.
 
 \begin{figure}[htb]
@@ -68,10 +69,12 @@ Dataset & Model & Duration (h) & Emissions (\gls{gco2eq}) & Best \gls{wf1} (\%) 
 \end{tabular}
 \end{table}
 
+\paragraph{Structural Determinants of Tuning Cost}
 How expensive that search becomes is structurally determined by how well a model's training procedure maps onto available hardware during each trial evaluation. On the Credit dataset, this difference is already quantifiable. \gls{xgb} completed its tuning study in 122 seconds and 1.92\,\gls{gco2eq}, accelerating each trial on \gls{gpu}. \gls{rf} arrived at a functionally identical result, a \gls{wf1} of 80.0\,\% against \gls{xgb}'s 80.2\,\%, in 326 seconds and 6.09\,\gls{gco2eq}: three times the tuning cost for a predictive difference that is statistically negligible. The gap reflects an architectural property that scales with search rather than just with training: constructing an ensemble of independent decision trees requires sequential or coarse-grained parallel computation that does not exploit \gls{gpu} cores. Every trial inherits that cost and forty trials compound it. This is why \gls{rf} was excluded from HIGGS tuning altogether, with literature defaults substituted instead. Subjecting that per-trial cost to eleven million rows across forty iterations would have been ecologically unjustifiable relative to any predictive gain it could have delivered, an assessment the scaling analysis in \Cref{sec:results_scaling} corroborates.
 
 The consequence for how the benchmark results in the following sections should be interpreted is direct. The training emissions in the benchmark table represent the cost of a single run with already-optimized hyperparameters. For the HIGGS \gls{mlp}, the initialization cost that precedes that run amounts to 3{,}180\,\gls{gco2eq} against a training footprint of 58.5\,\gls{gco2eq}: tuning is roughly 54 times costlier than the benchmark run it makes possible. That debt does not reset at deployment. A nested \gls{cv} approach for hyperparameter evaluation, as described in \Cref{design_validation}, would have multiplied these costs fivefold, adding weeks of additional compute on HIGGS alone. Whether the \gls{mlp}'s efficient inference architecture can serve enough predictions to offset that initialization cost over a realistic deployment lifetime is a question the lifecycle analysis in \Cref{sec:results_lifecycle} addresses directly.
 
+\paragraph{Efficiency of the Search Budget}
 Translating tuning costs into the \gls{cf1} framework extends this picture beyond absolute emissions. \Cref{fig:tuning_cf1} reports the $\frac{\gls{mgco2eq}}{\gls{wf1}}$ achieved across each tuning study, using the best \gls{wf1} reached over 40 trials as the denominator. On Wine, all three models are tuned at a comparable efficiency of 6--12\,$\frac{\gls{mgco2eq}}{\gls{wf1}}$, with differences small enough to be practically irrelevant at this scale. On Credit, \gls{xgb} separates from the field: its tuning \gls{cf1} is three times lower than \gls{rf}'s and more than four times lower than \gls{mlp}'s (\Cref{tab:tuning_costs}). The gap reflects the same structural property that appears in training: \gls{xgb}'s histogram-based search is computationally light per trial, while tree-ensemble and gradient-descent-based searches carry proportionally higher per-trial costs. On HIGGS, the disparity becomes extreme. \gls{mlp}'s tuning \gls{cf1} is 57 times larger than \gls{xgb}'s, reflecting the combination of long per-trial evaluations on eleven million rows and a modest \gls{wf1} gain achieved over the full 40-trial budget. The tuning \gls{cf1} therefore reveals a cost axis that raw emissions alone obscure: whether the performance gains unlocked by a search budget are proportionate to its ecological price.
 
 \begin{figure}[htb]
@@ -81,6 +84,7 @@ Translating tuning costs into the \gls{cf1} framework extends this picture beyon
 \label{fig:tuning_cf1}
 \end{figure}
 
+\paragraph{Tuned Versus Default Configurations}
 \Cref{tab:tuned_vs_default} makes the value proposition of hyperparameter tuning concrete by comparing the full initialization cost (HPO plus one training run) against simply training with framework defaults, restricting the comparison to HIGGS where the default configurations are defined as follows. For \gls{xgb}, the
 library defaults are used directly: 100 estimators, maximum tree depth
 of~6, and a learning rate of~0.3. For the \gls{mlp}, no authoritative
@@ -125,7 +129,7 @@ Model & HPO & Tuned train & Total tuned & Default & Tuned & Default & $\Delta$ \
 \expref{1} spans 14 model-dataset combinations across three datasets that differ by three orders of magnitude in size, directly addressing \rqref{1}. \Cref{fig:vergleich_performance,fig:vergleich_efficiency} lay out the two dimensions of the comparison. The \gls{cf1} ranking synthesizes both dimensions. The central finding is that no model dominates across all three settings. Ecological efficiency is not a fixed property of any single model. It emerges from the alignment between a model's computational profile, the hardware it runs on and the scale of the task it faces. Each of the three datasets exposes a different axis of that contingency. The emission figures in the per-dataset tables below reflect a single training run with already-optimized hyperparameters. A consolidated overview of all 14 model-dataset combinations is provided in \Cref{tab:main_results} in the Appendix. The one-time initialization cost of producing those parameters and the \gls{wf1} premium they deliver over untuned defaults are quantified in \Cref{sec:results_tuning}.
 
 \FloatBarrier
-\paragraph{The Low-Data Regime: When Hardware Overhead Dominates.}
+\paragraph{The Low-Data Regime: When Hardware Overhead Dominates}
 \label{sec:results_wine}
 
 Focusing first on the Wine dataset, the leftmost cluster in \Cref{fig:vergleich_performance} reveals that all five models converge on a \gls{wf1} of 97.2\,\%. With predictive differentiation absent, the entire comparison reduces to emissions, where \Cref{fig:vergleich_efficiency} shows a threefold spread across models that deliver the exact same outcome. The most striking observation within that spread is that \gls{xgb} \gls{gpu} emits 1.3 times as much \gls{gco2eq} as \gls{xgb} \gls{cpu} for an identical result.
@@ -162,7 +166,7 @@ Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac
 \end{table}
 
 \FloatBarrier
-\paragraph{The Medium-Data Regime: Structural Efficiency Disparities.}
+\paragraph{The Medium-Data Regime: Structural Efficiency Disparities}
 \label{sec:results_credit}
 
 Moving to the medium-scale Credit dataset (center cluster in \Cref{fig:vergleich_performance} and \Cref{fig:vergleich_efficiency}), genuine predictive differentiation appears for the first time. As \Cref{tab:credit_results} shows, the critical data point is \gls{rf}: it matches \gls{xgb} \gls{cpu}'s \gls{wf1} to one decimal place while incurring more than twice the emissions cost. Two models, statistically indistinguishable predictive outcomes and a more-than-twofold difference in ecological cost.
@@ -211,7 +215,7 @@ Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac
 
 
 \FloatBarrier
-\paragraph{The High-Data Regime: Hardware Saturation and Role Reversals.}
+\paragraph{The High-Data Regime: Hardware Saturation and Role Reversals}
 \label{sec:results_higgs}
 
 Finally, as shown in the rightmost clusters of \Cref{fig:vergleich_performance} and \Cref{fig:vergleich_efficiency}, both dimensions of the comparison shift decisively at eleven million rows. \gls{rf} is excluded from this dataset for the reasons established in \Cref{sec:results_tuning}: the per-trial training cost made a full 40-trial HIGGS run ecologically unjustifiable. As \Cref{tab:higgs_results} shows, \gls{lr} saturates well below the non-linear models, while \gls{mlp} achieves the highest \gls{wf1} in the entire benchmark at the highest single-run training cost in the study. Most strikingly, \gls{xgb} \gls{gpu} emits one seventh of what \gls{xgb} \gls{cpu} does for an equivalent outcome. On Wine, the \gls{gpu} was a liability. On HIGGS, it is the ecologically dominant choice.
@@ -280,8 +284,10 @@ As established in the main benchmark, hardware acceleration is not unconditional
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
 
+\paragraph{Small-Scale Penalty}
 On Wine and Credit, \gls{gpu} acceleration provides no emissions benefit but rather an ecological liability. The \gls{gpu} consistently emits more and trains slower than the \gls{cpu} on both small datasets. This inversion occurs because the fixed overhead of device initialization and host-to-device memory transfer via the PCIe interface completely dominates actual computation time, as analyzed in \Cref{sec:theoretical_cpu_vs_gpu}. The thousands of available cores remain starved of data, leaving the \gls{gpu}'s higher power draw unamortized. On Credit the gap narrows to near parity, but \gls{gpu} execution still fails to pay for itself.
 
+\paragraph{Large-Scale Advantage}
 The HIGGS result reverses the picture completely. The \gls{gpu} variant is seven times more emissions-efficient and nine times faster, as roughly nine million training rows finally saturate the \gls{gpu}'s \gls{simt} architecture \parencite{nickollsGPUComputingEra2010}. The histogram-based tree construction distributes efficiently across thousands of cores, and the fixed memory transfer costs that dominated at small scale are now fully amortized by the parallelization gains.
 
 \begin{figure}[htb]
@@ -292,6 +298,7 @@ The HIGGS result reverses the picture completely. The \gls{gpu} variant is seven
 \end{figure}
 
 % LTeX: enabled=false
+\paragraph{The Break-Even Threshold}
 To pinpoint where this shift occurs, \Cref{fig:xgb_breakeven_higgs} maps the emissions crossover across intermediate HIGGS subsets from \expref{2} (explored further in \Cref{sec:results_scaling}). The analysis identifies a hard break-even threshold at approximately 80{,}000 rows. Below this volume, the \gls{gpu}'s higher instantaneous power draw remains unamortized, transforming the accelerator into an ecological penalty. Above it, the compounding speedup of massive parallelization outpaces the wattage premium and the emissions gap widens favorably with each additional row.
 % LTeX: enabled=true
 
@@ -366,10 +373,13 @@ More profoundly, these scaling curves challenge the pervasive assumption that mo
 \label{fig:mlp_variation}
 \end{figure}
 
+\paragraph{Performance: Width Dominates Depth}
 The variation grid reveals that width has a substantially stronger effect on performance than depth. Moving from 128 to 512 units per layer increases \gls{wf1} by up to 2.7 percentage points across all depth levels, whereas adding layers beyond two yields marginal gains of at most 0.7 percentage points at the widest setting and near zero for narrower networks. The predictive ceiling is reached early: the 2$\times$512 architecture achieves a \gls{wf1} of 77.6\,\%, trailing the best-observed configuration (4$\times$512, \gls{wf1}\,=\,78.3\,\%) by only 0.7 percentage points.
 
+\paragraph{Emissions: The Early-Stopping Reversal}
 The emissions picture is more nuanced. For narrow networks (width\,=\,128), emissions actually \textit{decrease} as the network gets deeper, falling from 26\,\gls{gco2eq} at depth~1 to 18\,\gls{gco2eq} at depth~3. This reversal is mechanically driven by early stopping. Deep, narrow networks lack the representational capacity required for complex tabular features, causing them to rapidly overfit and trigger the early stopping patience criterion in fewer epochs. Consequently, the total compute per training run is lower despite the larger parameter count. For wider networks, this effect vanishes. At width\,=\,512, emissions increase monotonically with depth from 48\,\gls{gco2eq} to 93\,\gls{gco2eq}, as the network successfully utilizes its capacity and trains for more epochs before saturating.
 
+\paragraph{Structural Mismatch with Tabular Data}
 Taken together, these results highlight a structural mismatch between standard deep learning practice and tabular data. In computer vision or natural language processing, stacking layers is necessary to extract hierarchical spatial or sequential representations. Tabular datasets like HIGGS lack this strict local hierarchy, so excessive depth provides almost no predictive value and functions primarily as a computational overhead. The 4$\times$512 configuration illustrates this directly: achieving the final 0.7 percentage point improvement in \gls{wf1} required scaling to maximum depth and width, nearly doubling the emission footprint from 55\,\gls{gco2eq} to 93\,\gls{gco2eq} for a gain well within normal run-to-run variance. Framed as an architecture selection decision, choosing 2$\times$512 over 4$\times$512 reduces emissions by 41\,\% while sacrificing less than one percentage point of \gls{wf1} in relative terms. The data here corroborate the broader Green \gls{ai} observation that predictive returns on model scale follow diminishing returns, while energy costs do not \parencite{schwartzGreenAI2020}.
 
 \begin{figure}[htb]
@@ -551,6 +561,7 @@ Dataset & Model & \gls{wf1} (\%) & TE (\gls{gco2eq}) & IE (\textmu\gls{gco2eq}) 
 \end{tabular}
 \end{table}
 
+\paragraph{Break-Even Points and Their Drivers}
 The lowest break-even point is \gls{rf} on Wine, at 66 predictions. \gls{rf} inference is slow relative to other classifiers: each prediction requires sequential traversal of the learned tree ensemble, producing a per-prediction cost of approximately 236\,\textmu\gls{gco2eq}. Against a training footprint of only 0.016\,\gls{gco2eq}, the inference cost accumulates to parity within a few minutes of active serving. For any realistic \gls{rf} deployment on tabular data at this scale, inference is the dominant ecological cost by a wide margin.
 
 The opposite extreme is \gls{mlp} on HIGGS, which does not reach break-even until approximately 8.3 million predictions. \gls{mlp} inference is fast: the forward pass through a fixed-depth network requires no tree traversal, producing a per-prediction cost of only 7.1\,\textmu\gls{gco2eq}. Against a training footprint of 58.5\,\gls{gco2eq}, that rate of accumulation reaches parity only after roughly 8 million queries. A system serving this model on a low-traffic application would find that training represents the dominant ecological cost throughout its entire operational lifetime.

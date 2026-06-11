@@ -11,11 +11,11 @@ from pathlib import Path
 mpl.rcParams.update({
     "font.family":     "serif",
     "font.serif":      ["Palatino Linotype", "Palatino", "Book Antiqua", "DejaVu Serif"],
-    "axes.titlesize":  16,
-    "axes.labelsize":  14,
-    "xtick.labelsize":  14,
-    "ytick.labelsize":  14,
-    "legend.fontsize":  13,
+    "axes.titlesize":  19,
+    "axes.labelsize":  17,
+    "xtick.labelsize":  17,
+    "ytick.labelsize":  17,
+    "legend.fontsize":  16,
 })
 
 BASE_DIR  = Path(__file__).parent.parent.parent
@@ -28,20 +28,20 @@ MODEL_PALETTE = {
     "tune_MLP": (155/255, 135/255, 181/255),
 }
 MODEL_LABELS = {
-    "tune_RFC": "Random Forest",
-    "tune_XGB": "XGBoost",
+    "tune_RFC": "RF",
+    "tune_XGB": "XGB",
     "tune_MLP": "MLP",
 }
 DATASET_LABELS = {"wine": "Wine", "credit": "Credit", "higgs": "HIGGS"}
 
 def fmt_time(s):
     if s >= 3600: return f"{s/3600:.1f} h"
-    if s >= 60:   return f"{s/60:.0f} min"
+    if s >= 60:   return f"{s/60:.0f} m"
     return f"{s:.0f} s"
 
 def fmt_co2(g):
-    if g >= 1:    return f"{g:.1f} g"
-    return f"{g:.2f} g"
+    if g >= 1:    return f"{g:.1f}"
+    return f"{g:.2f}"
 
 df = pd.read_csv(BASE_DIR / "results" / "results.csv")
 df.columns = df.columns.str.strip()
@@ -74,7 +74,7 @@ ax_co2.set_ylabel(r"Tuning Emissions (gCO₂eq, log scale)")
 ax_co2.set_title("Emissions")
 for container in ax_co2.containers:
     labels = [fmt_co2(v) if not np.isnan(v) else "" for v in container.datavalues]
-    ax_co2.bar_label(container, labels=labels, padding=3, fontsize=12)
+    ax_co2.bar_label(container, labels=labels, padding=3, fontsize=15)
 if ax_co2.get_legend():
     ax_co2.get_legend().remove()
 ylo, yhi = ax_co2.get_ylim()
@@ -88,7 +88,7 @@ ax_time.set_ylabel("Tuning Duration (s, log scale)")
 ax_time.set_title("Tuning Duration")
 for container in ax_time.containers:
     labels = [fmt_time(v) if not np.isnan(v) else "" for v in container.datavalues]
-    ax_time.bar_label(container, labels=labels, padding=3, fontsize=12)
+    ax_time.bar_label(container, labels=labels, padding=3, fontsize=15)
 if ax_time.get_legend():
     ax_time.get_legend().remove()
 ylo, yhi = ax_time.get_ylim()
@@ -97,13 +97,7 @@ ax_time.set_ylim(bottom=ylo, top=yhi * 4)
 # Shared legend above
 patches = [mpatches.Patch(color=MODEL_PALETTE[m], label=MODEL_LABELS[m]) for m in TUNE_ORDER]
 fig.legend(handles=patches, loc="upper center", bbox_to_anchor=(0.5, 1.04),
-           ncol=3, fontsize=13, frameon=True, framealpha=0.9)
-
-# Footnote
-fig.text(0.5, -0.05,
-         "Random Forest was not tuned on HIGGS; literature defaults were used instead.\n"
-         "XGBoost was tuned on GPU only; resulting hyperparameters apply to both the CPU and GPU variants.",
-         ha="center", va="top", fontsize=10, color="#666666", style="italic", multialignment="center")
+           ncol=3, fontsize=16, frameon=True, framealpha=0.9)
 
 plt.tight_layout(rect=[0, 0, 1, 0.97])
 plt.savefig(PLOTS_DIR / "tuning_costs.pdf", bbox_inches="tight")
