@@ -57,14 +57,14 @@ Dataset & Model & Duration (h) & Emissions (\gls{gco2eq}) & Best \gls{wf1} (\%) 
 \midrule
 \multirow{3}{*}{Wine}   & \gls{rf}  &          0.02 &          0.88 & 97.9          &          9.0 \\
                          & \gls{xgb} &          0.02 &          1.12 & 97.9          &         11.4 \\
-                         & MLP       & \textbf{0.01} & \textbf{0.67} & \textbf{99.3} & \textbf{6.7} \\
+                         & \gls{mlp} & \textbf{0.01} & \textbf{0.67} & \textbf{99.3} & \textbf{6.7} \\
 \midrule
 \multirow{3}{*}{Credit} & \gls{rf}  &          0.09 &          6.09 & 80.0          &         76.1 \\
                          & \gls{xgb} & \textbf{0.03} & \textbf{1.92} & 80.2          & \textbf{23.9} \\
-                         & MLP       &          0.19 &          8.64 & \textbf{80.3} &        107.7 \\
+                         & \gls{mlp} &          0.19 &          8.64 & \textbf{80.3} &        107.7 \\
 \midrule
 \multirow{2}{*}{HIGGS}  & \gls{xgb} & \textbf{0.67} & \textbf{54.26} & 75.9          & \textbf{714.7} \\
-                         & MLP       &         72.33 & 3{,}182.5      & \textbf{78.2} & 40{,}682 \\
+                         & \gls{mlp} &         72.33 & 3{,}182.5      & \textbf{78.2} & 40{,}682 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -543,20 +543,20 @@ Dataset & Model & \gls{wf1} (\%) & TE (\gls{gco2eq}) & IE (\textmu\gls{gco2eq}) 
   & \gls{rf}        & 97.2 &          0.0156 &        235.9  &            768    &        66 \\
   & \gls{xgb} (CPU) & 97.2 &          0.0130 &         17.11 &         20{,}113  &      758 \\
   & \gls{xgb} (GPU) & 97.2 &          0.0170 &         30.27 &         11{,}333  &      563 \\
-  & MLP             & 97.2 &          0.0387 &          5.65 &         33{,}125  &    6{,}858 \\
+  & \gls{mlp}       & 97.2 &          0.0387 &          5.65 &         33{,}125  &    6{,}858 \\
 \midrule
 \multirow{5}{*}{Credit}
   & \gls{lr}        &          77.0 &          0.0207 & \textbf{3.73} & \textbf{46{,}870} &    5{,}551 \\
   & \gls{rf}        &          79.7 &          0.0446 &        251.2  &            742    &      178 \\
   & \gls{xgb} (CPU) &          79.8 & \textbf{0.0206} &         33.20 &         10{,}408  &      620 \\
   & \gls{xgb} (GPU) &          79.8 &          0.0223 &         55.48 &          6{,}123  &      402 \\
-  & MLP             & \textbf{80.2} &          0.0722 &          8.16 &         24{,}327  &    8{,}851 \\
+  & \gls{mlp}       & \textbf{80.2} &          0.0722 &          8.16 &         24{,}327  &    8{,}851 \\
 \midrule
 \multirow{4}{*}{HIGGS}
   & \gls{lr}        &          63.7 &          0.9610 & \textbf{3.55} & \textbf{48{,}669} &  270{,}538 \\
   & \gls{xgb} (CPU) &          76.0 &          2.7630 &         23.47 &         14{,}442  &  117{,}683 \\
   & \gls{xgb} (GPU) &          76.0 & \textbf{0.3926} &         40.71 &          8{,}380  &    9{,}643 \\
-  & MLP             & \textbf{78.5} &         58.4610 &          7.08 &         29{,}011  & 8{,}261{,}330 \\
+  & \gls{mlp}       & \textbf{78.5} &         58.4610 &          7.08 &         29{,}011  & 8{,}261{,}330 \\
 \bottomrule
 \end{tabular}
 \end{table}
