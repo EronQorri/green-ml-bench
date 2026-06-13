@@ -219,16 +219,19 @@ pivot = (df_cf1
 # log-scale the values for color mapping so large RF outliers don't wash out detail
 log_pivot = np.log10(pivot.where(pivot > 0))
 
-HM_LABEL  = 25
+HM_LABEL  = 23
 HM_TICK   = 22
 HM_ANNOT  = 20
+
+from matplotlib.colors import LinearSegmentedColormap
+_eco_carbon = LinearSegmentedColormap.from_list("eco_carbon", ["#4caf50", "#1a1a1a"])
 
 fig, ax = plt.subplots(figsize=(13, 5))
 
 sns.heatmap(
     log_pivot,
     ax=ax,
-    cmap="YlOrRd",
+    cmap=_eco_carbon,
     annot=pivot.round(1),       # show raw CF1 values as annotation
     fmt=".1f",
     annot_kws={"size": HM_ANNOT},

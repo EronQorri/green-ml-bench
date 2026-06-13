@@ -89,7 +89,7 @@ for m in MODELS:
     ax.plot(N / 1e6, total, color=MODEL_PALETTE[m], linewidth=1.5, label=MODEL_LABELS[m])
 
 ax.set_xlabel("Number of predictions (millions)")
-ax.set_ylabel("Cumulative CO₂ (g)")
+ax.set_ylabel("Cumulative emissions (gCO₂eq)")
 ax.legend()
 ax.set_xlim(left=0)
 ax.set_ylim(bottom=0)

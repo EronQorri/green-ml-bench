@@ -103,20 +103,19 @@ For both \gls{xgb} variants the HPO study absorbs more than 95\,\% of the total 
 
 \begin{table}[htbp]
 \centering
-\caption[Tuned versus default hyperparameters on HIGGS (11\,M rows).]{Tuned versus default hyperparameters on HIGGS (full 11\,M rows). Total tuned combines the 40-trial Optuna study with one final training run on the tuned configuration. Default uses scikit-learn and \gls{xgb} library defaults with no tuning. The \gls{xgb} HPO study ran once on \gls{gpu}; its cost applies to both variants. \gls{lr} uses fixed defaults in both settings and is excluded; \gls{rf} is excluded as it is not evaluated on HIGGS.}
+\caption[Tuned versus default hyperparameters on HIGGS (11\,M rows).]{Tuning cost versus performance gain on HIGGS (full 11\,M rows). \textit{No tuning} uses scikit-learn and \gls{xgb} library defaults with no HPO. \textit{Total} combines the 40-trial Optuna study with one final training run on the tuned configuration; the \gls{xgb} HPO study ran once on \gls{gpu} and its cost applies to both variants. All emission values in \gls{gco2eq}. \gls{lr} uses fixed defaults and is excluded; \gls{rf} is excluded as it is not evaluated on HIGGS.}
 \label{tab:tuned_vs_default}
-\small
-\begin{tabular}{@{} l r r r r r r r @{}}
+\begin{tabular}{@{} l r r r r r @{}}
 \toprule
- & \multicolumn{4}{c}{Emissions (\gls{gco2eq})} & \multicolumn{3}{c}{\gls{wf1} (\%)} \\
-\cmidrule(lr){2-5}\cmidrule(lr){6-8}
+ & \multicolumn{2}{c}{No tuning} & \multicolumn{2}{c}{After HPO tuning} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
 % LTeX: enabled=false
-Model & HPO & Tuned train & Total tuned & Default & Tuned & Default & $\Delta$ \\
+Model & Emissions (\gls{gco2eq}) & \gls{wf1}\,(\%) & Emissions (\gls{gco2eq}) & \gls{wf1}\,(\%) & $\Delta$\,\gls{wf1} \\
 % LTeX: enabled=true
 \midrule
-\gls{xgb} (\gls{cpu}) &    54.3 &  2.763 &    57.1 &  0.469 & 76.0 & 74.1 & $+$1.9 \\
-\gls{xgb} (\gls{gpu}) &    54.3 &  0.393 &    54.7 &  0.123 & 76.0 & 74.1 & $+$1.9 \\
-\gls{mlp}           & 3{,}182.5 & 58.461 & 3{,}241.0 & 84.770 & 78.5 & 76.9 & $+$1.6 \\
+\gls{xgb} (\gls{cpu}) &  0.469 & 74.1 &     57.1 & 76.0 & $+$1.9 \\
+\gls{xgb} (\gls{gpu}) &  0.123 & 74.1 &     54.7 & 76.0 & $+$1.9 \\
+\gls{mlp}            & 84.770 & 76.9 & 3{,}241.0 & 78.5 & $+$1.6 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -150,7 +149,6 @@ The \gls{cf1} ranking (\Cref{tab:wine_results}) surfaces this disproportionality
 \centering
 \caption{Wine benchmark results for all models.}
 \label{tab:wine_results}
-\small
 \begin{tabular}{@{} l l r r r r @{}}
 \toprule
 Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
@@ -198,7 +196,6 @@ The \gls{cf1} column in \Cref{tab:credit_results} captures this disproportionali
 \centering
 \caption{Credit Card Default benchmark results for all models.}
 \label{tab:credit_results}
-\small
 \begin{tabular}{@{} l l r r r r @{}}
 \toprule
 Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
@@ -228,7 +225,6 @@ The \gls{cf1} column in \Cref{tab:higgs_results} inverts relative to raw \gls{wf
 \centering
 \caption{HIGGS benchmark results for all models.}
 \label{tab:higgs_results}
-\small
 \begin{tabular}{@{} l l r r r r @{}}
 \toprule
 Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
@@ -345,7 +341,7 @@ Assessed through the \gls{cf1} lens, the diverse scaling patterns compress into 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.9\linewidth]{scaling_higgs_cf1_heatmap.pdf}
-\caption[\acrshort{cf1} heatmap across models and dataset sizes.]{\Gls{cf1} (\gls{mgco2eq} per \gls{wf1}) for all model-size combinations. Colour encodes log-scaled \gls{cf1}: yellow is most efficient, dark red is least. Cell annotations show raw \gls{cf1} values. Grey cells indicate runs not performed (\gls{rf} excluded above 500{,}000 rows).}
+\caption[\acrshort{cf1} heatmap across models and dataset sizes.]{\Gls{cf1} (\gls{mgco2eq} per \gls{wf1}) for all model-size combinations. Colour encodes log-scaled \gls{cf1}: green indicates the most efficient configurations, dark indicates the least. Cell annotations show raw \gls{cf1} values. Grey cells indicate runs not performed (\gls{rf} excluded above 500{,}000 rows).}
 \label{fig:scaling_cf1_heatmap}
 \end{figure}
 
@@ -385,7 +381,7 @@ Taken together, these results highlight a structural mismatch between standard d
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.7\linewidth]{mlp_variation_cf1.pdf}
-\caption[\acrshort{mlp} architecture grid: \acrshort{cf1}.]{\Gls{mlp} architecture variation on HIGGS: \gls{cf1} for all depth-width combinations. Darker cells indicate lower (better) values.}
+\caption[\acrshort{mlp} architecture grid: \acrshort{cf1}.]{\Gls{mlp} architecture variation on HIGGS: \gls{cf1} for all depth-width combinations. Greener cells indicate lower (better) values; darker cells indicate higher carbon cost.}
 \label{fig:mlp_variation_cf1}
 \end{figure}
 
@@ -533,7 +529,6 @@ Taken together, these findings introduce a dimension of ecological efficiency th
 \centering
 \caption[Lifecycle break-even analysis per model and dataset.]{Lifecycle break-even analysis. TE = hardware-corrected training \gls{co2eq}; IE = per-prediction inference \gls{co2eq} (directly measured \gls{cpu} energy, same grid intensity). Pred./30\,s = throughput in a 30-second window. Break-even = predictions until cumulative IE equals TE. \gls{rf} not run on HIGGS. Bold = best per column per dataset.}
 \label{tab:lifecycle}
-\footnotesize
 \begin{tabular}{@{} l l r r r r r @{}}
 \toprule
 Dataset & Model & \gls{wf1} (\%) & TE (\gls{gco2eq}) & IE (\textmu\gls{gco2eq}) & Pred./30\,s & Break-even \\

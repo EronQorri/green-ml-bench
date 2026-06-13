@@ -207,11 +207,11 @@ def plot_scenario_intensities(scenarios):
     ax.axhline(static, color="#888888", linestyle="--", linewidth=1)
     for bar, v in zip(bars, values):
         ax.text(bar.get_x() + bar.get_width() / 2, v + 5, f"{v:.0f}",
-                ha="center", va="bottom", fontsize=12)
+                ha="center", va="bottom", fontsize=13)
     ax.set_ylim(top=max(values) * 1.18)
-    ax.set_ylabel("Carbon intensity (gCO₂eq/kWh)", fontsize=14)
-    ax.tick_params(axis="x", labelsize=13, rotation=20)
-    ax.tick_params(axis="y", labelsize=12)
+    ax.set_ylabel("Carbon intensity (gCO₂eq/kWh)", fontsize=15)
+    ax.tick_params(axis="x", labelsize=14, rotation=20)
+    ax.tick_params(axis="y", labelsize=13)
     plt.tight_layout()
     plt.savefig(SCENARIO_INTENSITY_PLOT, bbox_inches="tight")
     plt.close()
@@ -255,12 +255,12 @@ def plot_scenario_per_run(cf, scenarios):
         pct_diff = val - 100
         annotation = "baseline" if pct_diff == 0 else f"{sign}{pct_diff:.0f}%"
         ax.text(bar.get_x() + bar.get_width() / 2, val + 1.5, annotation,
-                ha="center", va="bottom", fontsize=12)
+                ha="center", va="bottom", fontsize=15)
 
-    ax.set_ylabel("CO₂ relative to static CodeCarbon factor (%)", fontsize=14)
+    ax.set_ylabel("Relative carbon emissions (%)", fontsize=17)
     ax.set_ylim(0, max(values) * 1.2)
-    ax.tick_params(axis="x", labelsize=13)
-    ax.tick_params(axis="y", labelsize=12)
+    ax.tick_params(axis="x", labelsize=16)
+    ax.tick_params(axis="y", labelsize=15)
     plt.tight_layout()
     plt.savefig(SCENARIO_PER_RUN_PLOT, bbox_inches="tight")
     plt.close()

@@ -5,6 +5,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 from pathlib import Path
 
 mpl.rcParams.update({
@@ -49,10 +50,12 @@ best_width = mlp_var.loc[best_idx, "width"]
 
 fig, ax = plt.subplots(figsize=(6, 4))
 
+_eco_carbon = LinearSegmentedColormap.from_list("eco_carbon", ["#4caf50", "#1a1a1a"])
+
 sns.heatmap(
     piv, ax=ax,
     annot=True, fmt=".1f",
-    cmap="YlGn_r",
+    cmap=_eco_carbon,
     linewidths=0.5, linecolor="white",
     annot_kws={"size": 14},
     cbar_kws={"label": "CF1 (mg CO₂eq / F1%)"},

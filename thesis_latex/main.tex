@@ -170,9 +170,12 @@
 \addtocontents{lot}{\protect\renewcommand{\protect\addvspace}[1]{}}
 
 \includepdf[pages={1}]{deckblatt.pdf}
-\input{chapters/declarations}
 
 \frontmatter
+\include{chapters/abstract}
+
+\input{chapters/declarations}
+
 \setcounter{tocdepth}{1}
 \tableofcontents
 \newpage
@@ -183,8 +186,6 @@
 \newpage
 \listoftables
 \addcontentsline{toc}{chapter}{List of Tables}
-
-\include{chapters/abstract}
 
 \mainmatter
 

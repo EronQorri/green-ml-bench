@@ -87,6 +87,7 @@ bp_perf = dict(hue="model", hue_order=MODEL_ORDER, palette=MODEL_PALETTE, errorb
 
 def _save_perf_panel(metric, ylabel, filename, pct=False):
     plot_df = df.copy()
+    plot_df["dataset"] = plot_df["dataset"].map(DATASET_LABELS)
     if pct:
         plot_df[metric] = plot_df[metric] * 100
     fig, ax = plt.subplots(figsize=(12, 5))
@@ -117,6 +118,7 @@ _save_perf_panel("f1",       "WF1 (%)", "vergleich_performance_f1.pdf", pct=True
 
 def _save_eff_panel(metric, ylabel, filename, scale=1.0):
     plot_df = df.copy()
+    plot_df["dataset"] = plot_df["dataset"].map(DATASET_LABELS)
     if scale != 1.0:
         plot_df[metric] = plot_df[metric] * scale
     fig, ax = plt.subplots(figsize=(12, 5))
@@ -141,7 +143,7 @@ def _save_eff_panel(metric, ylabel, filename, scale=1.0):
     print(f"Saved: analysis/plots/{filename}")
     plt.close()
 
-_save_eff_panel("co2eq_kg", "Emissions (gCO₂eq, log scale)", "vergleich_efficiency_co2.pdf", scale=1000)
+_save_eff_panel("co2eq_kg", "Emissions (mgCO₂eq, log scale)", "vergleich_efficiency_co2.pdf", scale=1e6)
 _save_eff_panel("training_time_s", "Training Time (s, log scale)", "vergleich_efficiency_time.pdf")
 
 
@@ -254,17 +256,17 @@ for ax, ds in zip(axes_tune, ["wine", "credit", "higgs"]):
                 palette=palette_ds, ax=ax, dodge=False, errorbar=None)
     if ds == "higgs":
         ax.set_yscale("log")
-        ax.set_title("HIGGS (log scale)", fontsize=19)
+        ax.set_title("HIGGS (log scale)", fontsize=21)
     else:
-        ax.set_title(DATASET_LABELS.get(ds, ds), fontsize=19)
+        ax.set_title(DATASET_LABELS.get(ds, ds), fontsize=21)
     ax.set_xlabel("")
     ylabel_text = r"CF1" if ds == "wine" else ""
-    ax.set_ylabel(ylabel_text, fontsize=17)
-    ax.tick_params(axis="x", rotation=45, labelsize=16)
-    ax.tick_params(axis="y", labelsize=16)
+    ax.set_ylabel(ylabel_text, fontsize=19)
+    ax.tick_params(axis="x", rotation=45, labelsize=18)
+    ax.tick_params(axis="y", labelsize=18)
     for container in ax.containers:
         labels = [custom_format(v) for v in container.datavalues]
-        ax.bar_label(container, labels=labels, padding=4, fontsize=15)
+        ax.bar_label(container, labels=labels, padding=4, fontsize=17)
     if ax.get_legend():
         ax.get_legend().remove()
     vals = [v for c in ax.containers for v in c.datavalues if v and v == v]
@@ -410,6 +412,7 @@ if not df_xgb.empty:
     df_xgb["co2eq_g"] = df_xgb["co2eq_kg"] * 1000
     df_xgb["inference_time_ms"] = df_xgb["inference_time"] * 1000
     df_xgb["f1_pct"] = df_xgb["f1"] * 100
+    df_xgb["dataset"] = df_xgb["dataset"].map(DATASET_LABELS)
 
     XGB_PALETTE = {"XGBoost": MODEL_PALETTE["XGBoost"], "XGBoost_GPU": MODEL_PALETTE["XGBoost_GPU"]}
     
