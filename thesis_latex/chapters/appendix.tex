@@ -57,39 +57,6 @@
 
 
 % ══════════════════════════════════════════════════════════════════════════════
-\chapter{Full MLP Architecture Variation Results}
-\label{app:mlp_variation}
-
-\Cref{tab:app_mlp_full} gives the complete numeric results for all twelve \gls{mlp} architecture configurations evaluated in the variation experiment (\Cref{design_mlp_variation,sec:results_mlp_arch}). The heatmaps in \Cref{fig:mlp_variation,fig:mlp_variation_cf1} visualize the same data. All runs use the full 11M-row HIGGS dataset. \gls{cf1} is computed as $\text{CF1} = \frac{C}{\text{WF1}}$, where $C$ is Emissions in \gls{mgco2eq} and \gls{wf1} is expressed as a percentage; lower values indicate a more ecologically efficient configuration.
-
-\begin{table}[htbp]
-\centering
-\caption[\acrshort{mlp} architecture variation results on HIGGS.]{Complete results for the 12 \acrshort{mlp} architecture configurations on HIGGS (11M rows). Configurations are labelled \textit{depth}$\times$\textit{width}. Training time is single-run wall-clock time. \acrshort{cf1} is \gls{mgco2eq} per \gls{wf1} percentage point; lower is better. Bold marks the best value per column.}
-\label{tab:app_mlp_full}
-\begin{tabular}{@{} l r r r r r @{}}
-\toprule
-\textbf{Config} & \textbf{\gls{wf1} (\%)} & \textbf{Emissions (\gls{mgco2eq})} & \textbf{Time (h)} & \textbf{CF1 (\gls{mgco2eq}/\gls{wf1})} \\
-\midrule
-$1\times 128$   & 72.8 & 25.6  & 0.75 & 352 \\
-$2\times 128$   & 75.6 & \textbf{13.5} & \textbf{0.39} & \textbf{179} \\
-$3\times 128$   & 75.7 & 18.1  & 0.54 & 239 \\
-$4\times 128$   & 75.6 & 16.1  & 0.48 & 213 \\
-\midrule
-$1\times 256$   & 73.6 & 30.3  & 0.95 & 412 \\
-$2\times 256$   & 76.8 & 30.5  & 0.93 & 397 \\
-$3\times 256$   & 77.1 & 42.6  & 1.26 & 553 \\
-$4\times 256$   & 77.2 & 43.5  & 1.28 & 564 \\
-\midrule
-$1\times 512$   & 74.4 & 48.1  & 1.33 & 647 \\
-$2\times 512$   & 77.6 & 54.6  & 1.39 & 704 \\
-$3\times 512$   & 78.1 & 80.5  & 2.16 & 1{,}031 \\
-$4\times 512$   & \textbf{78.3} & 92.7 & 2.17 & 1{,}184 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-% ══════════════════════════════════════════════════════════════════════════════
 \chapter{Experimental Setup Reference}
 \label{app:setup}
 
@@ -147,78 +114,7 @@ fastparquet      & 2026.3.0 \\
 
 
 % ══════════════════════════════════════════════════════════════════════════════
-\chapter{Supplementary Numeric Results}
-\label{app:supplementary}
-
-\section{Full Main Benchmark Results}
-\label{app:main_results}
-
-\Cref{tab:main_results} consolidates all 14 model-dataset combinations from \Cref{sec:results_main}. Per-dataset tables in the main text present the same data separately; this table provides a single-page reference for cross-dataset comparison.
-
-\begin{table}[htbp]
-\centering
-\caption[Main benchmark results for all 14 model-dataset combinations.]{Main benchmark results for all 14 model-dataset combinations. Emissions are hardware-corrected. Bold marks the best value per column within each dataset.}
-\label{tab:main_results}
-\small
-\begin{tabular}{@{} l l r r r r @{}}
-\toprule
-Dataset & Model & WF1 ($\%$) & Emissions (\gls{gco2eq}) & Time (s) & CF1 ($\frac{\gls{mgco2eq}}{\gls{wf1}}$) \\
-\midrule
-\multirow{5}{*}{Wine}
-  & \gls{lr}          & 97.2 & \textbf{0.013} & \textbf{0.01} & \textbf{0.130} \\
-  & \gls{rf}          & 97.2 &          0.016 &          0.4  & 0.161 \\
-  & \gls{xgb} (CPU)   & 97.2 & \textbf{0.013} &         0.11  & 0.133 \\
-  & \gls{xgb} (GPU)   & 97.2 &          0.017 &         0.31  & 0.175 \\
-  & \gls{mlp}         & 97.2 &          0.039 &          2.3  & 0.399 \\
-\midrule
-\multirow{5}{*}{Credit}
-  & \gls{lr}          & 77.0          & \textbf{0.021} &          0.8  & 0.269 \\
-  & \gls{rf}          & 79.7          &          0.045 &          1.7  & 0.560 \\
-  & \gls{xgb} (CPU)   & 79.8          & \textbf{0.021} & \textbf{0.41} & \textbf{0.258} \\
-  & \gls{xgb} (GPU)   & 79.8          &          0.022 &         0.66  & 0.279 \\
-  & \gls{mlp}         & \textbf{80.2} &          0.072 &          5.0  & 0.899 \\
-\midrule
-\multirow{4}{*}{HIGGS}
-  & \gls{lr}          & 63.7          &          0.961 &        84.7   & 15.09 \\
-  & \gls{xgb} (CPU)   & 76.0          &          2.763 &        155    & 36.38 \\
-  & \gls{xgb} (GPU)   & 76.0          & \textbf{0.393} & \textbf{16.4} & \textbf{5.17} \\
-  & \gls{mlp}         & \textbf{78.5} &         58.461 &    4{,}754    & 744.7 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\clearpage
-\section{XGBoost CPU vs.\ GPU}
-\label{app:xgb_cpugpu}
-
-\Cref{tab:app_xgb_cpugpu} gives exact values for the XGBoost \gls{cpu} vs.\ \gls{gpu} comparison discussed in \Cref{sec:results_xgb}; \Cref{fig:xgb_cpu_vs_gpu} visualizes the same data. Both variants implement the same algorithm and produce equivalent predictive performance; any sub-0.001 difference in WF1 across runs is attributable to floating-point precision differences between \gls{cpu} (float64) and \gls{gpu} (float32) arithmetic and carries no practical meaning. Bold marks the better value within each dataset.
-
-\begin{table}[htbp]
-\centering
-\caption[\acrshort{xgb} \acrshort{cpu} vs.\ \acrshort{gpu}: efficiency comparison.]{Efficiency results for XGBoost \acrshort{cpu} and \acrshort{gpu} variants across all three datasets. Emissions are hardware-corrected; inference latency is mean per-sample wall-clock time. WF1 is included for completeness; differences are sub-0.001 and carry no practical meaning.}
-\label{tab:app_xgb_cpugpu}
-\setlength{\tabcolsep}{7pt}
-\begin{tabular}{@{} l l r r r r @{}}
-\toprule
-\textbf{Dataset} & \textbf{Variant} & \textbf{\gls{wf1} (\%)} & \textbf{Emissions (\gls{gco2eq})} & \textbf{Time (s)} & \textbf{Latency ($\mu$s)} \\
-\midrule
-\multirow{2}{*}{Wine}
-  & \gls{xgb} (CPU) & 97.2 & \textbf{0.013} & \textbf{0.1}  & \textbf{1464} \\
-  & \gls{xgb} (GPU) & 97.2 & 0.017          & 0.3           & 2468 \\
-\midrule
-\multirow{2}{*}{Credit}
-  & \gls{xgb} (CPU) & 79.8 & \textbf{0.021} & \textbf{0.4}  & \textbf{2785} \\
-  & \gls{xgb} (GPU) & 79.8 & 0.022          & 0.7           & 4688 \\
-\midrule
-\multirow{2}{*}{HIGGS}
-  & \gls{xgb} (CPU) & 76.0 & 2.763          & 155.2         & \textbf{2021} \\
-  & \gls{xgb} (GPU) & 76.0 & \textbf{0.393} & \textbf{16.4} & 3491 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\clearpage
-\section{Monthly Carbon Intensity Statistics: German Grid 2024}
+\chapter{Monthly Carbon Intensity}
 \label{app:carbon_monthly}
 
 \Cref{tab:app_carbon_monthly} summarizes the carbon intensity of the German electricity grid for each calendar month of 2024, derived from 8{,}760 hourly observations obtained via the ElectricityMaps API. These values underpin the seasonal counterfactual analysis in \Cref{sec:results_carbon}. The winter months (October--January) consistently show higher mean intensity than the summer months, driven by reduced solar generation and higher gas and coal dispatch. November records the highest monthly mean; June records the single lowest hourly minimum.
@@ -252,10 +148,11 @@ December  & 380 & 383 & 152 & 658 & 128 \\
 \chapter{Full Counterfactual CO\texorpdfstring{\textsubscript{2}}{2} Scenario Results}
 \label{app:counterfactual}
 
-\Cref{tab:app_cf_wine,tab:app_cf_credit,tab:app_cf_higgs} give exact \gls{co2eq} values for all models under the eight carbon intensity scenarios introduced in \Cref{sec:results_carbon}. The \emph{Static (CC)} row is the hardware-corrected energy multiplied by CodeCarbon's built-in static intensity for Germany; the remaining seven rows use scenario intensities derived from the 2024 ElectricityMaps data. All values are in \gls{gco2eq}.
+\Cref{tab:app_cf_wine,tab:app_cf_credit,tab:app_cf_higgs} list exact \gls{co2eq} values for all models across the eight carbon intensity scenarios from \Cref{sec:results_carbon}. The \emph{Static (CC)} row uses CodeCarbon's built-in German intensity; the remaining seven rows use 2024 ElectricityMaps scenarios. All values are in \gls{gco2eq}.
 
 \begin{table}[htbp]
 \centering
+\small
 \caption[Counterfactual emissions for Wine under timing scenarios.]{Counterfactual emissions (\acrshort{gco2eq}) for the Wine dataset under eight carbon intensity scenarios.}
 \label{tab:app_cf_wine}
 \begin{tabular}{@{} l r r r r r @{}}
@@ -275,6 +172,7 @@ Winter evening & 0.0140 & 0.0294 & 0.0209 & 0.0522 & 0.0599 \\
 \end{table}
 
 \begin{table}[htbp]
+\small
 \centering
 \caption[Counterfactual emissions for Credit under timing scenarios.]{Counterfactual emissions (\acrshort{gco2eq}) for the Credit dataset under eight carbon intensity scenarios.}
 \label{tab:app_cf_credit}
@@ -296,6 +194,7 @@ Winter evening & 0.062 & 0.848 & 0.044 & 0.053 & 0.646 \\
 
 \begin{table}[htbp]
 \centering
+\small
 \caption[Counterfactual emissions for HIGGS under timing scenarios.]{Counterfactual emissions (\acrshort{gco2eq}) for the HIGGS dataset under eight carbon intensity scenarios. \acrshort{rf} was not run on the full 8.8M-row dataset.}
 \label{tab:app_cf_higgs}
 \begin{tabular}{@{} l r r r r @{}}

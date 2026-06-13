@@ -32,7 +32,7 @@ The pairing of a mid-range consumer \gls{gpu} (RTX 4070) with a desktop \gls{cpu
 \subsection{Software Environment and Reproducibility}
 \label{implementation_sw_env}
 
-All experiments were implemented in Python 3.13.0. The full implementation is \todo{noch private} publicly available \cite{BThesisQorri}, where a \texttt{requirements.txt} file is provided so that the exact library versions used in this study can be reproduced. The main libraries used are described below.
+All experiments were implemented in Python 3.13.0. The full implementation is \todo{still private} publicly available \cite{BThesisQorri}, where a \texttt{requirements.txt} file is provided so that the exact library versions used in this study can be reproduced. The main libraries used are described below.
 
 Scikit-learn \parencite{pedregosaScikitlearnMachineLearning2011} served as the foundation of the evaluation pipeline. It provided the \texttt{LogisticRegression} and \texttt{RandomForestClassifier} implementations, as well as the \texttt{StratifiedKFold} (with \texttt{shuffle=True}) for \gls{cv} within hyperparameter tuning and \path{StandardScaler} for feature normalization which is used for \gls{lr} and \gls{mlp}. It also supplied \path{make_pipeline} for chaining preprocessing and model steps, and \texttt{make\_scorer} together with \gls{wf1} for evaluation metrics. Final model evaluation uses a single \texttt{model.fit(X\_train, y\_train)} call followed by \texttt{model.predict(X\_test)}, with \gls{wf1} computed on the held-out test partition using \texttt{f1\_score(average="weighted")}.
 
@@ -140,7 +140,7 @@ Four classification methods were selected to span a range of model complexity, f
 \gls{lr} serves as the lightweight baseline in this study. Despite its simplicity as a linear classifier, it often achieves competitive performance, making it well suited to quantifying whether the additional training cost of more complex models yields a meaningful gain in predictive performance. As a gradient-based model, it requires feature scaling, and a standard scaler is applied to normalize all input features to zero mean and unit variance before training.
 
 \paragraph{Implementation}
-The algorithm is embedded in a scikit-learn pipeline with a \texttt{StandardScaler} as the first step. The solver is set to \texttt{sag}, chosen for its efficiency on large datasets as described in \Cref{sec:theoretical_lr}, and \texttt{max\_iter} is capped at 1000 to ensure convergence. No \gls{hpo} is applied.
+The algorithm is embedded in a scikit-learn pipeline with a \texttt{Standard\-Scaler} as the first step. The solver is set to \texttt{sag}, chosen for its efficiency on large datasets as described in \Cref{sec:theoretical_lr}, and \texttt{max\_iter} is capped at 1000 to ensure convergence. No \gls{hpo} is applied.
 
 \paragraph{Threading Constraint}
 It is worth noting that scikit-learn's \texttt{LogisticRegression} is single-threaded for the core optimization step regardless of solver choice: none of the available solvers (\texttt{lbfgs}, \texttt{newton-cg}, \texttt{sag}, \texttt{saga}, \texttt{liblinear}) parallelize a single model fit. The \texttt{n\_jobs} parameter of \texttt{LogisticRegression} only applies to \gls{ovr} multiclass decomposition, which provides no benefit for the two binary-classification datasets in this study. As a result, training runs on a single \gls{cpu} core and produces roughly 10\% utilization on the eight-core system used here. The implications of this single-threaded constraint for energy comparability are discussed in \Cref{implementation_emissions}.
@@ -583,7 +583,7 @@ The results of every model run are written to \texttt{results/results.csv}, whic
 The primary emissions value is \texttt{co2eq\_kg}, which combines the hardware-sensor \gls{cpu} reading with CodeCarbon's \gls{gpu} and \gls{ram} estimates as described in \Cref{implementation_emissions}. The column \texttt{co2eq\_codecarbon\_kg} retains the original CodeCarbon total for reference. The difference between the two columns is examined in \Cref{results}.
 
 \paragraph{Inference Results}
-Inference latency is stored separately in \texttt{results/inference\_time.csv}, as it is measured outside the emissions tracker and has a different structure. Like \texttt{results.csv}, it uses append-only writes via \texttt{csv.DictWriter}. \Cref{tab:inference_schema} shows its columns.
+Inference latency is stored separately in \texttt{results/inference\_time.csv}, as it is measured outside the emissions tracker and has a different structure. Like \path{results.csv}, it uses append-only writes via \texttt{csv.DictWriter}. \Cref{tab:inference_schema} shows its columns.
 
 \begin{table}[htbp]
 \centering
