@@ -409,7 +409,7 @@ The analyses conducted in the preceding sections treat emissions as a fixed func
     \caption{July 2025 (1--10 Jul). Solar becomes the dominant midday source, sharply reducing the fossil fuel share during daylight hours.}
     \label{fig:electricity_mix_jul}
 \end{subfigure}
-\caption[Electricity mix in Germany: winter vs.\ summer.]{Electricity production mix in Germany for representative ten-day windows in winter and summer. Each data point represents a one-hour average of power production in MW, sampled at hourly intervals and reported by ElectricityMaps. The legend shown in (b) applies to both panels.}
+\caption[Electricity mix in Germany: winter vs.\ summer.]{Electricity production mix in Germany for representative ten-day windows in winter and summer. Each data point represents a one-hour average of power production in MW, sampled at hourly intervals and reported by ElectricityMaps \cite{electricityMapsAPI2025}. The legend shown in (b) applies to both panels.}
 \label{fig:electricity_mix_comparison}
 \end{figure}
 
@@ -424,7 +424,7 @@ The first result is somewhat reassuring for the existing measurements: as shown 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{scenario_intensities.pdf}
-\caption[Carbon intensity for eight timing scenarios.]{Mean grid carbon intensity in \gls{gco2eq}/\gls{kwh} for eight timing scenarios derived from one year of hourly ElectricityMaps data for Germany (2024). The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Summer midday hours are roughly half as carbon-intensive as winter evening hours, a factor of two achievable through deliberate scheduling alone.}
+\caption[Carbon intensity for eight timing scenarios.]{Mean grid carbon intensity in \gls{gco2eq}/\gls{kwh} for eight timing scenarios derived from one year of hourly ElectricityMaps data for Germany (2024) \cite{electricityMapsAPI2025}. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Summer midday hours are roughly half as carbon-intensive as winter evening hours, a factor of two achievable through deliberate scheduling alone.}
 \label{fig:scenario_intensities}
 \end{figure}
 
@@ -446,7 +446,7 @@ To understand why the diurnal dimension matters as much as the seasonal one, con
 \begin{figure}[htb]
 \centering
 \includegraphics[width=\linewidth]{carbon_intensity_july_day.pdf}
-\caption[Hourly \acrshort{ci} for Germany on 24 July 2024.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone on 24 July 2024, retrieved from the ElectricityMaps \gls{api} (\texttt{/v3/carbon-intensity/past-range}). Each data point represents the \gls{ci} for one clock hour as computed by ElectricityMaps from the hourly generation mix. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$.}
+\caption[Hourly \acrshort{ci} for Germany on 24 July 2024.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone on 24 July 2024, retrieved from the ElectricityMaps \gls{api} \cite{electricityMapsAPI2025} (\texttt{/v3/carbon-intensity/past-range}). Each data point represents the \gls{ci} for one clock hour as computed by ElectricityMaps from the hourly generation mix. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$.}
 \label{fig:carbon_intensity_july_day}
 \end{figure}
 
@@ -479,7 +479,7 @@ The seasonal dimension adds a second layer of variation on top of the diurnal on
     \caption{Autumn (16--25 Oct 2024). Mean: $384\,\gls{gco2eq}/\gls{kwh}$.}
     \label{fig:ci_autumn}
 \end{subfigure}
-\caption[Hourly \acrshort{ci} for Germany across four seasons.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone across representative ten-day windows per season (2024), retrieved from the ElectricityMaps \gls{api} (\texttt{/v3/carbon-intensity/past-range}). Each data point is the \gls{ci} for one clock hour. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Winter and autumn exceed the baseline on average; spring and summer fall below it.}
+\caption[Hourly \acrshort{ci} for Germany across four seasons.]{Hourly \gls{ci} in \gls{gco2eq}/\gls{kwh} for the German bidding zone across representative ten-day windows per season (2024), retrieved from the ElectricityMaps \gls{api} \cite{electricityMapsAPI2025} (\texttt{/v3/carbon-intensity/past-range}). Each data point is the \gls{ci} for one clock hour. The dashed line marks the static CodeCarbon baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Winter and autumn exceed the baseline on average; spring and summer fall below it.}
 \label{fig:carbon_intensity_seasonal}
 \end{figure}
 
