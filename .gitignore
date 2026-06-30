@@ -52,3 +52,5 @@ latex.out/
 *.gls
 *.ist
 *main_fb.pdf
+# Druckkosten-Hilfsskript
+analyze_print_pages.py

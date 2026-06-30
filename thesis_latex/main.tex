@@ -169,12 +169,12 @@
 \addtocontents{lof}{\protect\renewcommand{\protect\addvspace}[1]{}}
 \addtocontents{lot}{\protect\renewcommand{\protect\addvspace}[1]{}}
 
+\frontmatter
 \includepdf[pages={1}]{deckblatt.pdf}
 
-\frontmatter
-\include{chapters/abstract}
-
 \input{chapters/declarations}
+
+\include{chapters/abstract}
 
 \setcounter{tocdepth}{1}
 \tableofcontents
