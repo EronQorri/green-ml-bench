@@ -1,19 +1,9 @@
 \chapter{Results and Discussion}
 \label{results}
-The chapter is organized in eight sections that together address the five sub-questions set out in the introduction. The first section places the study's aggregate compute and emissions budget in context. The second establishes the hardware-corrected measurement baseline on which all subsequent comparisons rest. The third quantifies the tuning overhead that standard benchmark tables omit. The main analysis proceeds in three thematic blocks: the cross-dataset benchmark, which closes with a focused \gls{cpu}--\gls{gpu} hardware comparison, the HIGGS scaling and \gls{mlp} architecture variation experiments, and finally the temporal and lifecycle analyses that extend the efficiency picture beyond training time alone.
-
-
-% ── Aggregate Footprint ────────────────────────────────────────────────────────
-\section{Aggregate Experimental Footprint}
-\label{sec:results_scope}
-
-Across 737 \texttt{CodeCarbon}-tracked runs conducted between March and June 2026, the experiments in this study consumed approximately 17.3\,\gls{kwh} of electricity and 255 hours of compute time, with \texttt{CodeCarbon} logging a cumulative 6{,}550\,\gls{gco2eq}, equivalent to driving approximately 55\,km in an average German car or charging a smartphone roughly 860 times on the German grid, computed using a fleet-average factor of 118\,\gls{gco2eq}/km \parencite{europeanenvironmentagencyMonitoringCO2Emissions2025} and an assumed charge energy of 20 Watt-hours at an electricity grid intensity of 381\,\gls{gco2eq}/\gls{kwh}. Given the systematic underestimation documented in \Cref{sec:results_measurement}, the corrected total is substantially higher. The 6{,}550\,\gls{gco2eq} should be read as a lower bound. Hyperparameter tuning for the \gls{mlp} on HIGGS alone accounts for 4{,}325\,\gls{gco2eq} of that figure, approximately two thirds of the logged total, illustrating that the experimental overhead of finding a competitive configuration can dwarf the cost of the benchmark runs themselves.
-
-The distribution of cost is highly uneven when viewed by run type rather than by count. The 40 tuning runs across all models and datasets represent just 5\,\% of all logged runs, yet are responsible for 69\,\% of the study's total emissions and 67\,\% of total compute time. The 14 model-dataset combinations that form the core benchmark, each measured as a single training run with already-optimized hyperparameters, account for only a small fraction of the ecological investment required to produce them. This asymmetry is not an anomaly of the experimental design but a structural feature of how \gls{ml} research incurs cost: the visible artifact, the final trained model, represents only the tip of an iceberg whose bulk lies in the iterative search that precedes it.
-
+The chapter is organized in four parts. The first two sections establish the preconditions for interpreting the results: the hardware-corrected measurement baseline and the tuning overhead that standard benchmark tables omit. The third and central section presents the experimental results across six thematic subsections: the cross-dataset benchmark, the \gls{cpu}--\gls{gpu} hardware comparison, the HIGGS scaling and \gls{mlp} architecture variation experiments, and the temporal and lifecycle analyses that extend the efficiency picture beyond training time alone. The closing section synthesises the study's aggregate compute and emissions budget across all runs.
 
 % ── Measurement Validation ─────────────────────────────────────────────────────
-\section{Emissions Measurement Validation}
+\section{Experimental Framework Validation}
 \label{sec:results_measurement}
 
 Any comparison of model efficiencies is only as valid as the measurements it rests on. As described in \Cref{implementation_emissions}, \texttt{CodeCarbon}'s \gls{tdp}-based \gls{cpu} estimate was replaced in this study by direct hardware-sensor readings. \Cref{fig:codecarbon_vs_hw} shows the ratio between the two for every model-dataset combination.
@@ -121,8 +111,12 @@ Model & Emissions (\gls{gco2eq}) & \gls{wf1}\,(\%) & Emissions (\gls{gco2eq}) & 
 \end{table}
 
 
+% ── Experimental Results ───────────────────────────────────────────────────────
+\section{Experimental Results}
+\label{sec:experimental_results}
+
 % ── Main Benchmark ─────────────────────────────────────────────────────────────
-\section{Main Cross-Dataset Benchmark}
+\subsection{Main Cross-Dataset Benchmark}
 \label{sec:results_main}
 
 \expref{1} spans 14 model-dataset combinations across three datasets that differ by three orders of magnitude in size, directly addressing \rqref{1}. \Cref{fig:vergleich_performance,fig:vergleich_efficiency} lay out the two dimensions of the comparison. The \gls{cf1} ranking synthesizes both dimensions. The central finding is that no model dominates across all three settings. Ecological efficiency is not a fixed property of any single model. It emerges from the alignment between a model's computational profile, the hardware it runs on and the scale of the task it faces. Each of the three datasets exposes a different axis of that contingency. The emission figures in the per-dataset tables below reflect a single training run with already-optimized hyperparameters. The one-time initialization cost of producing those parameters and the \gls{wf1} premium they deliver over untuned defaults are quantified in \Cref{sec:results_tuning}.
@@ -302,7 +296,7 @@ This finding provides a direct, empirical answer to \rqref{3}: the ecological vi
 
 
 % ── HIGGS Scaling ──────────────────────────────────────────────────────────────
-\section{HIGGS Dataset Scaling}
+\subsection{HIGGS Dataset Scaling}
 \label{sec:results_scaling}
 
 \expref{2}, directly addressing \rqref{4}, tracks emissions and predictive performance across nine HIGGS subsets ranging from 1{,}000 to 8{,}800{,}000 rows (\Cref{fig:scaling_higgs}). Each data point is the mean across three independent random seeds. This replication averages out subsample-specific noise and yields monotonically well-behaved scaling curves. By holding the dataset complexity constant and isolating the volume of data, the scaling analysis exposes the exact thresholds at which the ecological cost of processing more data eclipses the predictive benefit.
@@ -349,7 +343,7 @@ More profoundly, these scaling curves challenge the pervasive assumption that mo
 
 
 % ── MLP Architecture Variation ─────────────────────────────────────────────────
-\section{MLP Architecture Variation}
+\subsection{MLP Architecture Variation}
 \label{sec:results_mlp_arch}
 
 \expref{3} directly addresses \rqref{2} by training all twelve \gls{mlp} configurations (depth $\in \{1,2,3,4\}$, width $\in \{128, 256, 512\}$) on the full HIGGS dataset; \Cref{fig:mlp_variation} shows the results.
@@ -389,7 +383,7 @@ Evaluating the twelve configurations through the \gls{cf1} lens, as seen in \Cre
 
 
 % ── Carbon Intensity Analysis ──────────────────────────────────────────────────
-\section{Carbon Intensity Analysis}
+\subsection{Carbon Intensity Analysis}
 \label{sec:results_carbon}
 
 \expref{4} departs from the preceding sections, which treat emissions as a fixed function of the training run: given the same model, dataset and hardware, the reported figure does not change. This is a consequence of how \texttt{CodeCarbon} works: it converts measured energy into \gls{gco2eq} using a static intensity factor of $381\,\frac{\gls{gco2eq}}{\gls{kwh}}$ for Germany, a calculated average that cannot reflect when a run actually takes place (see \Cref{sec:theoretical_codecarbon}). The German grid, however, draws on a fundamentally different fuel mix in January than in July and during peak evening demand than during solar-rich midday hours, a structure visible directly in the hourly ElectricityMaps data used in this analysis.
@@ -513,7 +507,7 @@ Taken together, these findings introduce a dimension of ecological efficiency th
 
 
 % ── Lifecycle Break-Even ───────────────────────────────────────────────────────
-\section{Lifecycle Break-Even Analysis}
+\subsection{Lifecycle Break-Even Analysis}
 \label{sec:results_lifecycle}
 
 \expref{5} directly addresses \rqref{5}: \Cref{fig:lifecycle_breakeven} shows for each model-dataset combination the number of predictions at which cumulative inference \gls{co2eq} surpasses the one-time training footprint.
@@ -581,3 +575,11 @@ Whether that threshold is reached depends entirely on deployment context. A batc
 The roughly five orders of magnitude separating these extremes reflect a structural divide rather than an accident of scale. Models with cheap training and slow inference front-load their ecological cost at the point of training, then spend that cost again with every subsequent prediction. Models with expensive training and fast inference invert this: the initial investment is large, but it is amortized across many cheap queries. Which profile is ecologically preferable depends entirely on how many predictions the deployed system will serve, a figure that has nothing to do with performance or training efficiency \parencite{luccioniPowerHungryProcessing2024}.
 
 This creates a direct inversion of the training-only rankings for high-volume deployments \parencite{desislavovTrendsAIInference2023}. \gls{rf} on Wine achieves a favorable \gls{cf1} precisely because it is cheap to train. Yet at ten thousand predictions it has already accumulated roughly 95 times its training budget in inference emissions, while \gls{mlp} at the same query count has barely touched its much larger training investment. For a practitioner deploying at scale, the \gls{cf1} ranking is not merely incomplete at this point. It points in the wrong direction. Ecological model selection therefore requires a deployment volume estimate as an explicit input. Below the break-even threshold, optimizing training emissions is the right lever. Above it, inference latency per prediction governs the total lifecycle cost and no amount of training efficiency compensates for a slow prediction function at scale.
+
+% ── Aggregate Footprint ────────────────────────────────────────────────────────
+\section{Aggregate Experimental Footprint}
+\label{sec:results_scope}
+
+Across 737 \texttt{CodeCarbon}-tracked runs conducted between March and June 2026, the experiments in this study consumed approximately 17.3\,\gls{kwh} of electricity and 255 hours of compute time, with \texttt{CodeCarbon} logging a cumulative 6{,}550\,\gls{gco2eq}, equivalent to driving approximately 55\,km in an average German car or charging a smartphone roughly 860 times on the German grid, computed using a fleet-average factor of 118\,\gls{gco2eq}/km \parencite{europeanenvironmentagencyMonitoringCO2Emissions2025} and an assumed charge energy of 20 Watt-hours at an electricity grid intensity of 381\,\gls{gco2eq}/\gls{kwh}. Given the systematic underestimation documented in \Cref{sec:results_measurement}, the corrected total is substantially higher. The 6{,}550\,\gls{gco2eq} should be read as a lower bound. Hyperparameter tuning for the \gls{mlp} on HIGGS alone accounts for 4{,}325\,\gls{gco2eq} of that figure, approximately two thirds of the logged total, illustrating that the experimental overhead of finding a competitive configuration can dwarf the cost of the benchmark runs themselves.
+
+The distribution of cost is highly uneven when viewed by run type rather than by count. The 40 tuning runs across all models and datasets represent just 5\,\% of all logged runs, yet are responsible for 69\,\% of the study's total emissions and 67\,\% of total compute time. The 14 model-dataset combinations that form the core benchmark, each measured as a single training run with already-optimized hyperparameters, account for only a small fraction of the ecological investment required to produce them. This asymmetry is not an anomaly of the experimental design but a structural feature of how \gls{ml} research incurs cost: the visible artifact, the final trained model, represents only the tip of an iceberg whose bulk lies in the iterative search that precedes it.
