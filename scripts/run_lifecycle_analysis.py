@@ -165,9 +165,10 @@ def plot_breakeven_bars(df):
     trans = blended_transform_factory(ax.transData, ax.transAxes)
     for dataset in datasets:
         x_min, x_max = group_bounds[dataset]
-        ax.text((x_min + x_max) / 2, 1.02, dataset.capitalize(),
+        label = "HIGGS" if dataset == "higgs" else dataset.capitalize()
+        ax.text((x_min + x_max) / 2, 1.02, label,
                 transform=trans, ha="center", va="bottom",
-                fontsize=fs, fontweight="bold")
+                fontsize=fs)
 
     # Dashed separator lines between groups
     for i in range(len(datasets) - 1):
