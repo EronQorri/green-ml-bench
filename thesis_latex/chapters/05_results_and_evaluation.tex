@@ -165,14 +165,14 @@ Moving to the medium-scale Credit dataset (center cluster in \Cref{fig:vergleich
 
 \begin{figure}[htb]
 \centering
-\begin{subfigure}{0.8\linewidth}
+\begin{subfigure}{0.75\linewidth}
   \centering
   \includegraphics[width=\linewidth]{vergleich_efficiency_co2.pdf}
   \caption{Hardware-corrected emissions (log scale).}
   \label{fig:vergleich_efficiency_co2}
 \end{subfigure}
 \vspace{0.5em}
-\begin{subfigure}{0.8\linewidth}
+\begin{subfigure}{0.75\linewidth}
   \centering
   \includegraphics[width=\linewidth]{vergleich_efficiency_time.pdf}
   \caption{Training time (log scale).}
@@ -184,7 +184,7 @@ Moving to the medium-scale Credit dataset (center cluster in \Cref{fig:vergleich
 
 The explanation is structural rather than incidental. \gls{rf} constructs an ensemble of independently grown decision trees, evaluating candidate splits at each node across every tree in full. \gls{xgb}'s boosted tree construction, by contrast, uses highly-optimized histogram-based split-finding and grows trees sequentially, each correcting the residual errors of the last. This procedure achieves equivalent predictive capacity at a fraction of the computational cost. Crucially, this is the same structural property that inflated \gls{rf}'s tuning cost in \Cref{sec:results_tuning}: the per-tree overhead that makes tuning expensive makes training expensive for identical reasons and no amount of hyperparameter optimization removes it.
 
-The \gls{cf1} column in \Cref{tab:credit_results} captures this disproportionality directly. \gls{xgb} \gls{cpu} leads despite near-identical \gls{wf1} to \gls{rf}; \gls{lr} ranks second even though it posts the lowest predictive score on this dataset, because its near-zero training cost outweighs the \gls{wf1} shortfall. \gls{mlp} finishes last: a 0.4 percentage point lead over \gls{xgb} \gls{cpu} comes at 3.5 times the training emissions. The Credit ranking therefore illustrates two complementary efficiency failure modes: the structural overhead of tree-ensemble computation and the disproportionate carbon cost of marginal neural-network gains. When model families differ structurally in computational profile, choosing the right family is at least as consequential for ecological efficiency as any hardware decision \parencite{verdecchiaDataCentricGreenAI2022a}.
+The \gls{cf1} column in \Cref{tab:credit_results} captures this disproportionality directly. \gls{xgb} \gls{cpu} leads despite near-identical \gls{wf1} to \gls{rf}. \Gls{lr} ranks second even though it posts the lowest predictive score on this dataset, because its near-zero training cost outweighs the \gls{wf1} shortfall. \gls{mlp} finishes last: a 0.4 percentage point lead over \gls{xgb} \gls{cpu} comes at 3.5 times the training emissions. The Credit ranking therefore illustrates two complementary efficiency failure modes: the structural overhead of tree-ensemble computation and the disproportionate carbon cost of marginal neural-network gains. When model families differ structurally in computational profile, choosing the right family is at least as consequential for ecological efficiency as any hardware decision \parencite{verdecchiaDataCentricGreenAI2022a}.
 
 \begin{table}[htbp]
 \centering
@@ -269,7 +269,7 @@ As established in the main benchmark, hardware acceleration is not unconditional
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.95\linewidth]{xgb_cpu_vs_gpu.pdf}
+\includegraphics[width=0.9\linewidth]{xgb_cpu_vs_gpu.pdf}
 \caption[\acrshort{xgb} \acrshort{cpu} vs.\ \acrshort{gpu}.]{\gls{xgb} \gls{cpu} vs.\ \gls{gpu} across datasets. Top row: Emissions in \gls{gco2eq} and training time in seconds (log scale). Bottom row: \gls{wf1} and per-sample inference time. \gls{wf1} is identical across variants on all three datasets. The ecological and speed differences are the operative comparison.}
 \label{fig:xgb_cpu_vs_gpu}
 \end{figure}
@@ -282,7 +282,7 @@ The HIGGS result reverses the picture completely. The \gls{gpu} variant is seven
 
 \begin{figure}[htb]
     \centering
-    \includegraphics[width=\linewidth]{xgb_breakeven_higgs.pdf}
+    \includegraphics[width=0.9\linewidth]{xgb_breakeven_higgs.pdf}
     \caption[\acrshort{xgb} \acrshort{cpu}/\acrshort{gpu} energy break-even on HIGGS.]{\gls{xgb} break-even point comparison between different subset sizes of the HIGGS dataset.}
     \label{fig:xgb_breakeven_higgs}
 \end{figure}
@@ -309,12 +309,12 @@ At the lower end of the scaling curve, the linear boundary of \gls{lr} hits a ha
 \begin{figure}[htb]
 \centering
 \subcaptionbox{Emissions (\gls{gco2eq}, log scale)\label{fig:scaling_higgs_emissions}}{%
-    \includegraphics[width=0.78\linewidth]{scaling_higgs_emissions.pdf}}
+    \includegraphics[width=0.85\linewidth]{scaling_higgs_emissions.pdf}}
 \par\medskip
 \subcaptionbox{\Gls{wf1}\label{fig:scaling_higgs_f1}}{%
-    \includegraphics[width=0.78\linewidth]{scaling_higgs_f1.pdf}}
+    \includegraphics[width=0.85\linewidth]{scaling_higgs_f1.pdf}}
 \par\smallskip
-\includegraphics[width=0.78\linewidth]{scaling_higgs_legend.pdf}
+\includegraphics[width=0.85\linewidth]{scaling_higgs_legend.pdf}
 \caption[Scaling: Emissions and \acrshort{wf1} on HIGGS.]{Emissions (log scale) and \gls{wf1} across nine HIGGS subsets for all models. Each point is the mean of three independent random-seed runs. \gls{rf} excluded above 500{,}000 rows.}
 \label{fig:scaling_higgs}
 \end{figure}
@@ -411,29 +411,26 @@ Evaluating the twelve configurations through the \gls{cf1} lens, as seen in \Cre
 
 If this temporal variation is large enough, then the timing of a training run is itself a meaningful ecological decision, one that requires no changes to code, hardware, or model architecture. This section presents the results of \expref{4}, which evaluates that hypothesis by counterfactually re-assigning the energy of every training run to different timing scenarios derived from one year of hourly ElectricityMaps data, as described in \Cref{design_carbon_intensity}.
 
-\FloatBarrier
 \paragraph{Annual Spread and Scenario Intensities}
 The first result is somewhat reassuring for the existing measurements: as shown in \Cref{fig:scenario_intensities}, the static \texttt{CodeCarbon} factor of $381\,\frac{\gls{gco2eq}}{\gls{kwh}}$ is a defensible approximation of the annual mean of the year 2024, which the empirical data places at $341\,\frac{\gls{gco2eq}}{\gls{kwh}}$. A workload executed at a uniformly random point during the year would therefore be assigned only a modest systematic error by \texttt{CodeCarbon}. The more important finding is the spread around that average. The best recorded hour of 2024 reaches $115\,\frac{\gls{gco2eq}}{\gls{kwh}}$ and the worst reaches $658\,\frac{\gls{gco2eq}}{\gls{kwh}}$, a factor of 5.7$\times$ between two hours. The absolute extremes are not practically exploitable, since no practitioner can guarantee their run coincides with the single cleanest or dirtiest hour of the year. The structurally informed seasonal-diurnal combinations are the actionable range: summer midday hours average $193\,\frac{\gls{gco2eq}}{\gls{kwh}}$ while winter evening hours average $389\,\frac{\gls{gco2eq}}{\gls{kwh}}$, a factor of two achievable through deliberate scheduling alone.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{scenario_intensities.pdf}
+\includegraphics[width=0.9\linewidth]{scenario_intensities.pdf}
 \caption[Carbon intensity for eight timing scenarios.]{Mean grid carbon intensity in \gls{gco2eq}/\gls{kwh} for eight timing scenarios derived from one year of hourly ElectricityMaps data for Germany (2024) \cite{electricityMapsAPI2025}. The dashed line marks the static \texttt{CodeCarbon} baseline of $381\,\gls{gco2eq}/\gls{kwh}$. Summer midday hours are roughly half as carbon-intensive as winter evening hours, a factor of two achievable through deliberate scheduling alone.}
 \label{fig:scenario_intensities}
 \end{figure}
 
-\FloatBarrier
 \paragraph{Per-Run Emissions Counterfactuals}
 Because training energy is a fixed physical quantity for any given run, every percentage difference in grid intensity translates directly into the same percentage difference in emissions. \Cref{fig:scenario_per_run} expresses this proportionality relative to the static \texttt{CodeCarbon} baseline, making the stakes concrete. Scheduling during summer mean conditions would reduce the reported emissions of this study by approximately 20\,\% compared to the static estimate, requiring no modification to the experimental setup whatsoever. The best-hour scenario pushes this reduction to 70\,\%, while the worst-hour scenario reverses it into a 73\,\% increase. These percentages are identical for every model and dataset, because the intensity factor scales uniformly. What differs is the absolute magnitude of the effect. For lightweight runs such as \gls{lr} on Wine, the difference between any two scenarios is negligible in absolute terms. For the \gls{mlp} trained on HIGGS, the gap between best-hour and worst-hour timing amounts to approximately 208\,\gls{gco2eq}, a quantity that exceeds the total training footprint of every Wine and Credit run in this study combined. This asymmetry reveals an important practical principle: grid-aware scheduling is most valuable precisely where model and hardware efficiency decisions also matter most, namely on large, compute-intensive workloads where the absolute energy expenditure is high enough for timing to make a meaningful difference.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=\linewidth]{scenario_per_run.pdf}
+\includegraphics[width=0.8\linewidth]{scenario_per_run.pdf}
 \caption[Counterfactual \acrshort{co2eq} relative to \texttt{CodeCarbon} baseline.]{Counterfactual training emissions expressed as a percentage of the static \texttt{CodeCarbon} baseline (= 100\,\%). Because grid intensity scales uniformly across all runs, the bars are identical for every model and dataset. The dashed line marks the \texttt{CodeCarbon} reference; values below it represent emission reductions achievable through timing alone, without any change to code, hardware, or model architecture.}
 \label{fig:scenario_per_run}
 \end{figure}
 
-\FloatBarrier
 \paragraph{The Diurnal Dimension}
 To understand why the diurnal dimension matters as much as the seasonal one, consider the solar duck curve visible in \Cref{fig:carbon_intensity_july_day} for 24 July 2024. \Gls{ci} declines from roughly $300\,\frac{\gls{gco2eq}}{\gls{kwh}}$ in the morning as solar generation ramps up, reaches a minimum of $163\,\frac{\gls{gco2eq}}{\gls{kwh}}$ near midday, then recovers sharply to a peak of $461\,\frac{\gls{gco2eq}}{\gls{kwh}}$ once solar output falls in the evening. The static \texttt{CodeCarbon} factor of $381\,\frac{\gls{gco2eq}}{\gls{kwh}}$ intersects this curve only during the early morning and late evening hours, the two dirtiest windows of the day on a summer date with strong solar generation. During the core daylight hours, the static factor overestimates the actual intensity by up to a factor of two. This discrepancy empirically validates recent arguments that relying on generation-based average rates is inadequate for true consequential carbon accounting, which instead requires time-specific marginal emissions data \parencite{dodgeMeasuringCarbonIntensity2022}. This is not an anomaly specific to this particular date: it is the structural consequence of Germany's growing solar capacity, which consistently depresses midday intensity throughout the summer months. A practitioner who runs training jobs during office hours on summer days is inadvertently benefiting from this effect, while their \texttt{CodeCarbon} reports attribute a higher carbon cost than actually occurred.
 
