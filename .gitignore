@@ -18,6 +18,15 @@ CLAUDE.md
 
 saved_models/
 
+# generated artifacts
+saved_models_run_*/
+optuna_mlp_*.db
+optune_db/
+*.bak
+
+# defense materials (kept private)
+Kolloquium/
+
 thesis_latex/literature_pdfs/
 
 *.aux
